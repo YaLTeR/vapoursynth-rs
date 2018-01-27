@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "vapoursynth",
+    "vapoursynth-sys",
+]

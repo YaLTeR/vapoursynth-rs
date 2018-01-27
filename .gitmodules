@@ -1,0 +1,6 @@
+[submodule "vapoursynth-sys/vapoursynth"]
+	path = vapoursynth-sys/vapoursynth
+	url = https://github.com/vapoursynth/vapoursynth.git
+[submodule "vapoursynth-sys/source-files/vapoursynth"]
+	path = vapoursynth-sys/source-files/vapoursynth
+	url = https://github.com/vapoursynth/vapoursynth.git

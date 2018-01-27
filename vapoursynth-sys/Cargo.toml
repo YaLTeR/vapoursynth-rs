@@ -1,0 +1,42 @@
+[package]
+name = "vapoursynth-sys"
+version = "0.1.0"
+authors = ["Ivan Molodetskikh <yalterz@gmail.com>"]
+build = "build.rs"
+
+[dependencies]
+cfg-if = "0.1"
+
+[features]
+# Features for enabling higher API versions.
+vapoursynth-api-31 = ["gte-vapoursynth-api-31"]
+vapoursynth-api-32 = ["gte-vapoursynth-api-31", "gte-vapoursynth-api-32"]
+vapoursynth-api-33 = ["gte-vapoursynth-api-31", "gte-vapoursynth-api-32", "gte-vapoursynth-api-33"]
+vapoursynth-api-34 = [
+    "gte-vapoursynth-api-31",
+    "gte-vapoursynth-api-32",
+    "gte-vapoursynth-api-33",
+    "gte-vapoursynth-api-34"
+]
+vapoursynth-api-35 = [
+    "gte-vapoursynth-api-31",
+    "gte-vapoursynth-api-32",
+    "gte-vapoursynth-api-33",
+    "gte-vapoursynth-api-34",
+    "gte-vapoursynth-api-35"
+]
+
+vsscript-api-31 = ["gte-vsscript-api-31"]
+
+# Features for linking to certain functions.
+vapoursynth-functions = []
+vsscript-functions = []
+
+# Utility features, not for outside use.
+gte-vapoursynth-api-31 = []
+gte-vapoursynth-api-32 = []
+gte-vapoursynth-api-33 = []
+gte-vapoursynth-api-34 = []
+gte-vapoursynth-api-35 = []
+
+gte-vsscript-api-31 = []
