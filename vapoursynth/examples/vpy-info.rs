@@ -14,7 +14,7 @@ fn usage() {
         env::current_exe()
             .ok()
             .and_then(|p| p.file_name().map(|n| n.to_string_lossy().into_owned()))
-            .unwrap_or("vpy-test".to_owned())
+            .unwrap_or("vpy-info".to_owned())
     );
 }
 
