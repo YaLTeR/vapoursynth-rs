@@ -1,12 +1,9 @@
-//! This example needs the following features: `vsscript-functions vapoursynth-functions`.
-#[macro_use]
 extern crate failure;
 extern crate vapoursynth;
 
-use failure::{Error, ResultExt};
+use failure::{err_msg, Error, ResultExt};
 use std::borrow::Cow;
 use std::env;
-use vapoursynth::{vsscript, Property};
 
 fn usage() {
     println!(
@@ -18,17 +15,20 @@ fn usage() {
     );
 }
 
+#[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
 fn run() -> Result<(), Error> {
+    use vapoursynth::{vsscript, Property};
+
     let filename = env::args()
         .nth(1)
-        .ok_or(format_err!("The filename argument is missing"))?;
-    let api = vapoursynth::API::get().ok_or(format_err!("Couldn't get the VapourSynth API"))?;
+        .ok_or(err_msg("The filename argument is missing"))?;
+    let api = vapoursynth::API::get().ok_or(err_msg("Couldn't get the VapourSynth API"))?;
     let environment =
         vsscript::Environment::from_file(filename, vsscript::EvalFlags::SetWorkingDir)
             .context("Couldn't create the VSScript environment")?;
     let node = environment
         .get_output(api, 0)
-        .ok_or(format_err!("No output at index 0"))?;
+        .ok_or(err_msg("No output at index 0"))?;
 
     println!("{:#?}", node.info());
 
@@ -39,6 +39,13 @@ fn run() -> Result<(), Error> {
     println!("Format name: {}", format_name);
 
     Ok(())
+}
+
+#[cfg(not(all(feature = "vapoursynth-functions", feature = "vsscript-functions")))]
+fn run() -> Result<(), Error> {
+    Err(err_msg(
+        "This example requires the `vapoursynth-functions vsscript-functions` features.",
+    ))
 }
 
 fn main() {
