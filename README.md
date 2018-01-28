@@ -1,5 +1,7 @@
 # vapoursynth-rs
 
+[![Build Status](https://api.travis-ci.org/YaLTeR/vapoursynth-rs.svg?branch=master)](https://travis-ci.org/YaLTeR/vapoursynth-rs)
+
 A (very WIP) safe wrapper for [VapourSynth](https://github.com/vapoursynth/vapoursynth), written in Rust.
 
 The primary goal is safety (that is, safe Rust code should not trigger undefined behavior), and secondary goals include performance and ease of use.
