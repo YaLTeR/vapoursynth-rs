@@ -13,6 +13,12 @@ fn green() {
     let node = env.get_output(api, 0).unwrap();
     let info = node.info();
 
+    if let Property::Constant(format) = info.format {
+        assert_eq!(format.name().to_string_lossy(), "RGB24");
+    } else {
+        assert!(false);
+    }
+
     assert_eq!(
         info.framerate,
         Property::Constant(Framerate {
@@ -42,6 +48,12 @@ fn green_from_string() {
     let node = env.get_output(api, 0).unwrap();
     let info = node.info();
 
+    if let Property::Constant(format) = info.format {
+        assert_eq!(format.name().to_string_lossy(), "RGB24");
+    } else {
+        assert!(false);
+    }
+
     assert_eq!(
         info.framerate,
         Property::Constant(Framerate {
@@ -61,4 +73,25 @@ fn green_from_string() {
     assert_eq!(info.num_frames, 100);
     #[cfg(not(feature = "gte-vapoursynth-api-32"))]
     assert_eq!(info.num_frames, Property::Constant(100));
+}
+
+#[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
+#[test]
+fn variable() {
+    let api = API::get().unwrap();
+    let env = vsscript::Environment::from_file(
+        "test-vpy/variable.vpy",
+        vsscript::EvalFlags::SetWorkingDir,
+    ).unwrap();
+    let node = env.get_output(api, 0).unwrap();
+    let info = node.info();
+
+    assert_eq!(info.format, Property::Variable);
+    assert_eq!(info.framerate, Property::Variable);
+    assert_eq!(info.resolution, Property::Variable);
+
+    #[cfg(feature = "gte-vapoursynth-api-32")]
+    assert_eq!(info.num_frames, 200);
+    #[cfg(not(feature = "gte-vapoursynth-api-32"))]
+    assert_eq!(info.num_frames, Property::Constant(200));
 }
