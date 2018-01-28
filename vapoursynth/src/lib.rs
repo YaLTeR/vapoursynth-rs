@@ -22,3 +22,5 @@ pub use node::Node;
 
 pub mod video_info;
 pub use video_info::Property;
+
+mod tests;
