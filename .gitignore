@@ -1,4 +1,6 @@
 
 /target/
+vapoursynth-sys/target/
+vapoursynth/target/
 **/*.rs.bk
 Cargo.lock
