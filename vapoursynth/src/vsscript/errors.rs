@@ -30,7 +30,7 @@ impl From<VSScriptError> for Error {
     }
 }
 
-pub type Result<T> = result::Result<T, Error>;
+pub(crate) type Result<T> = result::Result<T, Error>;
 
 /// A container for a VSScript error.
 #[derive(Fail, Debug)]
