@@ -11,7 +11,7 @@ fn usage() {
         env::current_exe()
             .ok()
             .and_then(|p| p.file_name().map(|n| n.to_string_lossy().into_owned()))
-            .unwrap_or("vpy-info".to_owned())
+            .unwrap_or_else(|| "vpy-info".to_owned())
     );
 }
 
@@ -21,14 +21,14 @@ fn run() -> Result<(), Error> {
 
     let filename = env::args()
         .nth(1)
-        .ok_or(err_msg("The filename argument is missing"))?;
-    let api = vapoursynth::API::get().ok_or(err_msg("Couldn't get the VapourSynth API"))?;
+        .ok_or_else(|| err_msg("The filename argument is missing"))?;
+    let api = vapoursynth::API::get().ok_or_else(|| err_msg("Couldn't get the VapourSynth API"))?;
     let environment =
         vsscript::Environment::from_file(filename, vsscript::EvalFlags::SetWorkingDir)
             .context("Couldn't create the VSScript environment")?;
     let node = environment
         .get_output(api, 0)
-        .ok_or(err_msg("No output at index 0"))?;
+        .ok_or_else(|| err_msg("No output at index 0"))?;
 
     println!("{:#?}", node.info());
 
