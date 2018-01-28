@@ -4,22 +4,37 @@ use std::fs::File;
 use std::{fmt, mem, ptr};
 use std::io::Read;
 use std::path::Path;
-use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
+use std::sync::{Mutex, Once, ONCE_INIT};
 use vapoursynth_sys as ffi;
 
 use api::API;
 use node::Node;
 
-/// True if `vsscript_init()` was already called.
-static VSSCRIPT_INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
+lazy_static! {
+    static ref FFI_CALL_MUTEX: Mutex<()> = Mutex::new(());
+}
+
+// Some `vsscript_*` function calls have threading issues. Protect them with a mutex.
+// https://github.com/vapoursynth/vapoursynth/issues/367
+macro_rules! call_vsscript {
+    ($call:expr) => ({
+        let _lock = FFI_CALL_MUTEX.lock();
+        $call
+    })
+}
 
 /// Ensures `vsscript_init()` has been called at least once.
+// TODO: `vsscript_init()` is already thread-safe with `std::call_once()`, maybe this can be done
+// differently to remove the thread protection on Rust's side? An idea is to have a special type
+// which calls `vsscript_init()` in `new()` and `vsscript_finalize()` in `drop()` and have the rest
+// of the API accessible through that type, however that could become somewhat unergonomic with
+// having to store its lifetime everywhere and potentially pass it around the threads.
 fn maybe_initialize() {
-    if !VSSCRIPT_INITIALIZED.swap(true, Ordering::Relaxed) {
-        unsafe {
-            ffi::vsscript_init();
-        }
-    }
+    static ONCE: Once = ONCE_INIT;
+
+    ONCE.call_once(|| unsafe {
+        ffi::vsscript_init();
+    });
 }
 
 /// A container for a VSScript error.
@@ -77,7 +92,7 @@ impl Environment {
         maybe_initialize();
 
         let mut handle = unsafe { mem::uninitialized() };
-        let rv = unsafe { ffi::vsscript_createScript(&mut handle) };
+        let rv = unsafe { call_vsscript!(ffi::vsscript_createScript(&mut handle)) };
 
         if rv != 0 {
             Err(Error(Self { handle }))
@@ -93,8 +108,14 @@ impl Environment {
         maybe_initialize();
 
         let mut handle = ptr::null_mut();
-        let rv =
-            unsafe { ffi::vsscript_evaluateScript(&mut handle, script.as_ptr(), ptr::null(), 0) };
+        let rv = unsafe {
+            call_vsscript!(ffi::vsscript_evaluateScript(
+                &mut handle,
+                script.as_ptr(),
+                ptr::null(),
+                0
+            ))
+        };
 
         if rv != 0 {
             Err(
@@ -127,12 +148,12 @@ impl Environment {
 
         let mut handle = ptr::null_mut();
         let rv = unsafe {
-            ffi::vsscript_evaluateScript(
+            call_vsscript!(ffi::vsscript_evaluateScript(
                 &mut handle,
                 script.as_ptr(),
                 path.as_ptr(),
                 flags.ffi_type(),
-            )
+            ))
         };
 
         if rv != 0 {
