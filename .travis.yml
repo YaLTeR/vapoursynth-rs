@@ -1,0 +1,27 @@
+sudo: required
+language: rust
+rust:
+- stable
+- beta
+- nightly
+matrix:
+  allow_failures:
+  - rust: nightly
+env:
+  global:
+  - RUST_BACKTRACE=1
+cache: cargo
+
+before_install:
+- bash .travis/install-vapoursynth.sh
+
+script:
+  # Build and test with no features
+- cargo build --verbose
+- cargo test --verbose
+
+  # Build with all features
+- cargo build --verbose --all-features
+
+  # Test with minimal features
+- cd vapoursynth; cargo test --verbose --features 'vapoursynth-functions vsscript-functions'

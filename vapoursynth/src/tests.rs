@@ -7,9 +7,8 @@ use video_info::{Framerate, Resolution};
 #[test]
 fn green() {
     let api = API::get().unwrap();
-    let env =
-        vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::SetWorkingDir)
-            .unwrap();
+    let env = vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
+        .unwrap();
     let node = env.get_output(api, 0).unwrap();
     let info = node.info();
 
@@ -79,10 +78,9 @@ fn green_from_string() {
 #[test]
 fn variable() {
     let api = API::get().unwrap();
-    let env = vsscript::Environment::from_file(
-        "test-vpy/variable.vpy",
-        vsscript::EvalFlags::SetWorkingDir,
-    ).unwrap();
+    let env =
+        vsscript::Environment::from_file("test-vpy/variable.vpy", vsscript::EvalFlags::Nothing)
+            .unwrap();
     let node = env.get_output(api, 0).unwrap();
     let info = node.info();
 
