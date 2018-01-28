@@ -1,6 +1,8 @@
 use std::ffi::CStr;
 use vapoursynth_sys as ffi;
 
+// TODO: expand this into fields like `VideoInfo`.
+/// Contains information about a video format.
 #[derive(Debug, Clone, Copy)]
 pub struct Format {
     handle: *const ffi::VSFormat,
