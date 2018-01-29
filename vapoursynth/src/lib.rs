@@ -16,6 +16,9 @@ pub use api::API;
 pub mod format;
 pub use format::Format;
 
+pub mod frame;
+pub use frame::Frame;
+
 pub mod node;
 pub use node::Node;
 

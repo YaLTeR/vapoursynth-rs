@@ -1,6 +1,8 @@
+use std::ffi::{CStr, CString};
 use vapoursynth_sys as ffi;
 
 use api::API;
+use frame::Frame;
 use video_info::VideoInfo;
 
 bitflags! {
@@ -67,6 +69,32 @@ impl Node {
         unsafe {
             let ptr = self.api.get_video_info(self.handle);
             VideoInfo::from_ptr(ptr)
+        }
+    }
+
+    /// Generates a frame directly.
+    ///
+    /// # Panics
+    /// Panics is `n` is greater than `i32::max_value()`.
+    pub fn get_frame(&self, n: usize) -> Result<Frame, CString> {
+        assert!(n <= i32::max_value() as usize);
+        let n = n as i32;
+
+        // Kinda arbitrary. Same value as used in vsvfw.
+        const ERROR_BUF_CAPACITY: usize = 32 * 1024;
+
+        let mut err_buf = Vec::with_capacity(ERROR_BUF_CAPACITY);
+        err_buf.resize(ERROR_BUF_CAPACITY, 0);
+        let mut err_buf = err_buf.into_boxed_slice();
+
+        let handle = unsafe { self.api.get_frame(n, self.handle, &mut *err_buf) };
+
+        if handle.is_null() {
+            // TODO: remove this extra allocation by reusing `Box<[c_char]>`.
+            let error = unsafe { CStr::from_ptr(err_buf.as_ptr()) }.to_owned();
+            Err(error)
+        } else {
+            Ok(unsafe { Frame::new(self.api, handle) })
         }
     }
 }
