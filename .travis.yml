@@ -36,5 +36,5 @@ deploy:
   github_token: "$GITHUB_TOKEN"
   local_dir: target/doc
   on:
-    branch: ci-docs
+    branch: master
     rust: stable
