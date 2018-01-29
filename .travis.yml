@@ -23,5 +23,18 @@ script:
   # Build with all features
 - cargo build --verbose --all-features
 
+  # Doc with all features
+- cargo doc --verbose --all-features
+- cp .travis/index.html target/doc/
+
   # Test with minimal features
 - cd vapoursynth; cargo test --verbose --features 'vapoursynth-functions vsscript-functions'
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: "$GITHUB_TOKEN"
+  local_dir: target/doc
+  on:
+    branch: ci-docs
+    rust: stable
