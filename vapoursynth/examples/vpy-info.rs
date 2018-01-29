@@ -83,7 +83,7 @@ fn run() -> Result<(), Error> {
             .map_err(|e| err_msg(e.to_string_lossy().into_owned()))
             .context("Couldn't get the frame")?;
 
-        println!("");
+        println!();
         println!("Frame #{}", n);
 
         let format = frame.format();
@@ -91,9 +91,13 @@ fn run() -> Result<(), Error> {
         println!("Plane count: {}", format.plane_count());
 
         for plane in 0..format.plane_count() {
-            println!("");
+            println!();
             println!("Plane #{}", plane);
-            println!("Resolution: {}×{}", frame.width(plane), frame.height(plane));
+            println!(
+                "Resolution: {}×{}",
+                frame.width(plane),
+                frame.height(plane)
+            );
             println!("Stride: {}", frame.stride(plane));
         }
     }

@@ -53,17 +53,16 @@ fn green() {
             }
         );
 
-        let color = if plane == 1 {
-            [255; 1920]
-        } else {
-            [0; 1920]
-        };
+        let color = if plane == 1 { [255; 1920] } else { [0; 1920] };
 
         let stride = frame.stride(plane);
         let plane = frame.data(plane);
 
         for row in 0..resolution.height {
-            assert_eq!(&plane[row * stride..row * stride + resolution.width], &color[..]);
+            assert_eq!(
+                &plane[row * stride..row * stride + resolution.width],
+                &color[..]
+            );
         }
     }
 }
@@ -117,17 +116,16 @@ fn green_from_string() {
             }
         );
 
-        let color = if plane == 1 {
-            [255; 1920]
-        } else {
-            [0; 1920]
-        };
+        let color = if plane == 1 { [255; 1920] } else { [0; 1920] };
 
         let stride = frame.stride(plane);
         let plane = frame.data(plane);
 
         for row in 0..resolution.height {
-            assert_eq!(&plane[row * stride..row * stride + resolution.width], &color[..]);
+            assert_eq!(
+                &plane[row * stride..row * stride + resolution.width],
+                &color[..]
+            );
         }
     }
 }
@@ -167,11 +165,7 @@ fn variable() {
             }
         );
 
-        let color = if plane == 1 {
-            [255; 1920]
-        } else {
-            [0; 1920]
-        };
+        let color = if plane == 1 { [255; 1920] } else { [0; 1920] };
 
         let stride = frame.stride(plane);
         let plane = frame.data(plane);
@@ -203,6 +197,9 @@ fn variable() {
     let plane = frame.data(plane);
 
     for row in 0..resolution.height {
-        assert_eq!(&plane[row * stride..row * stride + resolution.width], &color[..]);
+        assert_eq!(
+            &plane[row * stride..row * stride + resolution.width],
+            &color[..]
+        );
     }
 }

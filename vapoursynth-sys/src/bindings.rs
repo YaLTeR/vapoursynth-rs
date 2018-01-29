@@ -41,7 +41,6 @@ pub struct VSFrameContext {
     _unused: [u8; 0],
 }
 #[repr(i32)]
-#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSColorFamily {
     cmGray = 1000000,
@@ -51,14 +50,12 @@ pub enum VSColorFamily {
     cmCompat = 9000000,
 }
 #[repr(i32)]
-#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSSampleType {
     stInteger = 0,
     stFloat = 1,
 }
 #[repr(i32)]
-#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSPresetFormat {
     pfNone = 0,
@@ -99,7 +96,6 @@ pub enum VSPresetFormat {
     pfCompatYUY2 = 9000011,
 }
 #[repr(i32)]
-#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSFilterMode {
     fmParallel = 100,
@@ -154,7 +150,6 @@ impl ::std::ops::BitAndAssign for VSNodeFlags {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct VSNodeFlags(pub c_int);
 #[repr(i32)]
-#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSPropTypes {
     ptUnset = 117,
@@ -166,7 +161,6 @@ pub enum VSPropTypes {
     ptFunction = 109,
 }
 #[repr(i32)]
-#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSGetPropErrors {
     peUnset = 1,
@@ -174,7 +168,6 @@ pub enum VSGetPropErrors {
     peIndex = 4,
 }
 #[repr(i32)]
-#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSPropAppendMode {
     paReplace = 0,
@@ -203,7 +196,6 @@ pub struct VSVideoInfo {
     pub flags: c_int,
 }
 #[repr(i32)]
-#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSActivationReason {
     arInitial = 0,
@@ -212,7 +204,6 @@ pub enum VSActivationReason {
     arError = -1,
 }
 #[repr(i32)]
-#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSMessageType {
     mtDebug = 0,
@@ -499,7 +490,6 @@ pub struct VSScript {
     _unused: [u8; 0],
 }
 #[repr(i32)]
-#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSEvalFlags {
     efSetWorkingDir = 1,
