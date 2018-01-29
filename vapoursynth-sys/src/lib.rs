@@ -1,3 +1,6 @@
+//! Raw bindings to [VapourSynth](https://github.com/vapoursynth/vapoursynth).
+#![doc(html_root_url = "https://yalter.github.io/vapoursynth-rs/vapoursynth_sys")]
+
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]

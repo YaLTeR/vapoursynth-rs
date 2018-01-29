@@ -2,7 +2,18 @@
 name = "vapoursynth-sys"
 version = "0.1.0"
 authors = ["Ivan Molodetskikh <yalterz@gmail.com>"]
+description = "Rust bindings for vapoursynth and vsscript."
+license = "MIT/Apache-2.0"
 build = "build.rs"
+
+readme = "README.md"
+documentation = "https://yalter.github.io/vapoursynth-rs/vapoursynth_sys"
+repository = "https://github.com/YaLTeR/vapoursynth-rs"
+keywords = ["vapoursynth", "vsscript", "video", "bindings"]
+categories = ["api-bindings", "external-ffi-bindings", "multimedia::video"]
+
+[badges]
+travis-ci = { repository = "YaLTeR/vapoursynth-rs" }
 
 [dependencies]
 cfg-if = "0.1"
