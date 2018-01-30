@@ -7,6 +7,9 @@ pub struct API {
     handle: *const ffi::VSAPI,
 }
 
+unsafe impl Send for API {}
+unsafe impl Sync for API {}
+
 impl API {
     /// Retrieves the VapourSynth API.
     ///

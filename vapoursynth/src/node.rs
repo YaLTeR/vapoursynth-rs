@@ -37,6 +37,9 @@ pub struct Node {
     handle: *mut ffi::VSNodeRef,
 }
 
+unsafe impl Send for Node {}
+unsafe impl Sync for Node {}
+
 impl Drop for Node {
     fn drop(&mut self) {
         unsafe {

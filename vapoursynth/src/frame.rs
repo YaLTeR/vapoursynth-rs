@@ -12,6 +12,9 @@ pub struct Frame {
     handle: *const ffi::VSFrameRef,
 }
 
+unsafe impl Send for Frame {}
+unsafe impl Sync for Frame {}
+
 impl Drop for Frame {
     fn drop(&mut self) {
         unsafe {
