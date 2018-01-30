@@ -168,6 +168,18 @@ impl Environment {
         }
     }
 
+    /// Cancels a node set for output. The node will no longer be available to `get_output()`.
+    ///
+    /// If there's no node corresponding to the given `index`, `None` is returned.
+    pub fn clear_output(&self, index: i32) -> Option<()> {
+        let rv = unsafe { ffi::vsscript_clearOutput(self.handle, index) };
+        if rv != 0 {
+            None
+        } else {
+            Some(())
+        }
+    }
+
     /// Returns the error message from a script environment.
     ///
     /// # Safety

@@ -203,3 +203,12 @@ fn variable() {
         );
     }
 }
+
+#[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
+#[test]
+fn clear_output() {
+    let env = vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
+    assert!(env.clear_output(1).is_none());
+    assert!(env.clear_output(0).is_some());
+    assert!(env.clear_output(0).is_none());
+}
