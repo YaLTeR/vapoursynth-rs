@@ -27,6 +27,15 @@ impl EvalFlags {
     }
 }
 
+/// Contains two possible variants of arguments to `Environment::evaluate_script()`.
+#[derive(Clone, Copy)]
+enum EvaluateScriptArgs<'a> {
+    /// Evaluate a script contained in the string.
+    Script(&'a str),
+    /// Evaluate a script contained in the file.
+    File(&'a Path, EvalFlags),
+}
+
 /// A wrapper for the VSScript environment.
 #[derive(Debug)]
 pub struct Environment {
@@ -64,63 +73,79 @@ impl Environment {
         }
     }
 
-    /// Creates a script environment and evaluates a script contained in a string.
-    pub fn from_script(script: &str) -> Result<Self> {
-        let script = CString::new(script)?;
+    /// Creates an invalid, null `Environment`.
+    ///
+    /// # Safety
+    /// This function returns an invalid `Environment` which will behave incorrectly. The `handle`
+    /// pointer must be set to a valid value before use.
+    unsafe fn null() -> Self {
+        Self {
+            handle: ptr::null_mut(),
+        }
+    }
 
-        maybe_initialize();
+    /// Calls `vsscript_evaluateScript()`. Can be used to initialize a null `Environment`.
+    ///
+    /// # Safety
+    /// The caller must ensure `vsscript_initialize()` has been called at least once.
+    unsafe fn evaluate_script(mut self, args: EvaluateScriptArgs) -> Result<Self> {
+        let (script, path, flags) = match args {
+            EvaluateScriptArgs::Script(script) => (script.to_owned(), None, EvalFlags::Nothing),
+            EvaluateScriptArgs::File(path, flags) => {
+                let mut file = File::open(path).map_err(Error::FileOpen)?;
+                let mut script = String::new();
+                file.read_to_string(&mut script).map_err(Error::FileRead)?;
 
-        let mut handle = ptr::null_mut();
-        let rv = unsafe {
-            call_vsscript!(ffi::vsscript_evaluateScript(
-                &mut handle,
-                script.as_ptr(),
-                ptr::null(),
-                0
-            ))
+                // vsscript throws an error if it's not valid UTF-8 anyway.
+                let path = path.to_str().ok_or(Error::PathInvalidUnicode)?;
+                let path = CString::new(path)?;
+
+                (script, Some(path), flags)
+            }
         };
 
+        let script = CString::new(script)?;
+
+        let rv = call_vsscript!(ffi::vsscript_evaluateScript(
+            &mut self.handle,
+            script.as_ptr(),
+            path.as_ref().map(|p| p.as_ptr()).unwrap_or(ptr::null()),
+            flags.ffi_type(),
+        ));
+
         if rv != 0 {
-            Err(unsafe {
-                VSScriptError::from_environment(Self { handle }).into()
-            })
+            Err(VSScriptError::from_environment(self).into())
         } else {
-            Ok(Self { handle })
+            Ok(self)
         }
+    }
+
+    /// Creates a script environment and evaluates a script contained in a string.
+    pub fn from_script(script: &str) -> Result<Self> {
+        maybe_initialize();
+
+        unsafe { Self::evaluate_script(Self::null(), EvaluateScriptArgs::Script(script)) }
     }
 
     /// Creates a script environment and evaluates a script contained in a file.
     pub fn from_file<P: AsRef<Path>>(path: P, flags: EvalFlags) -> Result<Self> {
-        let mut file = File::open(path.as_ref()).map_err(Error::FileOpen)?;
-        let mut script = String::new();
-        file.read_to_string(&mut script).map_err(Error::FileRead)?;
-        drop(file);
-
-        let script = CString::new(script)?;
-
-        // vsscript throws an error if it's not valid UTF-8 anyway.
-        let path = path.as_ref().to_str().ok_or(Error::PathInvalidUnicode)?;
-        let path = CString::new(path)?;
-
         maybe_initialize();
 
-        let mut handle = ptr::null_mut();
-        let rv = unsafe {
-            call_vsscript!(ffi::vsscript_evaluateScript(
-                &mut handle,
-                script.as_ptr(),
-                path.as_ptr(),
-                flags.ffi_type(),
-            ))
-        };
-
-        if rv != 0 {
-            Err(unsafe {
-                VSScriptError::from_environment(Self { handle }).into()
-            })
-        } else {
-            Ok(Self { handle })
+        unsafe {
+            Self::evaluate_script(Self::null(), EvaluateScriptArgs::File(path.as_ref(), flags))
         }
+    }
+
+    /// Evaluates a script contained in a string.
+    // TODO: somehow make this a method from &self?
+    pub fn eval_script(self, script: &str) -> Result<Self> {
+        unsafe { Self::evaluate_script(self, EvaluateScriptArgs::Script(script)) }
+    }
+
+    /// Evaluates a script contained in a file.
+    // TODO: somehow make this a method from &self?
+    pub fn eval_file<P: AsRef<Path>>(self, path: P, flags: EvalFlags) -> Result<Self> {
+        unsafe { Self::evaluate_script(self, EvaluateScriptArgs::File(path.as_ref(), flags)) }
     }
 
     /// Clears the script environment.
