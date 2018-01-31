@@ -97,7 +97,7 @@ impl Node {
             let error = unsafe { CStr::from_ptr(err_buf.as_ptr()) }.to_owned();
             Err(error)
         } else {
-            Ok(unsafe { Frame::new(self.api, handle) })
+            Ok(unsafe { Frame::from_ptr(self.api, handle) })
         }
     }
 }

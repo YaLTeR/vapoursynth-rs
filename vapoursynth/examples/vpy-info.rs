@@ -17,7 +17,7 @@ fn usage() {
 #[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
 fn run() -> Result<(), Error> {
     use std::fmt::Debug;
-    use vapoursynth::{vsscript, Property};
+    use vapoursynth::{vsscript, Property, VSMap};
 
     let filename = env::args()
         .nth(1)
@@ -89,6 +89,18 @@ fn run() -> Result<(), Error> {
         let format = frame.format();
         println!("Format: {}", format.name().to_string_lossy());
         println!("Plane count: {}", format.plane_count());
+
+        let props = frame.props();
+        let count = props.key_count();
+
+        if count > 0 {
+            println!();
+        }
+
+        for k in 0..count {
+            let key = props.key(k);
+            println!("Property: {}", key.to_string_lossy());
+        }
 
         for plane in 0..format.plane_count() {
             println!();

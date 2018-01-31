@@ -3,6 +3,7 @@ use vapoursynth_sys as ffi;
 
 use api::API;
 use format::Format;
+use map::MapRef;
 use video_info::Resolution;
 
 /// Contains one frame of a clip.
@@ -28,7 +29,7 @@ impl Frame {
     ///
     /// # Safety
     /// The caller must ensure `handle` is valid.
-    pub(crate) unsafe fn new(api: API, handle: *const ffi::VSFrameRef) -> Self {
+    pub(crate) unsafe fn from_ptr(api: API, handle: *const ffi::VSFrameRef) -> Self {
         Self { api, handle }
     }
 
@@ -105,5 +106,10 @@ impl Frame {
         let ptr = unsafe { self.api.get_frame_read_ptr(self.handle, plane as i32) };
 
         unsafe { slice::from_raw_parts(ptr, length) }
+    }
+
+    /// Returns a map of frame's properties.
+    pub fn props(&self) -> MapRef<Self> {
+        unsafe { MapRef::from_ptr(self.api, self, self.api.get_frame_props_ro(self.handle)) }
     }
 }

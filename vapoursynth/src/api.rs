@@ -126,4 +126,53 @@ impl API {
     ) -> *const u8 {
         ((*self.handle).getReadPtr)(frame, plane)
     }
+
+    /// Returns a read-only pointer to a frame's properties.
+    ///
+    /// # Safety
+    /// The caller must ensure `frame` is valid and the correct lifetime is assigned to the
+    /// returned map (it can't outlive `frame`).
+    pub(crate) unsafe fn get_frame_props_ro(
+        self,
+        frame: *const ffi::VSFrameRef,
+    ) -> *const ffi::VSMap {
+        ((*self.handle).getFramePropsRO)(frame)
+    }
+
+    /// Creates a new `VSMap`.
+    pub(crate) fn create_map(self) -> *mut ffi::VSMap {
+        unsafe { ((*self.handle).createMap)() }
+    }
+
+    /// Clears `map`.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` is valid.
+    pub(crate) unsafe fn clear_map(self, map: *mut ffi::VSMap) {
+        ((*self.handle).clearMap)(map);
+    }
+
+    /// Frees `map`.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` is valid.
+    pub(crate) unsafe fn free_map(self, map: *mut ffi::VSMap) {
+        ((*self.handle).freeMap)(map);
+    }
+
+    /// Returns the number of keys contained in a map.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` is valid.
+    pub(crate) unsafe fn prop_num_keys(self, map: *const ffi::VSMap) -> i32 {
+        ((*self.handle).propNumKeys)(map)
+    }
+
+    /// Returns a key from a property map.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` is valid and `index` is valid for `map`.
+    pub(crate) unsafe fn prop_get_key(self, map: *const ffi::VSMap, index: i32) -> *const c_char {
+        ((*self.handle).propGetKey)(map, index)
+    }
 }

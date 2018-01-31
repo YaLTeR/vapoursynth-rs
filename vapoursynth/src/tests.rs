@@ -65,6 +65,11 @@ fn green() {
             );
         }
     }
+
+    let props = frame.props();
+    assert_eq!(props.key_count(), 2);
+    assert_eq!(props.key(0).to_string_lossy(), "_DurationDen");
+    assert_eq!(props.key(1).to_string_lossy(), "_DurationNum");
 }
 
 #[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
@@ -128,6 +133,11 @@ fn green_from_string() {
             );
         }
     }
+
+    let props = frame.props();
+    assert_eq!(props.key_count(), 2);
+    assert_eq!(props.key(0).to_string_lossy(), "_DurationDen");
+    assert_eq!(props.key(1).to_string_lossy(), "_DurationNum");
 }
 
 #[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
@@ -175,6 +185,11 @@ fn variable() {
         }
     }
 
+    let props = frame.props();
+    assert_eq!(props.key_count(), 2);
+    assert_eq!(props.key(0).to_string_lossy(), "_DurationDen");
+    assert_eq!(props.key(1).to_string_lossy(), "_DurationNum");
+
     // Test the first frame of the next format.
     let frame = node.get_frame(100).unwrap();
     let format = frame.format();
@@ -202,6 +217,11 @@ fn variable() {
             &color[..]
         );
     }
+
+    let props = frame.props();
+    assert_eq!(props.key_count(), 2);
+    assert_eq!(props.key(0).to_string_lossy(), "_DurationDen");
+    assert_eq!(props.key(1).to_string_lossy(), "_DurationNum");
 }
 
 #[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
