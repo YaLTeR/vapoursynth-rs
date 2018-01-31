@@ -1,45 +1,47 @@
 use std::ffi::CStr;
+use std::marker::PhantomData;
 use vapoursynth_sys as ffi;
 
 use api::API;
 
 // TODO: impl Eq on this stuff, impl Clone on Map, impl From for/to HashMap.
-// TODO: we don't actually need to store the reference to the owner, it's there to guarantee the
-// lifetime (so the owner doesn't get moved somewhere with a shorter lifetime and freed thus making
-// the MapRef invalid).
 
 /// A non-owned non-mutable VapourSynth map.
 #[derive(Debug, Clone, Copy)]
-pub struct MapRef<'a, T: 'a> {
+pub struct MapRef<'a> {
     api: API,
     handle: *const ffi::VSMap,
-    owner: &'a T,
+    owner: PhantomData<&'a ()>,
 }
 
-unsafe impl<'a, T: 'a> Send for MapRef<'a, T> {}
-unsafe impl<'a, T: 'a> Sync for MapRef<'a, T> {}
+unsafe impl<'a> Send for MapRef<'a> {}
+unsafe impl<'a> Sync for MapRef<'a> {}
 
-impl<'a, T: 'a> MapRef<'a, T> {
+impl<'a> MapRef<'a> {
     /// Wraps `handle` in a `MapRef`.
     ///
     /// # Safety
     /// The caller must ensure `handle` is valid and the provided owner's lifetime is correct for
     /// the given `handle`.
-    pub(crate) unsafe fn from_ptr(api: API, owner: &'a T, handle: *const ffi::VSMap) -> Self {
-        Self { api, handle, owner }
+    pub(crate) unsafe fn from_ptr<T>(api: API, _owner: &'a T, handle: *const ffi::VSMap) -> Self {
+        Self {
+            api,
+            handle,
+            owner: PhantomData,
+        }
     }
 }
 
 /// A non-owned mutable VapourSynth map.
 #[derive(Debug)]
-pub struct MapRefMut<'a, T: 'a> {
+pub struct MapRefMut<'a> {
     api: API,
     handle: *mut ffi::VSMap,
-    owner: &'a mut T,
+    owner: PhantomData<&'a mut ()>,
 }
 
-unsafe impl<'a, T: 'a> Send for MapRefMut<'a, T> {}
-unsafe impl<'a, T: 'a> Sync for MapRefMut<'a, T> {}
+unsafe impl<'a> Send for MapRefMut<'a> {}
+unsafe impl<'a> Sync for MapRefMut<'a> {}
 
 /// An owned VapourSynth map.
 #[derive(Debug)]
@@ -123,7 +125,7 @@ mod sealed {
         fn handle_mut(&mut self) -> *mut ffi::VSMap;
     }
 
-    impl<'a, T: 'a> VSMapInterface for MapRef<'a, T> {
+    impl<'a> VSMapInterface for MapRef<'a> {
         fn api(&self) -> API {
             self.api
         }
@@ -133,7 +135,7 @@ mod sealed {
         }
     }
 
-    impl<'a, T: 'a> VSMapInterface for MapRefMut<'a, T> {
+    impl<'a> VSMapInterface for MapRefMut<'a> {
         fn api(&self) -> API {
             self.api
         }
@@ -143,7 +145,7 @@ mod sealed {
         }
     }
 
-    impl<'a, T: 'a> VSMapMutInterface for MapRefMut<'a, T> {
+    impl<'a> VSMapMutInterface for MapRefMut<'a> {
         fn handle_mut(&mut self) -> *mut ffi::VSMap {
             self.handle
         }

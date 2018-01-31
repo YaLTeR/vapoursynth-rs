@@ -109,7 +109,7 @@ impl Frame {
     }
 
     /// Returns a map of frame's properties.
-    pub fn props(&self) -> MapRef<Self> {
+    pub fn props(&self) -> MapRef {
         unsafe { MapRef::from_ptr(self.api, self, self.api.get_frame_props_ro(self.handle)) }
     }
 }
