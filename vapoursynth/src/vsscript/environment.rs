@@ -161,7 +161,7 @@ impl Environment {
         if node_handle.is_null() {
             None
         } else {
-            Some(unsafe { Node::new(api, node_handle) })
+            Some(unsafe { Node::from_ptr(api, node_handle) })
         }
     }
 

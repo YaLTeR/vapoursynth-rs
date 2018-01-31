@@ -63,7 +63,7 @@ impl Node {
     ///
     /// # Safety
     /// The caller must ensure `handle` is valid.
-    pub(crate) unsafe fn new(api: API, handle: *mut ffi::VSNodeRef) -> Self {
+    pub(crate) unsafe fn from_ptr(api: API, handle: *mut ffi::VSNodeRef) -> Self {
         Self { api, handle }
     }
 
