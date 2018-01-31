@@ -1,7 +1,5 @@
-use std::ffi::NulError;
+use std::ffi::{CString, NulError};
 use std::{fmt, io, result};
-
-use vsscript::*;
 
 /// The error type for `vsscript` operations.
 #[derive(Fail, Debug)]
@@ -14,7 +12,7 @@ pub enum Error {
     FileRead(#[cause] io::Error),
     #[fail(display = "Path isn't valid Unicode")]
     PathInvalidUnicode,
-    #[fail(display = "An error occurred in vsscript")]
+    #[fail(display = "An error occurred in VSScript")]
     VSScript(#[cause] VSScriptError),
 }
 
@@ -34,21 +32,17 @@ pub(crate) type Result<T> = result::Result<T, Error>;
 
 /// A container for a VSScript error.
 #[derive(Fail, Debug)]
-pub struct VSScriptError(Environment);
+pub struct VSScriptError(CString);
 
 impl fmt::Display for VSScriptError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let message = unsafe { self.0.get_error() };
-        write!(f, "{}", message.to_string_lossy())
+        write!(f, "{}", self.0.to_string_lossy())
     }
 }
 
 impl VSScriptError {
-    /// Wraps `environment` into a `VSScriptError`.
-    ///
-    /// # Safety
-    /// The caller must ensure `environment` has an error.
-    pub(crate) unsafe fn from_environment(environment: Environment) -> Self {
-        VSScriptError(environment)
+    /// Creates a new `VSScriptError` with the given error message.
+    pub(crate) fn new(message: CString) -> Self {
+        VSScriptError(message)
     }
 }

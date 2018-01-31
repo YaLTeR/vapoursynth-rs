@@ -1,6 +1,6 @@
 use std::ffi::{CStr, CString};
 use std::fs::File;
-use std::{mem, ptr};
+use std::ptr;
 use std::io::Read;
 use std::path::Path;
 use vapoursynth_sys as ffi;
@@ -54,6 +54,15 @@ impl Drop for Environment {
 }
 
 impl Environment {
+    /// Retrieves the VSScript error message.
+    ///
+    /// # Safety
+    /// This function must only be called if an error is present.
+    unsafe fn error(&self) -> CString {
+        let message = ffi::vsscript_getError(self.handle);
+        CStr::from_ptr(message).to_owned()
+    }
+
     /// Creates an empty script environment.
     ///
     /// Useful if it is necessary to set some variable in the script environment before evaluating
@@ -61,34 +70,24 @@ impl Environment {
     pub fn new() -> Result<Self> {
         maybe_initialize();
 
-        let mut handle = unsafe { mem::uninitialized() };
+        let mut handle = ptr::null_mut();
         let rv = unsafe { call_vsscript!(ffi::vsscript_createScript(&mut handle)) };
+        let environment = Self { handle };
 
         if rv != 0 {
-            Err(unsafe {
-                VSScriptError::from_environment(Self { handle }).into()
-            })
+            Err(VSScriptError::new(unsafe { environment.error() }).into())
         } else {
-            Ok(Self { handle })
+            Ok(environment)
         }
     }
 
-    /// Creates an invalid, null `Environment`.
+    /// Calls `vsscript_evaluateScript()`.
     ///
-    /// # Safety
-    /// This function returns an invalid `Environment` which will behave incorrectly. The `handle`
-    /// pointer must be set to a valid value before use.
-    unsafe fn null() -> Self {
-        Self {
-            handle: ptr::null_mut(),
-        }
-    }
-
-    /// Calls `vsscript_evaluateScript()`. Can be used to initialize a null `Environment`.
-    ///
-    /// # Safety
-    /// The caller must ensure `vsscript_initialize()` has been called at least once.
-    unsafe fn evaluate_script(mut self, args: EvaluateScriptArgs) -> Result<Self> {
+    /// `self` is taken by a mutable reference mainly to ensure the atomicity of a call to
+    /// `vsscript_evaluateScript()` (a function that could produce an error) and the following call
+    /// to `vsscript_getError()`. If atomicity is not enforced, another thread could perform some
+    /// operation between these two and clear or change the error message.
+    fn evaluate_script(&mut self, args: EvaluateScriptArgs) -> Result<()> {
         let (script, path, flags) = match args {
             EvaluateScriptArgs::Script(script) => (script.to_owned(), None, EvalFlags::Nothing),
             EvaluateScriptArgs::File(path, flags) => {
@@ -106,46 +105,44 @@ impl Environment {
 
         let script = CString::new(script)?;
 
-        let rv = call_vsscript!(ffi::vsscript_evaluateScript(
-            &mut self.handle,
-            script.as_ptr(),
-            path.as_ref().map(|p| p.as_ptr()).unwrap_or(ptr::null()),
-            flags.ffi_type(),
-        ));
+        let rv = unsafe {
+            call_vsscript!(ffi::vsscript_evaluateScript(
+                &mut self.handle,
+                script.as_ptr(),
+                path.as_ref().map(|p| p.as_ptr()).unwrap_or(ptr::null()),
+                flags.ffi_type(),
+            ))
+        };
 
         if rv != 0 {
-            Err(VSScriptError::from_environment(self).into())
+            Err(VSScriptError::new(unsafe { self.error() }).into())
         } else {
-            Ok(self)
+            Ok(())
         }
     }
 
     /// Creates a script environment and evaluates a script contained in a string.
     pub fn from_script(script: &str) -> Result<Self> {
-        maybe_initialize();
-
-        unsafe { Self::evaluate_script(Self::null(), EvaluateScriptArgs::Script(script)) }
+        let mut environment = Self::new()?;
+        environment.evaluate_script(EvaluateScriptArgs::Script(script))?;
+        Ok(environment)
     }
 
     /// Creates a script environment and evaluates a script contained in a file.
     pub fn from_file<P: AsRef<Path>>(path: P, flags: EvalFlags) -> Result<Self> {
-        maybe_initialize();
-
-        unsafe {
-            Self::evaluate_script(Self::null(), EvaluateScriptArgs::File(path.as_ref(), flags))
-        }
+        let mut environment = Self::new()?;
+        environment.evaluate_script(EvaluateScriptArgs::File(path.as_ref(), flags))?;
+        Ok(environment)
     }
 
     /// Evaluates a script contained in a string.
-    // TODO: somehow make this a method from &self?
-    pub fn eval_script(self, script: &str) -> Result<Self> {
-        unsafe { Self::evaluate_script(self, EvaluateScriptArgs::Script(script)) }
+    pub fn eval_script(&mut self, script: &str) -> Result<()> {
+        self.evaluate_script(EvaluateScriptArgs::Script(script))
     }
 
     /// Evaluates a script contained in a file.
-    // TODO: somehow make this a method from &self?
-    pub fn eval_file<P: AsRef<Path>>(self, path: P, flags: EvalFlags) -> Result<Self> {
-        unsafe { Self::evaluate_script(self, EvaluateScriptArgs::File(path.as_ref(), flags)) }
+    pub fn eval_file<P: AsRef<Path>>(&mut self, path: P, flags: EvalFlags) -> Result<()> {
+        self.evaluate_script(EvaluateScriptArgs::File(path.as_ref(), flags))
     }
 
     /// Clears the script environment.
@@ -178,14 +175,5 @@ impl Environment {
         } else {
             Some(())
         }
-    }
-
-    /// Returns the error message from a script environment.
-    ///
-    /// # Safety
-    /// This must be called when an error is known to be present.
-    pub(crate) unsafe fn get_error(&self) -> &CStr {
-        let ptr = ffi::vsscript_getError(self.handle);
-        CStr::from_ptr(ptr)
     }
 }
