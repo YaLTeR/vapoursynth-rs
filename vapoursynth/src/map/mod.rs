@@ -152,8 +152,7 @@ pub trait VSMap: sealed::VSMapInterface {
                     $(
                         $pt => {
                             let value = unsafe {
-                                $self.api()
-                                    .$func($self.handle(), key.as_ptr(), index, &mut error)
+                                $self.api().$func($self.handle(), key.as_ptr(), index, &mut error)
                             };
 
                             match error {
