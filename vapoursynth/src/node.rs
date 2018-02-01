@@ -10,6 +10,7 @@ bitflags! {
     pub struct Flags: i32 {
         /// This flag indicates that the frames returned by the filter should not be cached. "Fast"
         /// filters should set this to reduce cache bloat.
+    #[inline]
         const NO_CACHE = ffi::VSNodeFlags_nfNoCache.0;
         /// This flag must not be used in third-party filters. It is used to mark instances of the
         /// built-in Cache filter. Strange things may happen to your filter if you use this flag.
@@ -25,6 +26,7 @@ bitflags! {
 }
 
 impl From<ffi::VSNodeFlags> for Flags {
+    #[inline]
     fn from(flags: ffi::VSNodeFlags) -> Self {
         Self::from_bits_truncate(flags.0)
     }
@@ -41,6 +43,7 @@ unsafe impl Send for Node {}
 unsafe impl Sync for Node {}
 
 impl Drop for Node {
+    #[inline]
     fn drop(&mut self) {
         unsafe {
             self.api.free_node(self.handle);
@@ -49,6 +52,7 @@ impl Drop for Node {
 }
 
 impl Clone for Node {
+    #[inline]
     fn clone(&self) -> Self {
         let handle = unsafe { self.api.clone_node(self.handle) };
         Self {
@@ -63,11 +67,13 @@ impl Node {
     ///
     /// # Safety
     /// The caller must ensure `handle` is valid.
+    #[inline]
     pub(crate) unsafe fn from_ptr(api: API, handle: *mut ffi::VSNodeRef) -> Self {
         Self { api, handle }
     }
 
     /// Returns the video info associated with this `Node`.
+    #[inline]
     pub fn info(&self) -> VideoInfo {
         unsafe {
             let ptr = self.api.get_video_info(self.handle);

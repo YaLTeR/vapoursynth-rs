@@ -23,6 +23,7 @@ impl<'a> MapRef<'a> {
     /// # Safety
     /// The caller must ensure `handle` is valid and the provided owner's lifetime is correct for
     /// the given `handle`.
+    #[inline]
     pub(crate) unsafe fn from_ptr<T>(api: API, _owner: &'a T, handle: *const ffi::VSMap) -> Self {
         Self {
             api,
@@ -54,6 +55,7 @@ unsafe impl Send for Map {}
 unsafe impl Sync for Map {}
 
 impl Drop for Map {
+    #[inline]
     fn drop(&mut self) {
         unsafe {
             self.api.free_map(self.handle);
@@ -63,6 +65,7 @@ impl Drop for Map {
 
 impl Map {
     /// Creates a new `Map`.
+    #[inline]
     pub fn new(api: API) -> Self {
         let handle = api.create_map();
 
@@ -75,6 +78,7 @@ impl Map {
 /// This trait is sealed and is not meant for implementation outside of this crate.
 pub trait VSMap: sealed::VSMapInterface {
     /// Returns the number of keys contained in a map.
+    #[inline]
     fn key_count(&self) -> usize {
         let count = unsafe { self.api().prop_num_keys(self.handle()) };
         assert!(count >= 0);
@@ -85,6 +89,7 @@ pub trait VSMap: sealed::VSMapInterface {
     ///
     /// # Panics
     /// Panics if `index >= self.key_count()`.
+    #[inline]
     fn key(&self, index: usize) -> &CStr {
         assert!(index < self.key_count());
         let index = index as i32;
@@ -98,6 +103,7 @@ pub trait VSMap: sealed::VSMapInterface {
 /// This trait is sealed and is not meant for implementation outside of this crate.
 pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
     /// Clears the map.
+    #[inline]
     fn clear(&mut self) {
         unsafe {
             self.api().clear_map(self.handle_mut());
@@ -127,42 +133,50 @@ mod sealed {
     }
 
     impl<'a> VSMapInterface for MapRef<'a> {
+        #[inline]
         fn api(&self) -> API {
             self.api
         }
 
+        #[inline]
         fn handle(&self) -> *const ffi::VSMap {
             self.handle
         }
     }
 
     impl<'a> VSMapInterface for MapRefMut<'a> {
+        #[inline]
         fn api(&self) -> API {
             self.api
         }
 
+        #[inline]
         fn handle(&self) -> *const ffi::VSMap {
             self.handle
         }
     }
 
     impl<'a> VSMapMutInterface for MapRefMut<'a> {
+        #[inline]
         fn handle_mut(&mut self) -> *mut ffi::VSMap {
             self.handle
         }
     }
 
     impl VSMapInterface for Map {
+        #[inline]
         fn api(&self) -> API {
             self.api
         }
 
+        #[inline]
         fn handle(&self) -> *const ffi::VSMap {
             self.handle
         }
     }
 
     impl VSMapMutInterface for Map {
+        #[inline]
         fn handle_mut(&mut self) -> *mut ffi::VSMap {
             self.handle
         }

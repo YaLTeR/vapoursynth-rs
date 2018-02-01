@@ -19,6 +19,7 @@ pub enum EvalFlags {
 }
 
 impl EvalFlags {
+    #[inline]
     fn ffi_type(self) -> ::std::os::raw::c_int {
         match self {
             EvalFlags::Nothing => 0,
@@ -46,6 +47,7 @@ unsafe impl Send for Environment {}
 unsafe impl Sync for Environment {}
 
 impl Drop for Environment {
+    #[inline]
     fn drop(&mut self) {
         unsafe {
             ffi::vsscript_freeScript(self.handle);
@@ -58,6 +60,7 @@ impl Environment {
     ///
     /// # Safety
     /// This function must only be called if an error is present.
+    #[inline]
     unsafe fn error(&self) -> CString {
         let message = ffi::vsscript_getError(self.handle);
         CStr::from_ptr(message).to_owned()
@@ -122,6 +125,7 @@ impl Environment {
     }
 
     /// Creates a script environment and evaluates a script contained in a string.
+    #[inline]
     pub fn from_script(script: &str) -> Result<Self> {
         let mut environment = Self::new()?;
         environment.evaluate_script(EvaluateScriptArgs::Script(script))?;
@@ -129,6 +133,7 @@ impl Environment {
     }
 
     /// Creates a script environment and evaluates a script contained in a file.
+    #[inline]
     pub fn from_file<P: AsRef<Path>>(path: P, flags: EvalFlags) -> Result<Self> {
         let mut environment = Self::new()?;
         environment.evaluate_script(EvaluateScriptArgs::File(path.as_ref(), flags))?;
@@ -136,16 +141,19 @@ impl Environment {
     }
 
     /// Evaluates a script contained in a string.
+    #[inline]
     pub fn eval_script(&mut self, script: &str) -> Result<()> {
         self.evaluate_script(EvaluateScriptArgs::Script(script))
     }
 
     /// Evaluates a script contained in a file.
+    #[inline]
     pub fn eval_file<P: AsRef<Path>>(&mut self, path: P, flags: EvalFlags) -> Result<()> {
         self.evaluate_script(EvaluateScriptArgs::File(path.as_ref(), flags))
     }
 
     /// Clears the script environment.
+    #[inline]
     pub fn clear(&self) {
         unsafe {
             ffi::vsscript_clearEnvironment(self.handle);
@@ -156,6 +164,7 @@ impl Environment {
     /// for output with the requested index.
     ///
     /// If there's no node corresponding to the given `index`, `None` is returned.
+    #[inline]
     pub fn get_output(&self, api: API, index: i32) -> Option<Node> {
         let node_handle = unsafe { ffi::vsscript_getOutput(self.handle, index) };
         if node_handle.is_null() {
@@ -168,6 +177,7 @@ impl Environment {
     /// Cancels a node set for output. The node will no longer be available to `get_output()`.
     ///
     /// If there's no node corresponding to the given `index`, `None` is returned.
+    #[inline]
     pub fn clear_output(&self, index: i32) -> Option<()> {
         let rv = unsafe { ffi::vsscript_clearOutput(self.handle, index) };
         if rv != 0 {

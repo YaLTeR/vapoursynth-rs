@@ -20,6 +20,7 @@ macro_rules! call_vsscript {
 // which calls `vsscript_init()` in `new()` and `vsscript_finalize()` in `drop()` and have the rest
 // of the API accessible through that type, however that could become somewhat unergonomic with
 // having to store its lifetime everywhere and potentially pass it around the threads.
+#[inline]
 fn maybe_initialize() {
     static ONCE: Once = ONCE_INIT;
 

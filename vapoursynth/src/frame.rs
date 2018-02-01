@@ -17,6 +17,7 @@ unsafe impl Send for Frame {}
 unsafe impl Sync for Frame {}
 
 impl Drop for Frame {
+    #[inline]
     fn drop(&mut self) {
         unsafe {
             self.api.free_frame(self.handle);
@@ -29,11 +30,13 @@ impl Frame {
     ///
     /// # Safety
     /// The caller must ensure `handle` is valid.
+    #[inline]
     pub(crate) unsafe fn from_ptr(api: API, handle: *const ffi::VSFrameRef) -> Self {
         Self { api, handle }
     }
 
     /// Returns the frame format.
+    #[inline]
     pub fn format(&self) -> Format {
         unsafe {
             let ptr = self.api.get_frame_format(self.handle);
@@ -47,6 +50,7 @@ impl Frame {
     ///
     /// # Panics
     /// Panics if `plane >= format().plane_count()`.
+    #[inline]
     pub fn width(&self, plane: usize) -> usize {
         assert!(plane < self.format().plane_count());
 
@@ -59,6 +63,7 @@ impl Frame {
     ///
     /// # Panics
     /// Panics if `plane >= format().plane_count()`.
+    #[inline]
     pub fn height(&self, plane: usize) -> usize {
         assert!(plane < self.format().plane_count());
 
@@ -71,6 +76,7 @@ impl Frame {
     ///
     /// # Panics
     /// Panics if `plane` is invalid for this frame.
+    #[inline]
     pub fn resolution(&self, plane: usize) -> Resolution {
         assert!(plane < self.format().plane_count());
 
@@ -84,6 +90,7 @@ impl Frame {
     ///
     /// # Panics
     /// Panics if `plane >= format().plane_count()`.
+    #[inline]
     pub fn stride(&self, plane: usize) -> usize {
         assert!(plane < self.format().plane_count());
 
@@ -109,6 +116,7 @@ impl Frame {
     }
 
     /// Returns a map of frame's properties.
+    #[inline]
     pub fn props(&self) -> MapRef {
         unsafe { MapRef::from_ptr(self.api, self, self.api.get_frame_props_ro(self.handle)) }
     }

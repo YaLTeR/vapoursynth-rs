@@ -17,12 +17,14 @@ pub enum Error {
 }
 
 impl From<NulError> for Error {
+    #[inline]
     fn from(x: NulError) -> Self {
         Error::CStringConversion(x)
     }
 }
 
 impl From<VSScriptError> for Error {
+    #[inline]
     fn from(x: VSScriptError) -> Self {
         Error::VSScript(x)
     }
@@ -35,6 +37,7 @@ pub(crate) type Result<T> = result::Result<T, Error>;
 pub struct VSScriptError(CString);
 
 impl fmt::Display for VSScriptError {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0.to_string_lossy())
     }
@@ -42,6 +45,7 @@ impl fmt::Display for VSScriptError {
 
 impl VSScriptError {
     /// Creates a new `VSScriptError` with the given error message.
+    #[inline]
     pub(crate) fn new(message: CString) -> Self {
         VSScriptError(message)
     }
