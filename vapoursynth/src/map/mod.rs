@@ -93,7 +93,7 @@ pub trait VSMap: sealed::VSMapInterface {
     #[inline]
     fn key_count(&self) -> usize {
         let count = unsafe { self.api().prop_num_keys(self.handle()) };
-        assert!(count >= 0);
+        debug_assert!(count >= 0);
         count as usize
     }
 
@@ -118,7 +118,7 @@ pub trait VSMap: sealed::VSMapInterface {
         if rv == -1 {
             None
         } else {
-            assert!(rv >= 0);
+            debug_assert!(rv >= 0);
             Some(rv as usize)
         }
     }
@@ -175,8 +175,8 @@ pub trait VSMap: sealed::VSMapInterface {
                     self.api()
                         .prop_get_data_size(self.handle(), key.as_ptr(), index, &mut error)
                 };
-                assert!(error == 0);
-                assert!(size >= 0);
+                debug_assert!(error == 0);
+                debug_assert!(size >= 0);
                 unsafe { slice::from_raw_parts(x as *const u8, size as usize) }
             }),
             ffi::VSPropTypes::ptNode => get_value!(prop_get_node, Value::Node, |x| {
@@ -202,7 +202,7 @@ pub trait VSMap: sealed::VSMapInterface {
                     let ptr = unsafe {
                         self.api().$func(self.handle(), key.as_ptr(), &mut error)
                     };
-                    assert!(error == 0);
+                    debug_assert!(error == 0);
 
                     Ok($value(unsafe { slice::from_raw_parts(ptr, count) }))
             }}
@@ -217,7 +217,7 @@ pub trait VSMap: sealed::VSMapInterface {
                             let value = unsafe {
                                 self.api().$func(self.handle(), key.as_ptr(), index, &mut error)
                             };
-                            assert!(error == 0);
+                            debug_assert!(error == 0);
                             (index, value)
                         })
                         .map($process)
@@ -252,8 +252,8 @@ pub trait VSMap: sealed::VSMapInterface {
                             &mut error,
                         )
                     };
-                    assert!(error == 0);
-                    assert!(size >= 0);
+                    debug_assert!(error == 0);
+                    debug_assert!(size >= 0);
                     unsafe { slice::from_raw_parts(x as *const u8, size as usize) }
                 })
             }

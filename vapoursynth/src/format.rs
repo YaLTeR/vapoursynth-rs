@@ -37,7 +37,7 @@ impl Format {
     #[inline]
     pub fn plane_count(self) -> usize {
         let plane_count = unsafe { (*self.handle).numPlanes };
-        assert!(plane_count >= 0);
+        debug_assert!(plane_count >= 0);
         plane_count as usize
     }
 }
