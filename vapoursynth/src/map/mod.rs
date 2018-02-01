@@ -166,7 +166,7 @@ pub trait VSMap: sealed::VSMapInterface {
         }
 
         match self.value_type(key) {
-            ffi::VSPropTypes::ptUnset => return Err(Error::KeyNotFound),
+            ffi::VSPropTypes::ptUnset => Err(Error::KeyNotFound),
             ffi::VSPropTypes::ptInt => get_value!(prop_get_int, Value::Int, |x| x),
             ffi::VSPropTypes::ptFloat => get_value!(prop_get_float, Value::Float, |x| x),
             ffi::VSPropTypes::ptData => get_value!(prop_get_data, Value::Data, |x| {
@@ -227,7 +227,7 @@ pub trait VSMap: sealed::VSMapInterface {
         }
 
         match self.value_type(key) {
-            ffi::VSPropTypes::ptUnset => return Err(Error::KeyNotFound),
+            ffi::VSPropTypes::ptUnset => Err(Error::KeyNotFound),
 
             #[cfg(feature = "gte-vapoursynth-api-31")]
             ffi::VSPropTypes::ptInt => get_value_array!(prop_get_int_array, ValueArray::Ints),
