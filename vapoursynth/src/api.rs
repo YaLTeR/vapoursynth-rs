@@ -265,6 +265,36 @@ impl API {
     prop_get_something!(prop_get_frame, propGetFrame, *const ffi::VSFrameRef);
     prop_get_something!(prop_get_func, propGetFunc, *mut ffi::VSFuncRef);
 
+    /// Retrieves an array of integers from a map.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` and `key` are valid.
+    #[cfg(feature = "gte-vapoursynth-api-31")]
+    #[inline]
+    pub(crate) unsafe fn prop_get_int_array(
+        self,
+        map: *const ffi::VSMap,
+        key: *const c_char,
+        error: &mut i32,
+    ) -> *const i64 {
+        ((*self.handle).propGetIntArray)(map, key, error)
+    }
+
+    /// Retrieves an array of floating point numbers from a map.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` and `key` are valid.
+    #[cfg(feature = "gte-vapoursynth-api-31")]
+    #[inline]
+    pub(crate) unsafe fn prop_get_float_array(
+        self,
+        map: *const ffi::VSMap,
+        key: *const c_char,
+        error: &mut i32,
+    ) -> *const f64 {
+        ((*self.handle).propGetFloatArray)(map, key, error)
+    }
+
     /// Frees `function`.
     ///
     /// # Safety

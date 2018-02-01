@@ -14,7 +14,7 @@ pub use self::errors::Error;
 use self::errors::Result;
 
 mod value;
-pub use self::value::Value;
+pub use self::value::{Value, ValueArray};
 
 // TODO: impl Eq on this stuff, impl Clone on Map, impl From for/to HashMap.
 
@@ -123,15 +123,10 @@ pub trait VSMap: sealed::VSMapInterface {
         }
     }
 
-    /// Retrieves a value from a map.
-    ///
-    /// # Panics
-    /// Panics if `index > i32::max_value()`.
-    fn value(&self, key: &CStr, index: usize) -> Result<Value> {
-        assert!(index <= i32::max_value() as usize);
-        let index = index as i32;
-
-        let prop_type = match unsafe { self.api().prop_get_type(self.handle(), key.as_ptr()) } {
+    /// Retrieves a value type from a map.
+    #[doc(hidden)]
+    fn value_type(&self, key: &CStr) -> ffi::VSPropTypes {
+        match unsafe { self.api().prop_get_type(self.handle(), key.as_ptr()) } {
             x if x == ffi::VSPropTypes::ptUnset as c_char => ffi::VSPropTypes::ptUnset,
             x if x == ffi::VSPropTypes::ptInt as c_char => ffi::VSPropTypes::ptInt,
             x if x == ffi::VSPropTypes::ptFloat as c_char => ffi::VSPropTypes::ptFloat,
@@ -140,63 +135,144 @@ pub trait VSMap: sealed::VSMapInterface {
             x if x == ffi::VSPropTypes::ptFrame as c_char => ffi::VSPropTypes::ptFrame,
             x if x == ffi::VSPropTypes::ptFunction as c_char => ffi::VSPropTypes::ptFunction,
             _ => unreachable!(),
-        };
+        }
+    }
 
-        let mut error = 0;
+    /// Retrieves a value from a map.
+    ///
+    /// # Panics
+    /// Panics if `index > i32::max_value()`.
+    fn value(&self, key: &CStr, index: usize) -> Result<Value> {
+        assert!(index <= i32::max_value() as usize);
+        let index = index as i32;
 
         macro_rules! get_value {
-            ($self:expr, $prop_type:expr
-                $(, ($pt:pat => $func:ident, $property:path, $process:expr))+) => (
-                match $prop_type {
-                    ffi::VSPropTypes::ptUnset => return Err(Error::KeyNotFound),
-                    $(
-                        $pt => {
-                            let value = unsafe {
-                                $self.api().$func($self.handle(), key.as_ptr(), index, &mut error)
-                            };
+            ($func:ident, $value:path, $process:expr) => {{
+                let mut error = 0;
+                let value = unsafe {
+                    self.api().$func(self.handle(), key.as_ptr(), index, &mut error)
+                };
 
-                            match error {
-                                0 => {}
-                                x if x == ffi::VSGetPropErrors::peIndex as i32 => {
-                                    return Err(Error::IndexOutOfBounds)
-                                }
-                                _ => unreachable!(),
-                            }
-
-                            Ok($property($process(value)))
-                        },
-                    )+
+                match error {
+                    0 => {}
+                    x if x == ffi::VSGetPropErrors::peIndex as i32 => {
+                        return Err(Error::IndexOutOfBounds)
+                    }
+                    _ => unreachable!(),
                 }
-            )
+
+                Ok($value($process(value)))
+            }}
         }
 
-        get_value!(self, prop_type,
-            (ffi::VSPropTypes::ptInt => prop_get_int, Value::Int, |x| x),
-            (ffi::VSPropTypes::ptFloat => prop_get_float, Value::Float, |x| x),
-            (ffi::VSPropTypes::ptData => prop_get_data, Value::Data, |x| {
+        match self.value_type(key) {
+            ffi::VSPropTypes::ptUnset => return Err(Error::KeyNotFound),
+            ffi::VSPropTypes::ptInt => get_value!(prop_get_int, Value::Int, |x| x),
+            ffi::VSPropTypes::ptFloat => get_value!(prop_get_float, Value::Float, |x| x),
+            ffi::VSPropTypes::ptData => get_value!(prop_get_data, Value::Data, |x| {
+                let mut error = 0;
                 let size = unsafe {
-                    self.api().prop_get_data_size(self.handle(), key.as_ptr(), index, &mut error)
+                    self.api()
+                        .prop_get_data_size(self.handle(), key.as_ptr(), index, &mut error)
                 };
                 assert!(error == 0);
                 assert!(size >= 0);
                 unsafe { slice::from_raw_parts(x as *const u8, size as usize) }
             }),
-            (ffi::VSPropTypes::ptNode => prop_get_node, Value::Node, |x| {
+            ffi::VSPropTypes::ptNode => get_value!(prop_get_node, Value::Node, |x| {
                 unsafe { Node::from_ptr(self.api(), x) }
             }),
-            (ffi::VSPropTypes::ptFrame => prop_get_frame, Value::Frame, |x| {
+            ffi::VSPropTypes::ptFrame => get_value!(prop_get_frame, Value::Frame, |x| {
                 unsafe { Frame::from_ptr(self.api(), x) }
             }),
-            (ffi::VSPropTypes::ptFunction => prop_get_func, Value::Function, |x| {
+            ffi::VSPropTypes::ptFunction => get_value!(prop_get_func, Value::Function, |x| {
                 unsafe { Function::from_ptr(self.api(), x) }
-            })
-        )
+            }),
+        }
     }
 
-    /// Retrieves values from a map.
-    fn values(&self, key: &CStr) -> Result<Vec<Value>> {
+    /// Retrieves all values for a given key from a map.
+    fn values(&self, key: &CStr) -> Result<ValueArray> {
         let count = self.value_count(key).ok_or(Error::KeyNotFound)?;
-        Ok((0..count).map(|i| self.value(key, i).unwrap()).collect())
+
+        #[cfg(feature = "gte-vapoursynth-api-31")]
+        macro_rules! get_value_array {
+            ($func:ident, $value:path) => {{
+                    let mut error = 0;
+                    let ptr = unsafe {
+                        self.api().$func(self.handle(), key.as_ptr(), &mut error)
+                    };
+                    assert!(error == 0);
+
+                    Ok($value(unsafe { slice::from_raw_parts(ptr, count) }))
+            }}
+        }
+
+        macro_rules! get_values {
+            ($func:ident, $value:path, $process:expr) => (
+                Ok($value(
+                    (0..count as i32)
+                        .map(|index| {
+                            let mut error = 0;
+                            let value = unsafe {
+                                self.api().$func(self.handle(), key.as_ptr(), index, &mut error)
+                            };
+                            assert!(error == 0);
+                            (index, value)
+                        })
+                        .map($process)
+                        .collect()
+                ))
+            )
+        }
+
+        match self.value_type(key) {
+            ffi::VSPropTypes::ptUnset => return Err(Error::KeyNotFound),
+
+            #[cfg(feature = "gte-vapoursynth-api-31")]
+            ffi::VSPropTypes::ptInt => get_value_array!(prop_get_int_array, ValueArray::Ints),
+            #[cfg(feature = "gte-vapoursynth-api-31")]
+            ffi::VSPropTypes::ptFloat => get_value_array!(prop_get_float_array, ValueArray::Floats),
+
+            #[cfg(not(feature = "gte-vapoursynth-api-31"))]
+            ffi::VSPropTypes::ptInt => get_values!(prop_get_int, ValueArray::Ints, |(_, x)| x),
+            #[cfg(not(feature = "gte-vapoursynth-api-31"))]
+            ffi::VSPropTypes::ptFloat => {
+                get_values!(prop_get_float, ValueArray::Floats, |(_, x)| x)
+            }
+
+            ffi::VSPropTypes::ptData => {
+                get_values!(prop_get_data, ValueArray::Data, |(index, x)| {
+                    let mut error = 0;
+                    let size = unsafe {
+                        self.api().prop_get_data_size(
+                            self.handle(),
+                            key.as_ptr(),
+                            index,
+                            &mut error,
+                        )
+                    };
+                    assert!(error == 0);
+                    assert!(size >= 0);
+                    unsafe { slice::from_raw_parts(x as *const u8, size as usize) }
+                })
+            }
+            ffi::VSPropTypes::ptNode => {
+                get_values!(prop_get_node, ValueArray::Nodes, |(_, x)| unsafe {
+                    Node::from_ptr(self.api(), x)
+                })
+            }
+            ffi::VSPropTypes::ptFrame => {
+                get_values!(prop_get_frame, ValueArray::Frames, |(_, x)| unsafe {
+                    Frame::from_ptr(self.api(), x)
+                })
+            }
+            ffi::VSPropTypes::ptFunction => {
+                get_values!(prop_get_func, ValueArray::Functions, |(_, x)| unsafe {
+                    Function::from_ptr(self.api(), x)
+                })
+            }
+        }
     }
 }
 
