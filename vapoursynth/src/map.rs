@@ -70,7 +70,9 @@ impl Map {
     }
 }
 
-/// A non-mutable VapourSynth map.
+/// A non-mutable VapourSynth map interface.
+///
+/// This trait is sealed and is not meant for implementation outside of this crate.
 pub trait VSMap: sealed::VSMapInterface {
     /// Returns the number of keys contained in a map.
     fn key_count(&self) -> usize {
@@ -91,8 +93,11 @@ pub trait VSMap: sealed::VSMapInterface {
     }
 }
 
-/// A mutable VapourSynth map.
+/// A mutable VapourSynth map interface.
+///
+/// This trait is sealed and is not meant for implementation outside of this crate.
 pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
+    /// Clears the map.
     fn clear(&mut self) {
         unsafe {
             self.api().clear_map(self.handle_mut());
@@ -100,16 +105,12 @@ pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
     }
 }
 
-impl<T> VSMap for T
-where
-    T: sealed::VSMapInterface,
-{
-}
-impl<T> VSMapMut for T
-where
-    T: VSMap + sealed::VSMapMutInterface,
-{
-}
+// Do this manually for each type so it shows up in rustdoc
+impl<'a> VSMap for MapRef<'a> {}
+impl<'a> VSMap for MapRefMut<'a> {}
+impl<'a> VSMapMut for MapRefMut<'a> {}
+impl VSMap for Map {}
+impl VSMapMut for Map {}
 
 mod sealed {
     use super::*;
