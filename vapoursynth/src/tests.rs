@@ -276,3 +276,16 @@ fn clear_output() {
     assert!(env.clear_output(0).is_some());
     assert!(env.clear_output(0).is_none());
 }
+
+#[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
+#[test]
+fn iterators() {
+    let api = API::get().unwrap();
+    let env = vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
+    let node = env.get_output(api, 0).unwrap();
+    let frame = node.get_frame(0).unwrap();
+    let props = frame.props();
+
+    assert_eq!(props.keys().size_hint(), (2, Some(2)));
+    assert_eq!(props.iter().size_hint(), (2, Some(2)));
+}

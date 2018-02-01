@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ffi::CStr;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
@@ -13,10 +14,15 @@ mod errors;
 pub use self::errors::Error;
 use self::errors::Result;
 
+mod iterators;
+pub use self::iterators::{Iter, Keys};
+
 mod value;
 pub use self::value::{Value, ValueArray};
 
 // TODO: impl Eq on this stuff, impl Clone on Map, impl From for/to HashMap.
+// TODO: the way current traits work is they return objects with lifetime bounds of the MapRefs
+// while they should probably be bound to lifetimes of owners instead.
 
 /// A non-owned non-mutable VapourSynth map.
 #[derive(Debug, Clone, Copy)]
@@ -107,6 +113,14 @@ pub trait VSMap: sealed::VSMapInterface {
         let index = index as i32;
 
         unsafe { CStr::from_ptr(self.api().prop_get_key(self.handle(), index)) }
+    }
+
+    /// Returns an iterator over all keys in a map.
+    fn keys(&self) -> Keys<Self>
+    where
+        Self: Sized,
+    {
+        Keys::new(self)
     }
 
     /// Returns the number of elements associated with a key in a map.
@@ -273,6 +287,32 @@ pub trait VSMap: sealed::VSMapInterface {
                 })
             }
         }
+    }
+
+    /// Returns an iterator over the entries.
+    fn iter(&self) -> Iter<Self>
+    where
+        Self: Sized,
+    {
+        Iter::new(self)
+    }
+}
+
+impl<'owner, 'map> From<&'map MapRef<'owner>> for HashMap<&'map CStr, ValueArray<'map>> {
+    fn from(x: &'map MapRef<'owner>) -> Self {
+        x.iter().collect()
+    }
+}
+
+impl<'owner, 'map> From<&'map MapRefMut<'owner>> for HashMap<&'map CStr, ValueArray<'map>> {
+    fn from(x: &'map MapRefMut<'owner>) -> Self {
+        x.iter().collect()
+    }
+}
+
+impl<'map> From<&'map Map> for HashMap<&'map CStr, ValueArray<'map>> {
+    fn from(x: &'map Map) -> Self {
+        x.iter().collect()
     }
 }
 
