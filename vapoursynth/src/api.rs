@@ -10,6 +10,22 @@ pub struct API {
 unsafe impl Send for API {}
 unsafe impl Sync for API {}
 
+// Macro for implementing repetitive functions.
+macro_rules! prop_get_something {
+    ($name:ident, $func:ident, $rv:ty) => (
+        #[inline]
+        pub(crate) unsafe fn $name(
+            self,
+            map: *const ffi::VSMap,
+            key: *const c_char,
+            index: i32,
+            error: &mut i32,
+        ) -> $rv {
+            ((*self.handle).$func)(map, key, index, error)
+        }
+    )
+}
+
 impl API {
     /// Retrieves the VapourSynth API.
     ///
@@ -84,6 +100,18 @@ impl API {
     #[inline]
     pub(crate) unsafe fn free_frame(self, frame: *const ffi::VSFrameRef) {
         ((*self.handle).freeFrame)(frame);
+    }
+
+    /// Clones `frame`.
+    ///
+    /// # Safety
+    /// The caller must ensure `frame` is valid.
+    #[inline]
+    pub(crate) unsafe fn clone_frame(
+        self,
+        frame: *const ffi::VSFrameRef,
+    ) -> *const ffi::VSFrameRef {
+        ((*self.handle).cloneFrameRef)(frame)
     }
 
     /// Retrieves the format of a frame.
@@ -191,5 +219,67 @@ impl API {
     #[inline]
     pub(crate) unsafe fn prop_get_key(self, map: *const ffi::VSMap, index: i32) -> *const c_char {
         ((*self.handle).propGetKey)(map, index)
+    }
+
+    /// Returns the number of elements associated with a key in a property map.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` and `key` are valid.
+    #[inline]
+    pub(crate) unsafe fn prop_num_elements(
+        self,
+        map: *const ffi::VSMap,
+        key: *const c_char,
+    ) -> i32 {
+        ((*self.handle).propNumElements)(map, key)
+    }
+
+    /// Returns the type of the elements associated with the given key in a property map.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` and `key` are valid.
+    #[inline]
+    pub(crate) unsafe fn prop_get_type(self, map: *const ffi::VSMap, key: *const c_char) -> c_char {
+        ((*self.handle).propGetType)(map, key)
+    }
+
+    /// Returns the size in bytes of a property of type ptData.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` and `key` are valid.
+    #[inline]
+    pub(crate) unsafe fn prop_get_data_size(
+        self,
+        map: *const ffi::VSMap,
+        key: *const c_char,
+        index: i32,
+        error: &mut i32,
+    ) -> i32 {
+        ((*self.handle).propGetDataSize)(map, key, index, error)
+    }
+
+    prop_get_something!(prop_get_int, propGetInt, i64);
+    prop_get_something!(prop_get_float, propGetFloat, f64);
+    prop_get_something!(prop_get_data, propGetData, *const c_char);
+    prop_get_something!(prop_get_node, propGetNode, *mut ffi::VSNodeRef);
+    prop_get_something!(prop_get_frame, propGetFrame, *const ffi::VSFrameRef);
+    prop_get_something!(prop_get_func, propGetFunc, *mut ffi::VSFuncRef);
+
+    /// Frees `function`.
+    ///
+    /// # Safety
+    /// The caller must ensure `function` is valid.
+    #[inline]
+    pub(crate) unsafe fn free_func(self, function: *mut ffi::VSFuncRef) {
+        ((*self.handle).freeFunc)(function);
+    }
+
+    /// Clones `function`.
+    ///
+    /// # Safety
+    /// The caller must ensure `function` is valid.
+    #[inline]
+    pub(crate) unsafe fn clone_func(self, function: *mut ffi::VSFuncRef) -> *mut ffi::VSFuncRef {
+        ((*self.handle).cloneFuncRef)(function)
     }
 }

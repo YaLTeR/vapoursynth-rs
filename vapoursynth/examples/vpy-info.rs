@@ -99,7 +99,11 @@ fn run() -> Result<(), Error> {
 
         for k in 0..count {
             let key = props.key(k);
-            println!("Property: {}", key.to_string_lossy());
+            println!(
+                "Property: {} => {:?}",
+                key.to_string_lossy(),
+                props.values(key).unwrap()
+            );
         }
 
         for plane in 0..format.plane_count() {

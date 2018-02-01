@@ -25,6 +25,17 @@ impl Drop for Frame {
     }
 }
 
+impl Clone for Frame {
+    #[inline]
+    fn clone(&self) -> Self {
+        let handle = unsafe { self.api.clone_frame(self.handle) };
+        Self {
+            api: self.api,
+            handle,
+        }
+    }
+}
+
 impl Frame {
     /// Wraps `handle` in a `Frame`.
     ///

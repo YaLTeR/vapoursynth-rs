@@ -19,6 +19,9 @@ pub use format::Format;
 pub mod frame;
 pub use frame::Frame;
 
+pub mod function;
+pub use function::Function;
+
 pub mod map;
 pub use map::*;
 

@@ -1,8 +1,20 @@
 use std::ffi::CStr;
 use std::marker::PhantomData;
+use std::os::raw::c_char;
+use std::slice;
 use vapoursynth_sys as ffi;
 
 use api::API;
+use frame::Frame;
+use function::Function;
+use node::Node;
+
+mod errors;
+pub use self::errors::Error;
+use self::errors::Result;
+
+mod value;
+pub use self::value::Value;
 
 // TODO: impl Eq on this stuff, impl Clone on Map, impl From for/to HashMap.
 
@@ -95,6 +107,97 @@ pub trait VSMap: sealed::VSMapInterface {
         let index = index as i32;
 
         unsafe { CStr::from_ptr(self.api().prop_get_key(self.handle(), index)) }
+    }
+
+    /// Returns the number of elements associated with a key in a map.
+    ///
+    /// If there's no such key in the map, `None` is returned.
+    #[inline]
+    fn value_count(&self, key: &CStr) -> Option<usize> {
+        let rv = unsafe { self.api().prop_num_elements(self.handle(), key.as_ptr()) };
+        if rv == -1 {
+            None
+        } else {
+            assert!(rv >= 0);
+            Some(rv as usize)
+        }
+    }
+
+    /// Retrieves a value from a map.
+    ///
+    /// # Panics
+    /// Panics if `index > i32::max_value()`.
+    fn value(&self, key: &CStr, index: usize) -> Result<Value> {
+        assert!(index <= i32::max_value() as usize);
+        let index = index as i32;
+
+        let prop_type = match unsafe { self.api().prop_get_type(self.handle(), key.as_ptr()) } {
+            x if x == ffi::VSPropTypes::ptUnset as c_char => ffi::VSPropTypes::ptUnset,
+            x if x == ffi::VSPropTypes::ptInt as c_char => ffi::VSPropTypes::ptInt,
+            x if x == ffi::VSPropTypes::ptFloat as c_char => ffi::VSPropTypes::ptFloat,
+            x if x == ffi::VSPropTypes::ptData as c_char => ffi::VSPropTypes::ptData,
+            x if x == ffi::VSPropTypes::ptNode as c_char => ffi::VSPropTypes::ptNode,
+            x if x == ffi::VSPropTypes::ptFrame as c_char => ffi::VSPropTypes::ptFrame,
+            x if x == ffi::VSPropTypes::ptFunction as c_char => ffi::VSPropTypes::ptFunction,
+            _ => unreachable!(),
+        };
+
+        let mut error = 0;
+
+        macro_rules! get_value {
+            ($self:expr, $prop_type:expr
+                $(, ($pt:pat => $func:ident, $property:path, $process:expr))+) => (
+                match $prop_type {
+                    ffi::VSPropTypes::ptUnset => return Err(Error::KeyNotFound),
+                    $(
+                        $pt => {
+                            let value = unsafe {
+                                $self.api()
+                                    .$func($self.handle(), key.as_ptr(), index, &mut error)
+                            };
+
+                            match error {
+                                0 => {}
+                                x if x == ffi::VSGetPropErrors::peIndex as i32 => {
+                                    return Err(Error::IndexOutOfBounds)
+                                }
+                                _ => unreachable!(),
+                            }
+
+                            Ok($property($process(value)))
+                        },
+                    )+
+                }
+            )
+        }
+
+        get_value!(self, prop_type,
+            (ffi::VSPropTypes::ptInt => prop_get_int, Value::Int, |x| x),
+            (ffi::VSPropTypes::ptFloat => prop_get_float, Value::Float, |x| x),
+            (ffi::VSPropTypes::ptData => prop_get_data, Value::Data, |x| {
+                let size = unsafe {
+                    self.api().prop_get_data_size(self.handle(), key.as_ptr(), index, &mut error)
+                };
+                assert!(error == 0);
+                assert!(size >= 0);
+                unsafe { slice::from_raw_parts(x as *const u8, size as usize) }
+            }),
+            (ffi::VSPropTypes::ptNode => prop_get_node, Value::Node, |x| {
+                unsafe { Node::from_ptr(self.api(), x) }
+            }),
+            (ffi::VSPropTypes::ptFrame => prop_get_frame, Value::Frame, |x| {
+                unsafe { Frame::from_ptr(self.api(), x) }
+            }),
+            (ffi::VSPropTypes::ptFunction => prop_get_func, Value::Function, |x| {
+                unsafe { Function::from_ptr(self.api(), x) }
+            })
+        )
+    }
+
+    /// Retrieves values from a map.
+    fn values(&self, key: &CStr) -> Result<Vec<Value>> {
+        let count = self.value_count(key).ok_or(Error::KeyNotFound)?;
+        Ok((0..count).map(|i| self.value(key, i).unwrap()).collect())
     }
 }
 

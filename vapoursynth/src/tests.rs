@@ -70,6 +70,17 @@ fn green() {
     assert_eq!(props.key_count(), 2);
     assert_eq!(props.key(0).to_string_lossy(), "_DurationDen");
     assert_eq!(props.key(1).to_string_lossy(), "_DurationNum");
+
+    assert_eq!(props.value_count(props.key(0)), Some(1));
+    if let Ok(Value::Int(60)) = props.value(props.key(0), 0) {
+    } else {
+        assert!(false);
+    }
+    assert_eq!(props.value_count(props.key(1)), Some(1));
+    if let Ok(Value::Int(1)) = props.value(props.key(1), 0) {
+    } else {
+        assert!(false);
+    }
 }
 
 #[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
@@ -138,6 +149,17 @@ fn green_from_string() {
     assert_eq!(props.key_count(), 2);
     assert_eq!(props.key(0).to_string_lossy(), "_DurationDen");
     assert_eq!(props.key(1).to_string_lossy(), "_DurationNum");
+
+    assert_eq!(props.value_count(props.key(0)), Some(1));
+    if let Ok(Value::Int(60)) = props.value(props.key(0), 0) {
+    } else {
+        assert!(false);
+    }
+    assert_eq!(props.value_count(props.key(1)), Some(1));
+    if let Ok(Value::Int(1)) = props.value(props.key(1), 0) {
+    } else {
+        assert!(false);
+    }
 }
 
 #[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
@@ -190,6 +212,17 @@ fn variable() {
     assert_eq!(props.key(0).to_string_lossy(), "_DurationDen");
     assert_eq!(props.key(1).to_string_lossy(), "_DurationNum");
 
+    assert_eq!(props.value_count(props.key(0)), Some(1));
+    if let Ok(Value::Int(60)) = props.value(props.key(0), 0) {
+    } else {
+        assert!(false);
+    }
+    assert_eq!(props.value_count(props.key(1)), Some(1));
+    if let Ok(Value::Int(1)) = props.value(props.key(1), 0) {
+    } else {
+        assert!(false);
+    }
+
     // Test the first frame of the next format.
     let frame = node.get_frame(100).unwrap();
     let format = frame.format();
@@ -222,6 +255,17 @@ fn variable() {
     assert_eq!(props.key_count(), 2);
     assert_eq!(props.key(0).to_string_lossy(), "_DurationDen");
     assert_eq!(props.key(1).to_string_lossy(), "_DurationNum");
+
+    assert_eq!(props.value_count(props.key(0)), Some(1));
+    if let Ok(Value::Int(30)) = props.value(props.key(0), 0) {
+    } else {
+        assert!(false);
+    }
+    assert_eq!(props.value_count(props.key(1)), Some(1));
+    if let Ok(Value::Int(1)) = props.value(props.key(1), 0) {
+    } else {
+        assert!(false);
+    }
 }
 
 #[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
