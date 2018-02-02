@@ -48,14 +48,12 @@ fn maybe_initialize() {
             if my_major != major {
                 panic!(
                     "Invalid VSScript major API version (expected: {}, got: {})",
-                    my_major,
-                    major
+                    my_major, major
                 );
             } else if my_minor > minor {
                 panic!(
                     "Invalid VSScript minor API version (expected: >= {}, got: {})",
-                    my_minor,
-                    minor
+                    my_minor, minor
                 );
             }
         }
