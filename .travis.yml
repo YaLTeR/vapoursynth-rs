@@ -30,6 +30,9 @@ script:
 - cargo doc --verbose --all-features
 - cp .travis/index.html target/doc/
 
+  # Test with all features
+- cd vapoursynth; cargo test --verbose --all-features
+
   # Test with minimal features
 - cd vapoursynth; cargo test --verbose --features 'vapoursynth-functions vsscript-functions'
 
