@@ -242,9 +242,8 @@ pub type VSFilterGetFrame = Option<
         vsapi: *const VSAPI,
     ) -> *const VSFrameRef,
 >;
-pub type VSFilterFree = Option<
-    unsafe extern "C" fn(instanceData: *mut c_void, core: *mut VSCore, vsapi: *const VSAPI),
->;
+pub type VSFilterFree =
+    Option<unsafe extern "C" fn(instanceData: *mut c_void, core: *mut VSCore, vsapi: *const VSAPI)>;
 pub type VSFrameDoneCallback = Option<
     unsafe extern "C" fn(
         userData: *mut c_void,
@@ -254,9 +253,8 @@ pub type VSFrameDoneCallback = Option<
         errorMsg: *const c_char,
     ),
 >;
-pub type VSMessageHandler = Option<
-    unsafe extern "C" fn(msgType: c_int, msg: *const c_char, userData: *mut c_void),
->;
+pub type VSMessageHandler =
+    Option<unsafe extern "C" fn(msgType: c_int, msg: *const c_char, userData: *mut c_void)>;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct VSAPI {
@@ -525,6 +523,8 @@ extern "C" {
     pub fn vsscript_clearOutput(handle: *mut VSScript, index: c_int) -> c_int;
     pub fn vsscript_getCore(handle: *mut VSScript) -> *mut VSCore;
     pub fn vsscript_getVSApi() -> *const VSAPI;
+    #[cfg(feature = "gte-vsscript-api-32")]
+    pub fn vsscript_getVSApi2(version: c_int) -> *const VSAPI;
     pub fn vsscript_getVariable(
         handle: *mut VSScript,
         name: *const c_char,

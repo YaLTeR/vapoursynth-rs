@@ -1,6 +1,5 @@
 //! Raw bindings to [VapourSynth](https://github.com/vapoursynth/vapoursynth).
 #![doc(html_root_url = "https://yalter.github.io/vapoursynth-rs/vapoursynth_sys")]
-
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -32,7 +31,9 @@ cfg_if! {
 }
 
 cfg_if! {
-    if #[cfg(feature="vsscript-api-31")] {
+    if #[cfg(feature="vsscript-api-32")] {
+        pub const VSSCRIPT_API_VERSION: i32 = api_version!(3, 2);
+    } else if #[cfg(feature="vsscript-api-31")] {
         pub const VSSCRIPT_API_VERSION: i32 = api_version!(3, 1);
     } else {
         pub const VSSCRIPT_API_VERSION: i32 = api_version!(3, 0);
