@@ -6,6 +6,7 @@ use std::path::Path;
 use vapoursynth_sys as ffi;
 
 use api::API;
+use map::{MapRef, MapRefMut, VSMapInterface, VSMapMutInterface};
 use node::Node;
 use vsscript::*;
 use vsscript::errors::Result;
@@ -184,6 +185,38 @@ impl Environment {
             None
         } else {
             Some(())
+        }
+    }
+
+    /// Retrieves a variable from the script environment.
+    pub fn get_variable<'a>(&self, name: &str, map: &mut MapRefMut<'a>) -> Result<()> {
+        let name = CString::new(name)?;
+        let rv = unsafe { ffi::vsscript_getVariable(self.handle, name.as_ptr(), map.handle_mut()) };
+        if rv != 0 {
+            Err(Error::NoSuchVariable)
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Sets variables in the script environment.
+    pub fn set_variables<'a>(&self, variables: &MapRef<'a>) -> Result<()> {
+        let rv = unsafe { ffi::vsscript_setVariable(self.handle, variables.handle()) };
+        if rv != 0 {
+            Err(Error::NoSuchVariable)
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Deletes a variable from the script environment.
+    pub fn clear_variable(&self, name: &str) -> Result<()> {
+        let name = CString::new(name)?;
+        let rv = unsafe { ffi::vsscript_clearVariable(self.handle, name.as_ptr()) };
+        if rv != 0 {
+            Err(Error::NoSuchVariable)
+        } else {
+            Ok(())
         }
     }
 }

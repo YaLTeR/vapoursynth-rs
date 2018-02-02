@@ -42,7 +42,7 @@ impl<'a> MapRef<'a> {
     /// The caller must ensure `handle` is valid and the provided owner's lifetime is correct for
     /// the given `handle`.
     #[inline]
-    pub(crate) unsafe fn from_ptr<T>(api: API, _owner: &'a T, handle: *const ffi::VSMap) -> Self {
+    pub(crate) unsafe fn from_ptr(api: API, handle: *const ffi::VSMap) -> Self {
         Self {
             api,
             handle,
@@ -61,6 +61,22 @@ pub struct MapRefMut<'a> {
 
 unsafe impl<'a> Send for MapRefMut<'a> {}
 unsafe impl<'a> Sync for MapRefMut<'a> {}
+
+impl<'a> MapRefMut<'a> {
+    /// Wraps `handle` in a `MapRefMut`.
+    ///
+    /// # Safety
+    /// The caller must ensure `handle` is valid and the provided owner's lifetime is correct for
+    /// the given `handle`.
+    #[inline]
+    pub(crate) unsafe fn from_ptr(api: API, handle: *mut ffi::VSMap) -> Self {
+        Self {
+            api,
+            handle,
+            owner: PhantomData,
+        }
+    }
+}
 
 /// An owned VapourSynth map.
 #[derive(Debug)]
@@ -296,6 +312,12 @@ pub trait VSMap: sealed::VSMapInterface {
     {
         Iter::new(self)
     }
+
+    /// Returns a `MapRef` to this map.
+    #[inline]
+    fn get_ref(&self) -> MapRef {
+        unsafe { MapRef::from_ptr(self.api(), self.handle()) }
+    }
 }
 
 impl<'owner, 'map> From<&'map MapRef<'owner>> for HashMap<&'map CStr, ValueArray<'map>> {
@@ -327,6 +349,12 @@ pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
             self.api().clear_map(self.handle_mut());
         }
     }
+
+    /// Returns a `MapRefMut` to this map.
+    #[inline]
+    fn get_ref_mut(&mut self) -> MapRefMut {
+        unsafe { MapRefMut::from_ptr(self.api(), self.handle_mut()) }
+    }
 }
 
 // Do this manually for each type so it shows up in rustdoc
@@ -335,6 +363,8 @@ impl<'a> VSMap for MapRefMut<'a> {}
 impl<'a> VSMapMut for MapRefMut<'a> {}
 impl VSMap for Map {}
 impl VSMapMut for Map {}
+
+pub(crate) use self::sealed::*;
 
 mod sealed {
     use super::*;

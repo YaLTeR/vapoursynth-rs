@@ -14,6 +14,8 @@ pub enum Error {
     PathInvalidUnicode,
     #[fail(display = "An error occurred in VSScript")]
     VSScript(#[cause] VSScriptError),
+    #[fail(display = "There's no such variable")]
+    NoSuchVariable,
 }
 
 impl From<NulError> for Error {

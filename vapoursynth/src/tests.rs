@@ -81,6 +81,18 @@ fn green() {
     } else {
         assert!(false);
     }
+
+    let mut map = Map::new(api);
+    assert!(env.get_variable("video", &mut map.get_ref_mut()).is_ok());
+    let value = map.iter().next();
+    assert!(value.is_some());
+    let value = value.unwrap();
+    assert_eq!(value.0.to_string_lossy(), "video");
+    if let ValueArray::Nodes(x) = value.1 {
+        assert_eq!(x.len(), 1);
+    } else {
+        assert!(false);
+    }
 }
 
 #[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
@@ -157,6 +169,18 @@ fn green_from_string() {
     }
     assert_eq!(props.value_count(props.key(1)), Some(1));
     if let Ok(Value::Int(1)) = props.value(props.key(1), 0) {
+    } else {
+        assert!(false);
+    }
+
+    let mut map = Map::new(api);
+    assert!(env.get_variable("video", &mut map.get_ref_mut()).is_ok());
+    let value = map.iter().next();
+    assert!(value.is_some());
+    let value = value.unwrap();
+    assert_eq!(value.0.to_string_lossy(), "video");
+    if let ValueArray::Nodes(x) = value.1 {
+        assert_eq!(x.len(), 1);
     } else {
         assert!(false);
     }
@@ -266,6 +290,18 @@ fn variable() {
     } else {
         assert!(false);
     }
+
+    let mut map = Map::new(api);
+    assert!(env.get_variable("video", &mut map.get_ref_mut()).is_ok());
+    let value = map.iter().next();
+    assert!(value.is_some());
+    let value = value.unwrap();
+    assert_eq!(value.0.to_string_lossy(), "video");
+    if let ValueArray::Nodes(x) = value.1 {
+        assert_eq!(x.len(), 1);
+    } else {
+        assert!(false);
+    }
 }
 
 #[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
@@ -288,4 +324,20 @@ fn iterators() {
 
     assert_eq!(props.keys().size_hint(), (2, Some(2)));
     assert_eq!(props.iter().size_hint(), (2, Some(2)));
+}
+
+#[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
+#[test]
+fn vsscript_variables() {
+    let api = API::get().unwrap();
+    let env = vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
+
+    let mut map = Map::new(api);
+    assert!(env.get_variable("video", &mut map.get_ref_mut()).is_ok());
+    assert!(env.clear_variable("video").is_ok());
+    assert!(env.clear_variable("video").is_err());
+    assert!(env.get_variable("video", &mut map.get_ref_mut()).is_err());
+
+    assert!(env.set_variables(&map.get_ref()).is_ok());
+    assert!(env.get_variable("video", &mut map.get_ref_mut()).is_ok());
 }
