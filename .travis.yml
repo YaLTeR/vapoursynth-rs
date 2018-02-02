@@ -32,10 +32,17 @@ script:
 
   # Test with all possible combinations of all features.
   # The Linux dist's VapourSynth is old and doesn't support VSScript API above 3.0.
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    cd vapoursynth; printf "%s\n" {vapoursynth-api-3{1..5},}" "{vsscript-api-3{1..2},}" "{vapoursynth-functions,}" "{vsscript-functions,} | xargs --verbose -I FEATURES cargo test --quiet --features FEATURES;
+- cd vapoursynth;
+  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    while read -r features; do
+      echo cargo test --quiet --features "\"$features\"";
+      cargo test --quiet --features "$features";
+    done <<< `printf "%s\n" {vapoursynth-api-3{1..5},}" "{vsscript-api-3{1..2},}" "{vapoursynth-functions,}" "{vsscript-functions,}`;
   else
-    cd vapoursynth; printf "%s\n" {vapoursynth-api-3{1..5},}" "{vapoursynth-functions,}" "{vsscript-functions,} | xargs --verbose -I FEATURES cargo test --quiet --features FEATURES;
+    while read -r features; do
+      echo cargo test --quiet --features "\"$features\"";
+      cargo test --quiet --features "$features";
+    done <<< `printf "%s\n" {vapoursynth-api-3{1..5},}" "{vapoursynth-functions,}" "{vsscript-functions,}`;
   fi
 
 deploy:
