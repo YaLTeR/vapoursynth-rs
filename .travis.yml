@@ -44,4 +44,4 @@ deploy:
   on:
     branch: master
     rust: stable
-    os: osx
+    condition: $TRAVIS_OS_NAME = linux
