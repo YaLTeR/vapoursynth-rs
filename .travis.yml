@@ -31,10 +31,10 @@ script:
 - cp .travis/index.html target/doc/
 
   # Test with all possible combinations of all features.
+  # The Linux dist's VapourSynth is old and doesn't support VSScript API above 3.0.
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     export FEATURE_COMBINATIONS=`printf "%s\n" {vapoursynth-api-3{1..5},}" "{vsscript-api-3{1..2},}" "{vapoursynth-functions,}" "{vsscript-functions,}`;
   else
-    # The Linux dist's VapourSynth is old and doesn't support VSScript API above 3.0.
     export FEATURE_COMBINATIONS=`printf "%s\n" {vapoursynth-api-3{1..5},}" "{vapoursynth-functions,}" "{vsscript-functions,}`;
   fi
 
