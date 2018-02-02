@@ -1,5 +1,8 @@
 sudo: required
 language: rust
+os:
+  - linux
+  - osx
 rust:
 - stable
 - beta
@@ -38,3 +41,4 @@ deploy:
   on:
     branch: master
     rust: stable
+    os: osx
