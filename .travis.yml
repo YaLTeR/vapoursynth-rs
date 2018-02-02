@@ -19,22 +19,26 @@ before_install:
 - bash .travis/install-vapoursynth.sh
 
 script:
-  # Build and test with no features
+  # Build and test with no features.
 - cargo build --verbose
 - cargo test --verbose
 
-  # Build with all features
+  # Build with all features.
 - cargo build --verbose --all-features
 
-  # Doc with all features
+  # Doc with all features.
 - cargo doc --verbose --all-features
 - cp .travis/index.html target/doc/
 
-  # Test with all features
-- cd vapoursynth; cargo test --verbose --all-features
+  # Test with all possible combinations of all features.
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    export FEATURE_COMBINATIONS=`printf "%s\n" {vapoursynth-api-3{1..5},}" "{vsscript-api-3{1..2},}" "{vapoursynth-functions,}" "{vsscript-functions,}`
+  else
+    # The Linux dist's VapourSynth is old and doesn't support VSScript API above 3.0.
+    export FEATURE_COMBINATIONS=`printf "%s\n" {vapoursynth-api-3{1..5},}" "{vapoursynth-functions,}" "{vsscript-functions,}`
+  fi
 
-  # Test with minimal features
-- cd vapoursynth; cargo test --verbose --features 'vapoursynth-functions vsscript-functions'
+- cd vapoursynth; echo $FEATURE_COMBINATIONS | xargs -I FEATURES cargo test --quiet --features FEATURES
 
 deploy:
   provider: pages
