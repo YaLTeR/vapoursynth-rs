@@ -30,7 +30,23 @@ impl API {
     /// Retrieves the VapourSynth API.
     ///
     /// Returns `None` on error, for example if the requested API version is not supported.
-    #[cfg(feature = "vapoursynth-functions")]
+    // If we're linking to VSScript anyway, use the VSScript function.
+    #[cfg(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))]
+    #[inline]
+    pub fn get() -> Option<Self> {
+        let handle = unsafe { ffi::vsscript_getVSApi2(ffi::VAPOURSYNTH_API_VERSION) };
+        if handle.is_null() {
+            None
+        } else {
+            Some(Self { handle })
+        }
+    }
+
+    /// Retrieves the VapourSynth API.
+    ///
+    /// Returns `None` on error, for example if the requested API version is not supported.
+    #[cfg(all(feature = "vapoursynth-functions",
+              not(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))))]
     #[inline]
     pub fn get() -> Option<Self> {
         let handle = unsafe { ffi::getVapourSynthAPI(ffi::VAPOURSYNTH_API_VERSION) };
