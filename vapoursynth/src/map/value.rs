@@ -14,17 +14,19 @@ pub enum Value<'a> {
 }
 
 /// An array of values.
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone)]
 pub enum ValueArray<'a> {
     // API 3.1 introduced more optimized getters for some value types.
-    #[cfg(not(feature = "gte-vapoursynth-api-31"))]
-    Ints(Vec<i64>),
     #[cfg(feature = "gte-vapoursynth-api-31")]
     Ints(&'a [i64]),
-    #[cfg(not(feature = "gte-vapoursynth-api-31"))]
-    Floats(Vec<f64>),
     #[cfg(feature = "gte-vapoursynth-api-31")]
     Floats(&'a [f64]),
+
+    #[cfg(not(feature = "gte-vapoursynth-api-31"))]
+    Ints(Vec<i64>),
+    #[cfg(not(feature = "gte-vapoursynth-api-31"))]
+    Floats(Vec<f64>),
 
     Data(Vec<&'a [u8]>),
     Nodes(Vec<Node>),

@@ -53,14 +53,12 @@ fn run() -> Result<(), Error> {
     );
     println!(
         "Framerate: {}",
-        map_or_variable(&info.framerate, |x| {
-            format!(
-                "{}/{} ({})",
-                x.numerator,
-                x.denominator,
-                x.numerator as f64 / x.denominator as f64
-            )
-        })
+        map_or_variable(&info.framerate, |x| format!(
+            "{}/{} ({})",
+            x.numerator,
+            x.denominator,
+            x.numerator as f64 / x.denominator as f64
+        ))
     );
 
     #[cfg(feature = "gte-vapoursynth-api-32")]

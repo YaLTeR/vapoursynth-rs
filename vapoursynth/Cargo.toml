@@ -8,7 +8,7 @@ bitflags = "1"
 failure = "0.1"
 failure_derive = "0.1"
 lazy_static = "1"
-vapoursynth-sys = { path = "../vapoursynth-sys" }
+vapoursynth-sys = { version = "0.1", path = "../vapoursynth-sys" }
 
 [features]
 # Features for enabling higher API versions.
@@ -47,6 +47,11 @@ vsscript-api-31 = [
     "vapoursynth-sys/vsscript-api-31",
     "gte-vsscript-api-31"
 ]
+vsscript-api-32 = [
+    "vapoursynth-sys/vsscript-api-32",
+    "gte-vsscript-api-31",
+    "gte-vsscript-api-32"
+]
 
 # Features for linking to certain functions.
 vapoursynth-functions = ["vapoursynth-sys/vapoursynth-functions"]
@@ -60,6 +65,7 @@ gte-vapoursynth-api-34 = []
 gte-vapoursynth-api-35 = []
 
 gte-vsscript-api-31 = []
+gte-vsscript-api-32 = []
 
 # For development.
-#default = ["vapoursynth-api-35", "vsscript-api-31", "vapoursynth-functions", "vsscript-functions"]
+#default = ["vapoursynth-api-35", "vsscript-api-32", "vapoursynth-functions", "vsscript-functions"]

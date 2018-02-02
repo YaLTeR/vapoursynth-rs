@@ -1,6 +1,7 @@
 use std::result;
 
 /// The error type for `Map` operations.
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Fail, Debug)]
 pub enum Error {
     #[fail(display = "The requested key wasn't found in the map")]

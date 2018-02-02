@@ -209,15 +209,17 @@ pub trait VSMap: sealed::VSMapInterface {
                 debug_assert!(size >= 0);
                 unsafe { slice::from_raw_parts(x as *const u8, size as usize) }
             }),
-            ffi::VSPropTypes::ptNode => get_value!(prop_get_node, Value::Node, |x| {
-                unsafe { Node::from_ptr(self.api(), x) }
+            ffi::VSPropTypes::ptNode => get_value!(prop_get_node, Value::Node, |x| unsafe {
+                Node::from_ptr(self.api(), x)
             }),
-            ffi::VSPropTypes::ptFrame => get_value!(prop_get_frame, Value::Frame, |x| {
-                unsafe { Frame::from_ptr(self.api(), x) }
+            ffi::VSPropTypes::ptFrame => get_value!(prop_get_frame, Value::Frame, |x| unsafe {
+                Frame::from_ptr(self.api(), x)
             }),
-            ffi::VSPropTypes::ptFunction => get_value!(prop_get_func, Value::Function, |x| {
-                unsafe { Function::from_ptr(self.api(), x) }
-            }),
+            ffi::VSPropTypes::ptFunction => {
+                get_value!(prop_get_func, Value::Function, |x| unsafe {
+                    Function::from_ptr(self.api(), x)
+                })
+            }
         }
     }
 
