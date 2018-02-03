@@ -8,6 +8,12 @@ A (very WIP) safe wrapper for [VapourSynth](https://github.com/vapoursynth/vapou
 
 The primary goal is safety (that is, safe Rust code should not trigger undefined behavior), and secondary goals include performance and ease of use.
 
+## vapoursynth-sys
+
+[![crates.io](https://img.shields.io/crates/v/vapoursynth-sys.svg)](https://crates.io/crates/vapoursynth-sys)
+
+Raw bindings to [VapourSynth](https://github.com/vapoursynth/vapoursynth).
+
 ## Supported Versions
 
 Right now the x86_64 and i686 Unix and x86_64 Windows targets are supported.
