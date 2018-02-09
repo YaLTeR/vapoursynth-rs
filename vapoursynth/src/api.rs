@@ -1,6 +1,8 @@
 use std::os::raw::c_char;
 use vapoursynth_sys as ffi;
 
+use vsscript;
+
 /// A wrapper for the VapourSynth API.
 #[derive(Debug, Clone, Copy)]
 pub struct API {
@@ -34,6 +36,8 @@ impl API {
     #[cfg(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))]
     #[inline]
     pub fn get() -> Option<Self> {
+        vsscript::maybe_initialize();
+
         let handle = unsafe { ffi::vsscript_getVSApi2(ffi::VAPOURSYNTH_API_VERSION) };
         if handle.is_null() {
             None

@@ -28,7 +28,7 @@ macro_rules! call_vsscript {
 // of the API accessible through that type, however that could become somewhat unergonomic with
 // having to store its lifetime everywhere and potentially pass it around the threads.
 #[inline]
-fn maybe_initialize() {
+pub(crate) fn maybe_initialize() {
     static ONCE: Once = ONCE_INIT;
 
     ONCE.call_once(|| unsafe {
