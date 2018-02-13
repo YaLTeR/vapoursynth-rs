@@ -108,10 +108,12 @@ impl Clone for Map {
             // TODO: this is stupid.
             match value {
                 ValueArray::Ints(xs) => unsafe {
-                    map.set_values_raw_unchecked(key, Values::IntArray(xs));
+                    #[cfg_attr(feature = "cargo-clippy", allow(needless_borrow))]
+                    map.set_values_raw_unchecked(key, Values::IntArray(&xs));
                 },
                 ValueArray::Floats(xs) => unsafe {
-                    map.set_values_raw_unchecked(key, Values::FloatArray(xs));
+                    #[cfg_attr(feature = "cargo-clippy", allow(needless_borrow))]
+                    map.set_values_raw_unchecked(key, Values::FloatArray(&xs));
                 },
                 ValueArray::Data(xs) => unsafe {
                     map.set_values_raw_unchecked(key, Values::Data(&mut xs.iter().map(|&x| x)));
