@@ -29,6 +29,8 @@ impl<'a> Value<'a> {
 }
 
 // TODO: is it possible to get rid of all of this Ref stuff?
+// Not only it's extra types, but for instance making a function for taking Values out of
+// ValueArray seems plain impossible.
 /// A non-owned value that can be stored in a `Map`.
 #[derive(Debug, Clone, Copy)]
 pub enum ValueRef<'a> {

@@ -261,5 +261,32 @@ mod need_api {
         } else {
             assert!(false);
         }
+
+        assert_eq!(
+            map.set_values("other", Values::IntArray(&[1, 2, 3])),
+            Ok(())
+        );
+        if let Ok(ValueArray::Ints(xs)) = map.values("other") {
+            assert_eq!(xs, &[1, 2, 3]);
+        } else {
+            assert!(false);
+        }
+
+        let clone = map.clone();
+        assert_eq!(
+            map.keys().collect::<Vec<_>>(),
+            clone.keys().collect::<Vec<_>>()
+        );
+        if let Ok(ValueArray::Data(xs)) = clone.values("test_frame") {
+            assert_eq!(xs, TEST_DATA);
+        } else {
+            assert!(false);
+        }
+
+        if let Ok(ValueArray::Ints(xs)) = clone.values("other") {
+            assert_eq!(xs, &[1, 2, 3]);
+        } else {
+            assert!(false);
+        }
     }
 }

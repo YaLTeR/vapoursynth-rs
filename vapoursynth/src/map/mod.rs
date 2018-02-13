@@ -20,7 +20,7 @@ pub use self::iterators::{Iter, Keys};
 mod value;
 pub use self::value::{Value, ValueArray, ValueRef, ValueType, Values};
 
-// TODO: impl Eq on this stuff, impl Clone on Map, impl From for/to HashMap.
+// TODO: impl Eq on this stuff.
 // TODO: the way current traits work is they return objects with lifetime bounds of the MapRefs
 // while they should probably be bound to lifetimes of owners instead.
 
@@ -94,6 +94,41 @@ impl Drop for Map {
         unsafe {
             self.api.free_map(self.handle);
         }
+    }
+}
+
+impl Clone for Map {
+    fn clone(&self) -> Self {
+        let mut map = Map::new(self.api);
+
+        for i in 0..self.key_count() {
+            let key = self.key_raw(i);
+            let value = unsafe { self.values_raw_unchecked(key).unwrap() };
+
+            // TODO: this is stupid.
+            match value {
+                ValueArray::Ints(xs) => unsafe {
+                    map.set_values_raw_unchecked(key, Values::IntArray(xs));
+                },
+                ValueArray::Floats(xs) => unsafe {
+                    map.set_values_raw_unchecked(key, Values::FloatArray(xs));
+                },
+                ValueArray::Data(xs) => unsafe {
+                    map.set_values_raw_unchecked(key, Values::Data(&mut xs.iter().map(|&x| x)));
+                },
+                ValueArray::Nodes(xs) => unsafe {
+                    map.set_values_raw_unchecked(key, Values::Nodes(&mut xs.iter()));
+                },
+                ValueArray::Frames(xs) => unsafe {
+                    map.set_values_raw_unchecked(key, Values::Frames(&mut xs.iter()));
+                },
+                ValueArray::Functions(xs) => unsafe {
+                    map.set_values_raw_unchecked(key, Values::Functions(&mut xs.iter()));
+                },
+            }
+        }
+
+        map
     }
 }
 
@@ -467,28 +502,26 @@ pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
     /// When using VapourSynth API >= R3.1, this performs better on integer and floating point
     /// arrays than calling `set_value()` in a loop.
     ///
+    /// # Safety
+    /// The caller must ensure `key` is valid.
+    ///
     /// # Panics
     /// Panics if `values` contains `Data`, and one of the entries' length can't fit into an `i32`,
     /// and if `values` contains an `IntArray` or a `FloatArray`, and its length can't fit into an
     /// `i32`.
-    fn set_values(&mut self, key: &str, values: Values) -> Result<()> {
-        Map::is_key_valid(key)?;
-        let key = CString::new(key).unwrap();
-
+    unsafe fn set_values_raw_unchecked(&mut self, key: &CStr, values: Values) {
         macro_rules! set_values {
             ($iter:expr, $value:ident) => ({
                 let first = $iter.next();
                 if first.is_none() {
-                    unsafe { self.touch_raw_unchecked(&key, ValueType::$value) };
+                    self.touch_raw_unchecked(&key, ValueType::$value);
                 } else {
                     let first = first.unwrap();
-                    unsafe {
-                        self.set_value_raw_unchecked(&key, ValueRef::$value(first));
+                    self.set_value_raw_unchecked(&key, ValueRef::$value(first));
 
-                        for x in $iter {
-                            let result = self.append_value_raw_unchecked(&key, ValueRef::$value(x));
-                            debug_assert!(result.is_ok());
-                        }
+                    for x in $iter {
+                        let result = self.append_value_raw_unchecked(&key, ValueRef::$value(x));
+                        debug_assert!(result.is_ok());
                     }
                 }
             })
@@ -497,18 +530,14 @@ pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
         match values {
             #[cfg(feature = "gte-vapoursynth-api-31")]
             Values::IntArray(xs) => {
-                let result = unsafe {
-                    self.api()
-                        .prop_set_int_array(self.handle_mut(), key.as_ptr(), xs)
-                };
+                let result = self.api()
+                    .prop_set_int_array(self.handle_mut(), key.as_ptr(), xs);
                 debug_assert!(result == 0);
             }
             #[cfg(feature = "gte-vapoursynth-api-31")]
             Values::FloatArray(xs) => {
-                let result = unsafe {
-                    self.api()
-                        .prop_set_float_array(self.handle_mut(), key.as_ptr(), xs)
-                };
+                let result = self.api()
+                    .prop_set_float_array(self.handle_mut(), key.as_ptr(), xs);
                 debug_assert!(result == 0);
             }
 
@@ -524,7 +553,23 @@ pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
             Values::Frames(xs) => set_values!(xs, Frame),
             Values::Functions(xs) => set_values!(xs, Function),
         }
+    }
 
+    /// Sets the property value to an array of values.
+    ///
+    /// When using VapourSynth API >= R3.1, this performs better on integer and floating point
+    /// arrays than calling `set_value()` in a loop.
+    ///
+    /// # Panics
+    /// Panics if `values` contains `Data`, and one of the entries' length can't fit into an `i32`,
+    /// and if `values` contains an `IntArray` or a `FloatArray`, and its length can't fit into an
+    /// `i32`.
+    fn set_values(&mut self, key: &str, values: Values) -> Result<()> {
+        Map::is_key_valid(key)?;
+        let key = CString::new(key).unwrap();
+        unsafe {
+            self.set_values_raw_unchecked(&key, values);
+        }
         Ok(())
     }
 
