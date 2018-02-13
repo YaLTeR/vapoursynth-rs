@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
@@ -15,10 +16,10 @@ pub use self::errors::{Error, InvalidKeyError};
 use self::errors::Result;
 
 mod iterators;
-pub use self::iterators::{Iter, Keys};
+pub use self::iterators::{Iter, Keys, ValueIter};
 
 mod value;
-pub use self::value::{Value, ValueArray, ValueRef, ValueType, Values};
+pub use self::value::{Value, ValueArray, ValueIterEnum, ValueRef, ValueType, Values};
 
 // TODO: impl Eq on this stuff.
 // TODO: the way current traits work is they return objects with lifetime bounds of the MapRefs
@@ -173,6 +174,17 @@ impl Map {
 
         Ok(())
     }
+}
+
+// Macro for repetitive stuff.
+macro_rules! get_something_raw_unchecked {
+    ($name:ident, $func:ident, $rv:ty) => (
+        #[doc(hidden)]
+        #[inline]
+        unsafe fn $name(&self, key: &CStr, index: i32, error: &mut i32) -> $rv {
+            self.api().$func(self.handle(), key.as_ptr(), index, error)
+        }
+    )
 }
 
 /// A non-mutable VapourSynth map interface.
@@ -403,6 +415,35 @@ pub trait VSMap: sealed::VSMapInterface {
         unsafe { self.values_raw_unchecked(&key) }
     }
 
+    /// Returns an iterator over the values for the given key.
+    fn value_iter(&self, key: &str) -> Result<ValueIterEnum> {
+        Map::is_key_valid(key)?;
+        let key = CString::new(key).unwrap();
+
+        let value_type = unsafe { self.value_type_raw_unchecked(&key)? };
+        let rv = match value_type {
+            ValueType::Int => unsafe {
+                ValueIter::<i64>::new(self.get_ref(), Cow::Owned(key))?.into()
+            },
+            ValueType::Float => unsafe {
+                ValueIter::<f64>::new(self.get_ref(), Cow::Owned(key))?.into()
+            },
+            ValueType::Data => unsafe {
+                ValueIter::<&[u8]>::new(self.get_ref(), Cow::Owned(key))?.into()
+            },
+            ValueType::Node => unsafe {
+                ValueIter::<Node>::new(self.get_ref(), Cow::Owned(key))?.into()
+            },
+            ValueType::Frame => unsafe {
+                ValueIter::<Frame>::new(self.get_ref(), Cow::Owned(key))?.into()
+            },
+            ValueType::Function => unsafe {
+                ValueIter::<Function>::new(self.get_ref(), Cow::Owned(key))?.into()
+            },
+        };
+        Ok(rv)
+    }
+
     /// Returns an iterator over the entries.
     #[inline]
     fn iter(&self) -> Iter<Self>
@@ -417,6 +458,23 @@ pub trait VSMap: sealed::VSMapInterface {
     fn get_ref(&self) -> MapRef {
         unsafe { MapRef::from_ptr(self.api(), self.handle()) }
     }
+
+    get_something_raw_unchecked!(get_int_raw_unchecked, prop_get_int, i64);
+    get_something_raw_unchecked!(get_float_raw_unchecked, prop_get_float, f64);
+    get_something_raw_unchecked!(get_data_raw_unchecked, prop_get_data, *const c_char);
+    get_something_raw_unchecked!(get_node_raw_unchecked, prop_get_node, *mut ffi::VSNodeRef);
+    get_something_raw_unchecked!(
+        get_frame_raw_unchecked,
+        prop_get_frame,
+        *const ffi::VSFrameRef
+    );
+    get_something_raw_unchecked!(
+        get_function_raw_unchecked,
+        prop_get_func,
+        *mut ffi::VSFuncRef
+    );
+
+    get_something_raw_unchecked!(get_data_size_raw_unchecked, prop_get_data_size, i32);
 }
 
 impl<'owner, 'map> From<&'map MapRef<'owner>> for HashMap<&'map str, ValueArray<'map>> {

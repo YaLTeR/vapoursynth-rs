@@ -1,6 +1,18 @@
 use frame::Frame;
 use function::Function;
+use map::ValueIter;
 use node::Node;
+
+/// An enumeration of all possible value types.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub enum ValueType {
+    Int,
+    Float,
+    Data,
+    Node,
+    Frame,
+    Function,
+}
 
 /// A value that can be stored in a `Map`.
 #[derive(Debug, Clone)]
@@ -76,13 +88,29 @@ pub enum Values<'a, 'b: 'a> {
     Functions(&'a mut Iterator<Item = &'b Function>),
 }
 
-/// An enumeration of all possible value types.
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-pub enum ValueType {
-    Int,
-    Float,
-    Data,
-    Node,
-    Frame,
-    Function,
+/// An iterator over values of a certain type.
+pub enum ValueIterEnum<'map, 'key> {
+    Ints(ValueIter<'map, 'key, i64>),
+    Floats(ValueIter<'map, 'key, f64>),
+    Data(ValueIter<'map, 'key, &'map [u8]>),
+    Nodes(ValueIter<'map, 'key, Node>),
+    Frames(ValueIter<'map, 'key, Frame>),
+    Functions(ValueIter<'map, 'key, Function>),
 }
+
+macro_rules! impl_from_value_iter {
+    ($type:ty, $name:ident) => (
+        impl<'map, 'key> From<ValueIter<'map, 'key, $type>> for ValueIterEnum<'map, 'key> {
+            fn from(x: ValueIter<'map, 'key, $type>) -> ValueIterEnum<'map, 'key> {
+                ValueIterEnum::$name(x)
+            }
+        }
+    )
+}
+
+impl_from_value_iter!(i64, Ints);
+impl_from_value_iter!(f64, Floats);
+impl_from_value_iter!(&'map [u8], Data);
+impl_from_value_iter!(Node, Nodes);
+impl_from_value_iter!(Frame, Frames);
+impl_from_value_iter!(Function, Functions);

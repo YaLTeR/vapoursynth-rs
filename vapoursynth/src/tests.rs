@@ -291,5 +291,15 @@ mod need_api {
 
         assert_eq!(map.delete_key("test_frame"), Ok(()));
         assert_eq!(map.delete_key("test_frame"), Err(Error::KeyNotFound));
+
+        if let Ok(ValueIterEnum::Data(mut iter)) = clone.value_iter("test_frame") {
+            assert_eq!(iter.next(), Some(TEST_DATA[0]));
+            assert_eq!(iter.next(), Some(TEST_DATA[1]));
+            assert_eq!(iter.next(), Some(TEST_DATA[2]));
+            assert_eq!(iter.next(), Some(TEST_DATA[3]));
+            assert_eq!(iter.next(), None);
+        } else {
+            assert!(false);
+        }
     }
 }
