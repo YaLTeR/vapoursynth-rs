@@ -288,5 +288,8 @@ mod need_api {
         } else {
             assert!(false);
         }
+
+        assert_eq!(map.delete_key("test_frame"), Ok(()));
+        assert_eq!(map.delete_key("test_frame"), Err(Error::KeyNotFound));
     }
 }

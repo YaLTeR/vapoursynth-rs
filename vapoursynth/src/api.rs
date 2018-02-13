@@ -255,6 +255,15 @@ impl API {
         ((*self.handle).propGetKey)(map, index)
     }
 
+    /// Removes the key from a property map.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` and `key` are valid.
+    #[inline]
+    pub(crate) unsafe fn prop_delete_key(self, map: *mut ffi::VSMap, key: *const c_char) -> i32 {
+        ((*self.handle).propDeleteKey)(map, key)
+    }
+
     /// Returns the number of elements associated with a key in a property map.
     ///
     /// # Safety

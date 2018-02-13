@@ -439,6 +439,12 @@ impl<'map> From<&'map Map> for HashMap<&'map str, ValueArray<'map>> {
 ///
 /// This trait is sealed and is not meant for implementation outside of this crate.
 pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
+    /// Returns a `MapRefMut` to this map.
+    #[inline]
+    fn get_ref_mut(&mut self) -> MapRefMut {
+        unsafe { MapRefMut::from_ptr(self.api(), self.handle_mut()) }
+    }
+
     /// Clears the map.
     #[inline]
     fn clear(&mut self) {
@@ -447,10 +453,27 @@ pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
         }
     }
 
-    /// Returns a `MapRefMut` to this map.
+    /// Deletes the given key.
+    ///
+    /// # Safety
+    /// The caller must ensure `key` is valid.
     #[inline]
-    fn get_ref_mut(&mut self) -> MapRefMut {
-        unsafe { MapRefMut::from_ptr(self.api(), self.handle_mut()) }
+    unsafe fn delete_key_raw_unchecked(&mut self, key: &CStr) -> Result<()> {
+        let result = self.api().prop_delete_key(self.handle_mut(), key.as_ptr());
+        if result == 0 {
+            Err(Error::KeyNotFound)
+        } else {
+            debug_assert!(result == 1);
+            Ok(())
+        }
+    }
+
+    /// Deletes the given key.
+    #[inline]
+    fn delete_key(&mut self, key: &str) -> Result<()> {
+        Map::is_key_valid(key)?;
+        let key = CString::new(key).unwrap();
+        unsafe { self.delete_key_raw_unchecked(&key) }
     }
 
     /// Sets the property value.
