@@ -2,12 +2,33 @@ use std::result;
 
 /// The error type for `Map` operations.
 #[cfg_attr(rustfmt, rustfmt_skip)]
-#[derive(Fail, Debug)]
+#[derive(Fail, Debug, Eq, PartialEq)]
 pub enum Error {
     #[fail(display = "The requested key wasn't found in the map")]
     KeyNotFound,
     #[fail(display = "The requested index was out of bounds")]
     IndexOutOfBounds,
+    #[fail(display = "The type of the given value doesn't match the type of the property")]
+    WrongValueType,
+    #[fail(display = "The key is invalid")]
+    InvalidKey(#[cause] InvalidKeyError),
 }
 
 pub(crate) type Result<T> = result::Result<T, Error>;
+
+/// An error indicating the map key is invalid.
+#[derive(Fail, Debug, Eq, PartialEq)]
+#[cfg_attr(rustfmt, rustfmt_skip)]
+pub enum InvalidKeyError {
+    #[fail(display = "The key is empty")]
+    EmptyKey,
+    #[fail(display = "The key contains an invalid character at index {}", _0)]
+    InvalidCharacter(usize),
+}
+
+impl From<InvalidKeyError> for Error {
+    #[inline]
+    fn from(x: InvalidKeyError) -> Self {
+        Error::InvalidKey(x)
+    }
+}

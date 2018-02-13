@@ -3,6 +3,7 @@ extern crate bitflags;
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
+#[cfg(not(feature = "gte-vsscript-api-32"))]
 #[macro_use]
 extern crate lazy_static;
 extern crate vapoursynth_sys;

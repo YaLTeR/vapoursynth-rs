@@ -10,7 +10,7 @@ pub struct API {
 unsafe impl Send for API {}
 unsafe impl Sync for API {}
 
-// Macro for implementing repetitive functions.
+// Macros for implementing repetitive functions.
 macro_rules! prop_get_something {
     ($name:ident, $func:ident, $rv:ty) => (
         #[inline]
@@ -22,6 +22,21 @@ macro_rules! prop_get_something {
             error: &mut i32,
         ) -> $rv {
             ((*self.handle).$func)(map, key, index, error)
+        }
+    )
+}
+
+macro_rules! prop_set_something {
+    ($name:ident, $func:ident, $type:ty) => (
+        #[inline]
+        pub(crate) unsafe fn $name(
+            self,
+            map: *mut ffi::VSMap,
+            key: *const c_char,
+            value: $type,
+            append: ffi::VSPropAppendMode,
+        ) -> i32 {
+            ((*self.handle).$func)(map, key, value, append as i32)
         }
     )
 }
@@ -284,6 +299,12 @@ impl API {
     prop_get_something!(prop_get_frame, propGetFrame, *const ffi::VSFrameRef);
     prop_get_something!(prop_get_func, propGetFunc, *mut ffi::VSFuncRef);
 
+    prop_set_something!(prop_set_int, propSetInt, i64);
+    prop_set_something!(prop_set_float, propSetFloat, f64);
+    prop_set_something!(prop_set_node, propSetNode, *mut ffi::VSNodeRef);
+    prop_set_something!(prop_set_frame, propSetFrame, *const ffi::VSFrameRef);
+    prop_set_something!(prop_set_func, propSetFunc, *mut ffi::VSFuncRef);
+
     /// Retrieves an array of integers from a map.
     ///
     /// # Safety
@@ -312,6 +333,72 @@ impl API {
         error: &mut i32,
     ) -> *const f64 {
         ((*self.handle).propGetFloatArray)(map, key, error)
+    }
+
+    /// Adds a data property to the map.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` and `key` are valid.
+    ///
+    /// # Panics
+    /// Panics if `value.len()` can't fit in an `i32`.
+    #[inline]
+    pub(crate) unsafe fn prop_set_data(
+        self,
+        map: *mut ffi::VSMap,
+        key: *const c_char,
+        value: &[u8],
+        append: ffi::VSPropAppendMode,
+    ) -> i32 {
+        let length = value.len();
+        assert!(length <= i32::max_value() as usize);
+        let length = length as i32;
+
+        ((*self.handle).propSetData)(map, key, value.as_ptr() as _, length, append as i32)
+    }
+
+    /// Adds an array of integers to the map.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` and `key` are valid.
+    ///
+    /// # Panics
+    /// Panics if `value.len()` can't fit in an `i32`.
+    #[cfg(feature = "gte-vapoursynth-api-31")]
+    #[inline]
+    pub(crate) unsafe fn prop_set_int_array(
+        self,
+        map: *mut ffi::VSMap,
+        key: *const c_char,
+        value: &[i64],
+    ) -> i32 {
+        let length = value.len();
+        assert!(length <= i32::max_value() as usize);
+        let length = length as i32;
+
+        ((*self.handle).propSetIntArray)(map, key, value.as_ptr(), length)
+    }
+
+    /// Adds an array of floating point numbers to the map.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` and `key` are valid.
+    ///
+    /// # Panics
+    /// Panics if `value.len()` can't fit in an `i32`.
+    #[cfg(feature = "gte-vapoursynth-api-31")]
+    #[inline]
+    pub(crate) unsafe fn prop_set_float_array(
+        self,
+        map: *mut ffi::VSMap,
+        key: *const c_char,
+        value: &[f64],
+    ) -> i32 {
+        let length = value.len();
+        assert!(length <= i32::max_value() as usize);
+        let length = length as i32;
+
+        ((*self.handle).propSetFloatArray)(map, key, value.as_ptr(), length)
     }
 
     /// Frees `function`.

@@ -41,4 +41,10 @@ impl Function {
     pub(crate) unsafe fn from_ptr(api: API, handle: *mut ffi::VSFuncRef) -> Self {
         Self { api, handle }
     }
+
+    /// Returns the underlying pointer.
+    #[inline]
+    pub(crate) fn ptr(&self) -> *mut ffi::VSFuncRef {
+        self.handle
+    }
 }

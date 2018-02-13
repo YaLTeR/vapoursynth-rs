@@ -72,6 +72,12 @@ impl Node {
         Self { api, handle }
     }
 
+    /// Returns the underlying pointer.
+    #[inline]
+    pub(crate) fn ptr(&self) -> *mut ffi::VSNodeRef {
+        self.handle
+    }
+
     /// Returns the video info associated with this `Node`.
     #[inline]
     pub fn info(&self) -> VideoInfo {

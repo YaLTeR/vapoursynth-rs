@@ -7,8 +7,10 @@ authors = ["Ivan Molodetskikh <yalterz@gmail.com>"]
 bitflags = "1"
 failure = "0.1"
 failure_derive = "0.1"
-lazy_static = "1"
 vapoursynth-sys = { version = "0.1", path = "../vapoursynth-sys" }
+
+[target.'cfg(not(feature = "gte-vsscript-api-32"))'.dependencies]
+lazy_static = "1"
 
 [features]
 # Features for enabling higher API versions.

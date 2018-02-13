@@ -51,6 +51,12 @@ impl Frame {
         Self { api, handle }
     }
 
+    /// Returns the underlying pointer.
+    #[inline]
+    pub(crate) fn ptr(&self) -> *const ffi::VSFrameRef {
+        self.handle
+    }
+
     /// Returns the frame format.
     #[inline]
     pub fn format(&self) -> Format {

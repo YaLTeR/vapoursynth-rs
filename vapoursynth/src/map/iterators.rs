@@ -26,7 +26,7 @@ impl<'a, T: 'a> Iterator for Keys<'a, T>
 where
     T: VSMap,
 {
-    type Item = &'a CStr;
+    type Item = &'a str;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -78,7 +78,7 @@ impl<'a, T: 'a> Iterator for Iter<'a, T>
 where
     T: VSMap,
 {
-    type Item = (&'a CStr, ValueArray<'a>);
+    type Item = (&'a str, ValueArray<'a>);
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -87,7 +87,8 @@ where
         }
 
         let key = self.map.key(self.index);
-        let values = self.map.values(key).unwrap();
+        let raw_key = self.map.key_raw(self.index);
+        let values = unsafe { self.map.values_raw_unchecked(raw_key).unwrap() };
 
         self.index += 1;
         Some((key, values))

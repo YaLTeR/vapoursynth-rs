@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 use std::os::raw::c_char;
-use std::slice;
+use std::{ptr, result, slice};
 use vapoursynth_sys as ffi;
 
 use api::API;
@@ -11,14 +11,14 @@ use function::Function;
 use node::Node;
 
 mod errors;
-pub use self::errors::Error;
+pub use self::errors::{Error, InvalidKeyError};
 use self::errors::Result;
 
 mod iterators;
 pub use self::iterators::{Iter, Keys};
 
 mod value;
-pub use self::value::{Value, ValueArray};
+pub use self::value::{Value, ValueArray, ValueRef, ValueType, Values};
 
 // TODO: impl Eq on this stuff, impl Clone on Map, impl From for/to HashMap.
 // TODO: the way current traits work is they return objects with lifetime bounds of the MapRefs
@@ -105,6 +105,37 @@ impl Map {
 
         Self { api, handle }
     }
+
+    /// Checks if the key is valid. Valid keys start with an alphabetic character or an underscore,
+    /// and contain only alphanumeric characters and underscores.
+    pub fn is_key_valid(key: &str) -> result::Result<(), InvalidKeyError> {
+        if key.is_empty() {
+            return Err(InvalidKeyError::EmptyKey);
+        }
+
+        // TODO: use `AsciiExt` stuff when it gets stabilized.
+        fn is_alpha(c: char) -> bool {
+            (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+        }
+        fn is_numeric(c: char) -> bool {
+            c >= '0' && c <= '9'
+        }
+
+        let mut chars = key.chars();
+
+        let first = chars.next().unwrap();
+        if !is_alpha(first) && first != '_' {
+            return Err(InvalidKeyError::InvalidCharacter(0));
+        }
+
+        for (i, c) in chars.enumerate() {
+            if !is_alpha(c) && !is_numeric(c) && c != '_' {
+                return Err(InvalidKeyError::InvalidCharacter(i + 1));
+            }
+        }
+
+        Ok(())
+    }
 }
 
 /// A non-mutable VapourSynth map interface.
@@ -124,14 +155,24 @@ pub trait VSMap: sealed::VSMapInterface {
     /// # Panics
     /// Panics if `index >= self.key_count()`.
     #[inline]
-    fn key(&self, index: usize) -> &CStr {
+    fn key_raw(&self, index: usize) -> &CStr {
         assert!(index < self.key_count());
         let index = index as i32;
 
         unsafe { CStr::from_ptr(self.api().prop_get_key(self.handle(), index)) }
     }
 
+    /// Returns a key from a map.
+    ///
+    /// # Panics
+    /// Panics if `index >= self.key_count()`.
+    #[inline]
+    fn key(&self, index: usize) -> &str {
+        self.key_raw(index).to_str().unwrap()
+    }
+
     /// Returns an iterator over all keys in a map.
+    #[inline]
     fn keys(&self) -> Keys<Self>
     where
         Self: Sized,
@@ -141,47 +182,61 @@ pub trait VSMap: sealed::VSMapInterface {
 
     /// Returns the number of elements associated with a key in a map.
     ///
-    /// If there's no such key in the map, `None` is returned.
+    /// # Safety
+    /// The caller must ensure `key` is valid.
     #[inline]
-    fn value_count(&self, key: &CStr) -> Option<usize> {
-        let rv = unsafe { self.api().prop_num_elements(self.handle(), key.as_ptr()) };
+    unsafe fn value_count_raw_unchecked(&self, key: &CStr) -> Result<usize> {
+        let rv = self.api().prop_num_elements(self.handle(), key.as_ptr());
         if rv == -1 {
-            None
+            Err(Error::KeyNotFound)
         } else {
             debug_assert!(rv >= 0);
-            Some(rv as usize)
+            Ok(rv as usize)
         }
     }
 
+    /// Returns the number of elements associated with a key in a map.
+    #[inline]
+    fn value_count(&self, key: &str) -> Result<usize> {
+        Map::is_key_valid(key)?;
+        let key = CString::new(key).unwrap();
+        unsafe { self.value_count_raw_unchecked(&key) }
+    }
+
     /// Retrieves a value type from a map.
-    #[doc(hidden)]
-    fn value_type(&self, key: &CStr) -> ffi::VSPropTypes {
-        match unsafe { self.api().prop_get_type(self.handle(), key.as_ptr()) } {
-            x if x == ffi::VSPropTypes::ptUnset as c_char => ffi::VSPropTypes::ptUnset,
-            x if x == ffi::VSPropTypes::ptInt as c_char => ffi::VSPropTypes::ptInt,
-            x if x == ffi::VSPropTypes::ptFloat as c_char => ffi::VSPropTypes::ptFloat,
-            x if x == ffi::VSPropTypes::ptData as c_char => ffi::VSPropTypes::ptData,
-            x if x == ffi::VSPropTypes::ptNode as c_char => ffi::VSPropTypes::ptNode,
-            x if x == ffi::VSPropTypes::ptFrame as c_char => ffi::VSPropTypes::ptFrame,
-            x if x == ffi::VSPropTypes::ptFunction as c_char => ffi::VSPropTypes::ptFunction,
+    ///
+    /// # Safety
+    /// The caller must ensure `key` is valid.
+    unsafe fn value_type_raw_unchecked(&self, key: &CStr) -> Result<ValueType> {
+        match self.api().prop_get_type(self.handle(), key.as_ptr()) {
+            x if x == ffi::VSPropTypes::ptUnset as c_char => Err(Error::KeyNotFound),
+            x if x == ffi::VSPropTypes::ptInt as c_char => Ok(ValueType::Int),
+            x if x == ffi::VSPropTypes::ptFloat as c_char => Ok(ValueType::Float),
+            x if x == ffi::VSPropTypes::ptData as c_char => Ok(ValueType::Data),
+            x if x == ffi::VSPropTypes::ptNode as c_char => Ok(ValueType::Node),
+            x if x == ffi::VSPropTypes::ptFrame as c_char => Ok(ValueType::Frame),
+            x if x == ffi::VSPropTypes::ptFunction as c_char => Ok(ValueType::Function),
             _ => unreachable!(),
         }
     }
 
+    /// Retrieves a value type from a map.
+    #[inline]
+    fn value_type(&self, key: &str) -> Result<ValueType> {
+        Map::is_key_valid(key)?;
+        let key = CString::new(key).unwrap();
+        unsafe { self.value_type_raw_unchecked(&key) }
+    }
+
     /// Retrieves a value from a map.
     ///
-    /// # Panics
-    /// Panics if `index > i32::max_value()`.
-    fn value(&self, key: &CStr, index: usize) -> Result<Value> {
-        assert!(index <= i32::max_value() as usize);
-        let index = index as i32;
-
+    /// # Safety
+    /// The caller must ensure `key` is valid and `index >= 0`.
+    unsafe fn value_raw_unchecked(&self, key: &CStr, index: i32) -> Result<Value> {
         macro_rules! get_value {
             ($func:ident, $value:path, $process:expr) => {{
                 let mut error = 0;
-                let value = unsafe {
-                    self.api().$func(self.handle(), key.as_ptr(), index, &mut error)
-                };
+                let value = self.api().$func(self.handle(), key.as_ptr(), index, &mut error);
 
                 match error {
                     0 => {}
@@ -195,48 +250,62 @@ pub trait VSMap: sealed::VSMapInterface {
             }}
         }
 
-        match self.value_type(key) {
-            ffi::VSPropTypes::ptUnset => Err(Error::KeyNotFound),
-            ffi::VSPropTypes::ptInt => get_value!(prop_get_int, Value::Int, |x| x),
-            ffi::VSPropTypes::ptFloat => get_value!(prop_get_float, Value::Float, |x| x),
-            ffi::VSPropTypes::ptData => get_value!(prop_get_data, Value::Data, |x| {
+        match self.value_type_raw_unchecked(key)? {
+            ValueType::Int => get_value!(prop_get_int, Value::Int, |x| x),
+            ValueType::Float => get_value!(prop_get_float, Value::Float, |x| x),
+            ValueType::Data => get_value!(prop_get_data, Value::Data, |x| {
                 let mut error = 0;
-                let size = unsafe {
+                let size =
                     self.api()
-                        .prop_get_data_size(self.handle(), key.as_ptr(), index, &mut error)
-                };
+                        .prop_get_data_size(self.handle(), key.as_ptr(), index, &mut error);
                 debug_assert!(error == 0);
                 debug_assert!(size >= 0);
-                unsafe { slice::from_raw_parts(x as *const u8, size as usize) }
+                slice::from_raw_parts(x as *const u8, size as usize)
             }),
-            ffi::VSPropTypes::ptNode => get_value!(prop_get_node, Value::Node, |x| unsafe {
-                Node::from_ptr(self.api(), x)
+            ValueType::Node => get_value!(prop_get_node, Value::Node, |x| Node::from_ptr(
+                self.api(),
+                x
+            )),
+            ValueType::Frame => get_value!(prop_get_frame, Value::Frame, |x| Frame::from_ptr(
+                self.api(),
+                x
+            )),
+            ValueType::Function => get_value!(prop_get_func, Value::Function, |x| {
+                Function::from_ptr(self.api(), x)
             }),
-            ffi::VSPropTypes::ptFrame => get_value!(prop_get_frame, Value::Frame, |x| unsafe {
-                Frame::from_ptr(self.api(), x)
-            }),
-            ffi::VSPropTypes::ptFunction => {
-                get_value!(prop_get_func, Value::Function, |x| unsafe {
-                    Function::from_ptr(self.api(), x)
-                })
-            }
         }
     }
 
+    /// Retrieves a value from a map.
+    ///
+    /// # Panics
+    /// Panics if `index > i32::max_value()`.
+    #[inline]
+    fn value(&self, key: &str, index: usize) -> Result<Value> {
+        Map::is_key_valid(key)?;
+        let key = CString::new(key).unwrap();
+
+        assert!(index <= i32::max_value() as usize);
+        let index = index as i32;
+
+        unsafe { self.value_raw_unchecked(&key, index) }
+    }
+
     /// Retrieves all values for a given key from a map.
-    fn values(&self, key: &CStr) -> Result<ValueArray> {
-        let count = self.value_count(key).ok_or(Error::KeyNotFound)?;
+    ///
+    /// # Safety
+    /// The caller must ensure `key` is valid.
+    unsafe fn values_raw_unchecked(&self, key: &CStr) -> Result<ValueArray> {
+        let count = self.value_count_raw_unchecked(key)?;
 
         #[cfg(feature = "gte-vapoursynth-api-31")]
         macro_rules! get_value_array {
             ($func:ident, $value:path) => {{
                     let mut error = 0;
-                    let ptr = unsafe {
-                        self.api().$func(self.handle(), key.as_ptr(), &mut error)
-                    };
+                    let ptr = self.api().$func(self.handle(), key.as_ptr(), &mut error);
                     debug_assert!(error == 0);
 
-                    Ok($value(unsafe { slice::from_raw_parts(ptr, count) }))
+                    Ok($value(slice::from_raw_parts(ptr, count)))
             }}
         }
 
@@ -246,9 +315,8 @@ pub trait VSMap: sealed::VSMapInterface {
                     (0..count as i32)
                         .map(|index| {
                             let mut error = 0;
-                            let value = unsafe {
-                                self.api().$func(self.handle(), key.as_ptr(), index, &mut error)
-                            };
+                            let value =
+                                self.api().$func(self.handle(), key.as_ptr(), index, &mut error);
                             debug_assert!(error == 0);
                             (index, value)
                         })
@@ -258,56 +326,48 @@ pub trait VSMap: sealed::VSMapInterface {
             )
         }
 
-        match self.value_type(key) {
-            ffi::VSPropTypes::ptUnset => Err(Error::KeyNotFound),
-
+        match self.value_type_raw_unchecked(key)? {
             #[cfg(feature = "gte-vapoursynth-api-31")]
-            ffi::VSPropTypes::ptInt => get_value_array!(prop_get_int_array, ValueArray::Ints),
+            ValueType::Int => get_value_array!(prop_get_int_array, ValueArray::Ints),
             #[cfg(feature = "gte-vapoursynth-api-31")]
-            ffi::VSPropTypes::ptFloat => get_value_array!(prop_get_float_array, ValueArray::Floats),
+            ValueType::Float => get_value_array!(prop_get_float_array, ValueArray::Floats),
 
             #[cfg(not(feature = "gte-vapoursynth-api-31"))]
-            ffi::VSPropTypes::ptInt => get_values!(prop_get_int, ValueArray::Ints, |(_, x)| x),
+            ValueType::Int => get_values!(prop_get_int, ValueArray::Ints, |(_, x)| x),
             #[cfg(not(feature = "gte-vapoursynth-api-31"))]
-            ffi::VSPropTypes::ptFloat => {
-                get_values!(prop_get_float, ValueArray::Floats, |(_, x)| x)
-            }
+            ValueType::Float => get_values!(prop_get_float, ValueArray::Floats, |(_, x)| x),
 
-            ffi::VSPropTypes::ptData => {
-                get_values!(prop_get_data, ValueArray::Data, |(index, x)| {
-                    let mut error = 0;
-                    let size = unsafe {
-                        self.api().prop_get_data_size(
-                            self.handle(),
-                            key.as_ptr(),
-                            index,
-                            &mut error,
-                        )
-                    };
-                    debug_assert!(error == 0);
-                    debug_assert!(size >= 0);
-                    unsafe { slice::from_raw_parts(x as *const u8, size as usize) }
-                })
-            }
-            ffi::VSPropTypes::ptNode => {
-                get_values!(prop_get_node, ValueArray::Nodes, |(_, x)| unsafe {
-                    Node::from_ptr(self.api(), x)
-                })
-            }
-            ffi::VSPropTypes::ptFrame => {
-                get_values!(prop_get_frame, ValueArray::Frames, |(_, x)| unsafe {
-                    Frame::from_ptr(self.api(), x)
-                })
-            }
-            ffi::VSPropTypes::ptFunction => {
-                get_values!(prop_get_func, ValueArray::Functions, |(_, x)| unsafe {
-                    Function::from_ptr(self.api(), x)
-                })
-            }
+            ValueType::Data => get_values!(prop_get_data, ValueArray::Data, |(index, x)| {
+                let mut error = 0;
+                let size =
+                    self.api()
+                        .prop_get_data_size(self.handle(), key.as_ptr(), index, &mut error);
+                debug_assert!(error == 0);
+                debug_assert!(size >= 0);
+                slice::from_raw_parts(x as *const u8, size as usize)
+            }),
+            ValueType::Node => get_values!(prop_get_node, ValueArray::Nodes, |(_, x)| {
+                Node::from_ptr(self.api(), x)
+            }),
+            ValueType::Frame => get_values!(prop_get_frame, ValueArray::Frames, |(_, x)| {
+                Frame::from_ptr(self.api(), x)
+            }),
+            ValueType::Function => get_values!(prop_get_func, ValueArray::Functions, |(_, x)| {
+                Function::from_ptr(self.api(), x)
+            }),
         }
     }
 
+    /// Retrieves all values for a given key from a map.
+    #[inline]
+    fn values(&self, key: &str) -> Result<ValueArray> {
+        Map::is_key_valid(key)?;
+        let key = CString::new(key).unwrap();
+        unsafe { self.values_raw_unchecked(&key) }
+    }
+
     /// Returns an iterator over the entries.
+    #[inline]
     fn iter(&self) -> Iter<Self>
     where
         Self: Sized,
@@ -322,19 +382,19 @@ pub trait VSMap: sealed::VSMapInterface {
     }
 }
 
-impl<'owner, 'map> From<&'map MapRef<'owner>> for HashMap<&'map CStr, ValueArray<'map>> {
+impl<'owner, 'map> From<&'map MapRef<'owner>> for HashMap<&'map str, ValueArray<'map>> {
     fn from(x: &'map MapRef<'owner>) -> Self {
         x.iter().collect()
     }
 }
 
-impl<'owner, 'map> From<&'map MapRefMut<'owner>> for HashMap<&'map CStr, ValueArray<'map>> {
+impl<'owner, 'map> From<&'map MapRefMut<'owner>> for HashMap<&'map str, ValueArray<'map>> {
     fn from(x: &'map MapRefMut<'owner>) -> Self {
         x.iter().collect()
     }
 }
 
-impl<'map> From<&'map Map> for HashMap<&'map CStr, ValueArray<'map>> {
+impl<'map> From<&'map Map> for HashMap<&'map str, ValueArray<'map>> {
     fn from(x: &'map Map) -> Self {
         x.iter().collect()
     }
@@ -356,6 +416,202 @@ pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
     #[inline]
     fn get_ref_mut(&mut self) -> MapRefMut {
         unsafe { MapRefMut::from_ptr(self.api(), self.handle_mut()) }
+    }
+
+    /// Sets the property value.
+    ///
+    /// # Safety
+    /// The caller must ensure `key` is valid.
+    ///
+    /// # Panics
+    /// Panics if `value` is `Value::Data(v)` and `v.len()` can't fit in an `i32`.
+    unsafe fn set_value_raw_unchecked(&mut self, key: &CStr, value: ValueRef) {
+        macro_rules! set_value {
+            ($func:ident, $value:expr) => ({
+                let result = self.api().$func(
+                    self.handle_mut(),
+                    key.as_ptr(),
+                    $value,
+                    ffi::VSPropAppendMode::paReplace
+                );
+                debug_assert!(result == 0);
+            })
+        }
+
+        match value {
+            ValueRef::Int(x) => set_value!(prop_set_int, x),
+            ValueRef::Float(x) => set_value!(prop_set_float, x),
+            ValueRef::Data(x) => set_value!(prop_set_data, x),
+            ValueRef::Node(x) => set_value!(prop_set_node, x.ptr()),
+            ValueRef::Frame(x) => set_value!(prop_set_frame, x.ptr()),
+            ValueRef::Function(x) => set_value!(prop_set_func, x.ptr()),
+        }
+    }
+
+    /// Sets the property value.
+    ///
+    /// # Panics
+    /// Panics if `value` is `Value::Data(v)` and `v.len()` can't fit in an `i32`.
+    #[inline]
+    fn set_value(&mut self, key: &str, value: ValueRef) -> Result<()> {
+        Map::is_key_valid(key)?;
+        let key = CString::new(key).unwrap();
+        unsafe {
+            self.set_value_raw_unchecked(&key, value);
+        }
+        Ok(())
+    }
+
+    /// Sets the property value to an array of values.
+    ///
+    /// When using VapourSynth API >= R3.1, this performs better on integer and floating point
+    /// arrays than calling `set_value()` in a loop.
+    ///
+    /// # Panics
+    /// Panics if `values` contains `Data`, and one of the entries' length can't fit into an `i32`,
+    /// and if `values` contains an `IntArray` or a `FloatArray`, and its length can't fit into an
+    /// `i32`.
+    fn set_values(&mut self, key: &str, values: Values) -> Result<()> {
+        Map::is_key_valid(key)?;
+        let key = CString::new(key).unwrap();
+
+        macro_rules! set_values {
+            ($iter:expr, $value:ident) => ({
+                let first = $iter.next();
+                if first.is_none() {
+                    unsafe { self.touch_raw_unchecked(&key, ValueType::$value) };
+                } else {
+                    let first = first.unwrap();
+                    unsafe {
+                        self.set_value_raw_unchecked(&key, ValueRef::$value(first));
+
+                        for x in $iter {
+                            let result = self.append_value_raw_unchecked(&key, ValueRef::$value(x));
+                            debug_assert!(result.is_ok());
+                        }
+                    }
+                }
+            })
+        }
+
+        match values {
+            #[cfg(feature = "gte-vapoursynth-api-31")]
+            Values::IntArray(xs) => {
+                let result = unsafe {
+                    self.api()
+                        .prop_set_int_array(self.handle_mut(), key.as_ptr(), xs)
+                };
+                debug_assert!(result == 0);
+            }
+            #[cfg(feature = "gte-vapoursynth-api-31")]
+            Values::FloatArray(xs) => {
+                let result = unsafe {
+                    self.api()
+                        .prop_set_float_array(self.handle_mut(), key.as_ptr(), xs)
+                };
+                debug_assert!(result == 0);
+            }
+
+            #[cfg(not(feature = "gte-vapoursynth-api-31"))]
+            Values::IntArray(xs) => set_values!(xs.iter().cloned(), Int),
+            #[cfg(not(feature = "gte-vapoursynth-api-31"))]
+            Values::FloatArray(xs) => set_values!(xs.iter().cloned(), Float),
+
+            Values::Ints(xs) => set_values!(xs, Int),
+            Values::Floats(xs) => set_values!(xs, Float),
+            Values::Data(xs) => set_values!(xs, Data),
+            Values::Nodes(xs) => set_values!(xs, Node),
+            Values::Frames(xs) => set_values!(xs, Frame),
+            Values::Functions(xs) => set_values!(xs, Function),
+        }
+
+        Ok(())
+    }
+
+    /// Appends the value to the property with the given key.
+    ///
+    /// # Safety
+    /// The caller must ensure `key` is valid.
+    ///
+    /// # Panics
+    /// Panics if `value` is `Value::Data(v)` and `v.len()` can't fit in an `i32`.
+    unsafe fn append_value_raw_unchecked(&mut self, key: &CStr, value: ValueRef) -> Result<()> {
+        macro_rules! append_value {
+            ($func:ident, $value:expr) => ({
+                let result = self.api().$func(
+                    self.handle_mut(),
+                    key.as_ptr(),
+                    $value,
+                    ffi::VSPropAppendMode::paAppend
+                );
+                if result != 0 {
+                    debug_assert!(result == 1);
+                    return Err(Error::WrongValueType);
+                }
+            })
+        }
+
+        match value {
+            ValueRef::Int(x) => append_value!(prop_set_int, x),
+            ValueRef::Float(x) => append_value!(prop_set_float, x),
+            ValueRef::Data(x) => append_value!(prop_set_data, x),
+            ValueRef::Node(x) => append_value!(prop_set_node, x.ptr()),
+            ValueRef::Frame(x) => append_value!(prop_set_frame, x.ptr()),
+            ValueRef::Function(x) => append_value!(prop_set_func, x.ptr()),
+        }
+
+        Ok(())
+    }
+
+    /// Appends the value to the property with the given key.
+    ///
+    /// # Panics
+    /// Panics if `value` is `Value::Data(v)` and `v.len()` can't fit in an `i32`.
+    #[inline]
+    fn append_value(&mut self, key: &str, value: ValueRef) -> Result<()> {
+        Map::is_key_valid(key)?;
+        let key = CString::new(key).unwrap();
+        unsafe { self.append_value_raw_unchecked(&key, value) }
+    }
+
+    /// Touches the key. That is, if the key exists, nothing happens, otherwise a key is created
+    /// with no values associated.
+    ///
+    /// # Safety
+    /// The caller must ensure `key` is valid.
+    unsafe fn touch_raw_unchecked(&mut self, key: &CStr, value_type: ValueType) {
+        macro_rules! touch_value {
+            ($func:ident, $value:expr) => ({
+                let result = self.api().$func(
+                    self.handle_mut(),
+                    key.as_ptr(),
+                    $value,
+                    ffi::VSPropAppendMode::paTouch
+                );
+                debug_assert!(result == 0);
+            })
+        }
+
+        match value_type {
+            ValueType::Int => touch_value!(prop_set_int, 0),
+            ValueType::Float => touch_value!(prop_set_float, 0f64),
+            ValueType::Data => touch_value!(prop_set_data, &[]),
+            ValueType::Node => touch_value!(prop_set_node, ptr::null_mut()),
+            ValueType::Frame => touch_value!(prop_set_frame, ptr::null()),
+            ValueType::Function => touch_value!(prop_set_func, ptr::null_mut()),
+        }
+    }
+
+    /// Touches the key. That is, if the key exists, nothing happens, otherwise a key is created
+    /// with no values associated.
+    #[inline]
+    fn touch(&mut self, key: &str, value_type: ValueType) -> Result<()> {
+        Map::is_key_valid(key)?;
+        let key = CString::new(key).unwrap();
+        unsafe {
+            self.touch_raw_unchecked(&key, value_type);
+        }
+        Ok(())
     }
 }
 
