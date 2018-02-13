@@ -11,8 +11,9 @@ mod need_api {
     #[test]
     fn green() {
         let api = API::get().unwrap();
-        let env = vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
-            .unwrap();
+        let env =
+            vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
+                .unwrap();
         let node = env.get_output(api, 0).unwrap();
         let info = node.info();
 
@@ -59,14 +60,9 @@ mod need_api {
 
             let color = if plane == 1 { [255; 1920] } else { [0; 1920] };
 
-            let stride = frame.stride(plane);
-            let plane = frame.data(plane);
-
             for row in 0..resolution.height {
-                assert_eq!(
-                    &plane[row * stride..row * stride + resolution.width],
-                    &color[..]
-                );
+                let data_row = frame.data_row(plane, row);
+                assert_eq!(&data_row[..], &color[..]);
             }
         }
 
@@ -102,7 +98,8 @@ mod need_api {
     #[test]
     fn green_from_string() {
         let api = API::get().unwrap();
-        let env = vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
+        let env =
+            vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
         let node = env.get_output(api, 0).unwrap();
         let info = node.info();
 
@@ -149,14 +146,9 @@ mod need_api {
 
             let color = if plane == 1 { [255; 1920] } else { [0; 1920] };
 
-            let stride = frame.stride(plane);
-            let plane = frame.data(plane);
-
             for row in 0..resolution.height {
-                assert_eq!(
-                    &plane[row * stride..row * stride + resolution.width],
-                    &color[..]
-                );
+                let data_row = frame.data_row(plane, row);
+                assert_eq!(&data_row[..], &color[..]);
             }
         }
 
@@ -225,11 +217,9 @@ mod need_api {
 
             let color = if plane == 1 { [255; 1920] } else { [0; 1920] };
 
-            let stride = frame.stride(plane);
-            let plane = frame.data(plane);
-
             for row in 0..resolution.height {
-                assert_eq!(&plane[row * stride..(row + 1) * stride], &color[..]);
+                let data_row = frame.data_row(plane, row);
+                assert_eq!(&data_row[..], &color[..]);
             }
         }
 
@@ -267,14 +257,9 @@ mod need_api {
 
         let color = [127; 1280];
 
-        let stride = frame.stride(plane);
-        let plane = frame.data(plane);
-
         for row in 0..resolution.height {
-            assert_eq!(
-                &plane[row * stride..row * stride + resolution.width],
-                &color[..]
-            );
+            let data_row = frame.data_row(plane, row);
+            assert_eq!(&data_row[..], &color[..]);
         }
 
         let props = frame.props();
@@ -308,7 +293,8 @@ mod need_api {
 
     #[test]
     fn clear_output() {
-        let env = vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
+        let env =
+            vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
         assert!(env.clear_output(1).is_none());
         assert!(env.clear_output(0).is_some());
         assert!(env.clear_output(0).is_none());
@@ -317,7 +303,8 @@ mod need_api {
     #[test]
     fn iterators() {
         let api = API::get().unwrap();
-        let env = vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
+        let env =
+            vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
         let node = env.get_output(api, 0).unwrap();
         let frame = node.get_frame(0).unwrap();
         let props = frame.props();
@@ -329,7 +316,8 @@ mod need_api {
     #[test]
     fn vsscript_variables() {
         let api = API::get().unwrap();
-        let env = vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
+        let env =
+            vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
 
         let mut map = Map::new(api);
         assert!(env.get_variable("video", &mut map.get_ref_mut()).is_ok());

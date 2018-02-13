@@ -6,6 +6,11 @@ use format::Format;
 use map::MapRef;
 use video_info::Resolution;
 
+/// An error indicating that the frame data has non-zero padding.
+#[derive(Fail, Debug)]
+#[fail(display = "Frame data has non-zero padding: {}", _0)]
+pub struct NonZeroPadding(usize);
+
 /// Contains one frame of a clip.
 #[derive(Debug)]
 pub struct Frame {
@@ -108,22 +113,66 @@ impl Frame {
         unsafe { self.api.get_frame_stride(self.handle, plane as i32) as usize }
     }
 
+    /// Returns a pointer to the plane's pixels.
+    ///
+    /// The pointer points to an array with a length of `height() * stride()` and is valid for as
+    /// long as the frame is alive.
+    ///
+    /// # Panics
+    /// Panics if `plane >= format().plane_count()`.
+    pub fn data_ptr(&self, plane: usize) -> *const u8 {
+        assert!(plane < self.format().plane_count());
+
+        unsafe { self.api.get_frame_read_ptr(self.handle, plane as i32) }
+    }
+
+    /// Returns a slice of a plane's pixel row.
+    ///
+    /// The length of the returned slice is equal to `width()`.
+    ///
+    /// # Panics
+    /// Panics if `plane >= format().plane_count()`, if `row >= height()` or if the computed row
+    /// offset overflows an `isize`.
+    pub fn data_row(&self, plane: usize, row: usize) -> &[u8] {
+        assert!(plane < self.format().plane_count());
+        assert!(row < self.height(plane));
+
+        let stride = self.stride(plane);
+        let ptr = self.data_ptr(plane);
+
+        let offset = stride.checked_mul(plane).unwrap();
+        assert!(offset <= isize::max_value() as usize);
+        let offset = offset as isize;
+
+        let row_ptr = unsafe { ptr.offset(offset) };
+        let width = self.width(plane);
+
+        unsafe { slice::from_raw_parts(row_ptr, width) }
+    }
+
     /// Returns a slice of the plane's pixels.
     ///
-    /// The length of the returned slice is `height() * stride()`.
+    /// The length of the returned slice is `height() * width()`. If the pixel data has non-zero
+    /// padding (that is, `stride()` is larger than `width()`), and error is returned, since
+    /// returning the data slice would open access to uninitialized bytes.
     ///
     /// # Panics
     /// Panics if `plane >= format().plane_count()` or if the computed plane size doesn't fit in a
     /// `usize`.
-    pub fn data(&self, plane: usize) -> &[u8] {
+    pub fn data(&self, plane: usize) -> Result<&[u8], NonZeroPadding> {
         assert!(plane < self.format().plane_count());
 
-        let height = self.height(plane);
         let stride = self.stride(plane);
-        let length = height.checked_mul(stride).unwrap();
-        let ptr = unsafe { self.api.get_frame_read_ptr(self.handle, plane as i32) };
+        let width = self.width(plane);
+        if stride != width {
+            return Err(NonZeroPadding(stride - width));
+        }
 
-        unsafe { slice::from_raw_parts(ptr, length) }
+        let height = self.height(plane);
+        let length = height.checked_mul(stride).unwrap();
+        let ptr = self.data_ptr(plane);
+
+        Ok(unsafe { slice::from_raw_parts(ptr, length) })
     }
 
     /// Returns a map of frame's properties.
