@@ -128,7 +128,7 @@ impl Node {
     ///
     /// - the generated frame or an error message if the generation failed,
     /// - the frame number (equal to `n`),
-    /// - the node that generated the frame (the same as `self`),
+    /// - the node that generated the frame (the same as `self`).
     ///
     /// If the callback panics, the process is aborted.
     ///
