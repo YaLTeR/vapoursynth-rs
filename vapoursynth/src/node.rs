@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::ffi::{CStr, CString};
 use std::{mem, panic};
 use std::os::raw::{c_char, c_void};
@@ -124,10 +125,9 @@ impl Node {
     ///
     /// The callback arguments are:
     ///
-    /// - the generated frame,
+    /// - the generated frame or an error message if the generation failed,
     /// - the frame number (equal to `n`),
     /// - the node that generated the frame (the same as `self`),
-    /// - the error message, if any.
     ///
     /// If the callback panics, the process is aborted.
     ///
@@ -135,11 +135,11 @@ impl Node {
     /// Panics is `n` is greater than `i32::max_value()`.
     pub fn get_frame_async<F>(&self, n: usize, callback: F)
     where
-        F: FnOnce(Frame, usize, Node, Option<&str>) + Send + 'static,
+        F: FnOnce(Result<Frame, Cow<str>>, usize, Node) + Send + 'static,
     {
         struct FrameDoneCallbackData {
             api: API,
-            callback: Box<NodeFnBox<(Frame, usize, Node), ()>>,
+            callback: Box<NodeFnBox>,
         }
 
         unsafe extern "C" fn frame_done_callback(
@@ -152,21 +152,20 @@ impl Node {
             let user_data = Box::from_raw(user_data as *mut FrameDoneCallbackData);
 
             let closure = panic::AssertUnwindSafe(move || {
-                let frame = Frame::from_ptr(user_data.api, frame);
+                let frame = if frame.is_null() {
+                    debug_assert!(!error_msg.is_null());
+                    Err(CStr::from_ptr(error_msg).to_string_lossy())
+                } else {
+                    debug_assert!(error_msg.is_null());
+                    Ok(Frame::from_ptr(user_data.api, frame))
+                };
+
                 let node = Node::from_ptr(user_data.api, node);
 
                 debug_assert!(n >= 0);
                 let n = n as usize;
 
-                let error_msg = if error_msg.is_null() {
-                    None
-                } else {
-                    Some(CStr::from_ptr(error_msg).to_string_lossy())
-                };
-
-                user_data
-                    .callback
-                    .call((frame, n, node), error_msg.as_ref().map(|x| x.as_ref()));
+                user_data.callback.call(frame, n, node);
             });
 
             if panic::catch_unwind(closure).is_err() {

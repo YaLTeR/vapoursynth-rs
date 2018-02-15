@@ -1,16 +1,21 @@
+use std::borrow::Cow;
+
+use frame::Frame;
+use node::Node;
+
 // This is a collection of hacks to allow passing FnOnce as callbacks.
 // Based on the boxfnonce crate.
 
-pub trait NodeFnBox<Arguments, Result> {
-    fn call(self: Box<Self>, args: Arguments, last_arg: Option<&str>) -> Result;
+pub trait NodeFnBox {
+    fn call(self: Box<Self>, frame: Result<Frame, Cow<str>>, n: usize, node: Node);
 }
 
-impl<A1, A2, A3, R, F> NodeFnBox<(A1, A2, A3), R> for F
+impl<F> NodeFnBox for F
 where
-    F: FnOnce(A1, A2, A3, Option<&str>) -> R + Send + 'static,
+    F: FnOnce(Result<Frame, Cow<str>>, usize, Node) + Send + 'static,
 {
-    fn call(self: Box<Self>, args: (A1, A2, A3), last_arg: Option<&str>) -> R {
+    fn call(self: Box<Self>, frame: Result<Frame, Cow<str>>, n: usize, node: Node) {
         let this = *self;
-        this(args.0, args.1, args.2, last_arg)
+        this(frame, n, node)
     }
 }

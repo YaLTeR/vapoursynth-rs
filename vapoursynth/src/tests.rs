@@ -242,8 +242,10 @@ mod need_api_and_vsscript {
             let (tx, rx) = channel();
             rxs.push(rx);
 
-            node.get_frame_async(i, move |frame, n, node, error| {
-                assert_eq!(error, None);
+            node.get_frame_async(i, move |frame, n, node| {
+                assert!(frame.is_ok());
+                let frame = frame.unwrap();
+
                 assert_eq!(n, i);
                 assert_eq!(
                     node.info().framerate,
@@ -265,6 +267,34 @@ mod need_api_and_vsscript {
         for rx in rxs {
             assert_eq!(rx.recv(), Ok(()));
         }
+    }
+
+    #[test]
+    fn get_frame_async_error() {
+        let api = API::get().unwrap();
+        let env =
+            vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
+                .unwrap();
+        let node = env.get_output(api, 0).unwrap();
+
+        let (tx, rx) = channel();
+
+        // The clip only has 100 frames, so requesting the 101th one produces an error.
+        node.get_frame_async(100, move |frame, n, node| {
+            assert!(frame.is_err());
+            assert_eq!(n, 100);
+            assert_eq!(
+                node.info().framerate,
+                Property::Constant(Framerate {
+                    numerator: 60,
+                    denominator: 1,
+                })
+            );
+
+            assert_eq!(tx.send(()), Ok(()));
+        });
+
+        assert_eq!(rx.recv(), Ok(()));
     }
 }
 
