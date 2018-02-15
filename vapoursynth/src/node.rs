@@ -151,19 +151,19 @@ impl Node {
         ) {
             let user_data = Box::from_raw(user_data as *mut FrameDoneCallbackData);
 
-            let frame = Frame::from_ptr(user_data.api, frame);
-            let node = Node::from_ptr(user_data.api, node);
-
-            debug_assert!(n >= 0);
-            let n = n as usize;
-
-            let error_msg = if error_msg.is_null() {
-                None
-            } else {
-                Some(CStr::from_ptr(error_msg).to_string_lossy())
-            };
-
             let closure = panic::AssertUnwindSafe(move || {
+                let frame = Frame::from_ptr(user_data.api, frame);
+                let node = Node::from_ptr(user_data.api, node);
+
+                debug_assert!(n >= 0);
+                let n = n as usize;
+
+                let error_msg = if error_msg.is_null() {
+                    None
+                } else {
+                    Some(CStr::from_ptr(error_msg).to_string_lossy())
+                };
+
                 user_data
                     .callback
                     .call((frame, n, node), error_msg.as_ref().map(|x| x.as_ref()));
