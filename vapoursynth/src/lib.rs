@@ -14,8 +14,6 @@ pub mod vsscript;
 pub mod api;
 pub use api::API;
 
-mod boxfnonce;
-
 pub mod format;
 pub use format::Format;
 

@@ -77,9 +77,7 @@ fn run() -> Result<(), Error> {
             return Err(err_msg("Frame number is too big"));
         }
 
-        let frame = node.get_frame(n)
-            .map_err(|e| err_msg(e.to_string_lossy().into_owned()))
-            .context("Couldn't get the frame")?;
+        let frame = node.get_frame(n).context("Couldn't get the frame")?;
 
         println!();
         println!("Frame #{}", n);

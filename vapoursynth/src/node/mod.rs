@@ -1,21 +1,22 @@
 use std::borrow::Cow;
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::{mem, panic};
 use std::os::raw::{c_char, c_void};
 use std::process;
 use vapoursynth_sys as ffi;
 
 use api::API;
-use boxfnonce::NodeFnBox;
 use frame::Frame;
 use video_info::VideoInfo;
+
+pub mod errors;
+pub use self::errors::GetFrameError;
 
 bitflags! {
     /// Node flags.
     pub struct Flags: i32 {
         /// This flag indicates that the frames returned by the filter should not be cached. "Fast"
         /// filters should set this to reduce cache bloat.
-    #[inline]
         const NO_CACHE = ffi::VSNodeFlags_nfNoCache.0;
         /// This flag must not be used in third-party filters. It is used to mark instances of the
         /// built-in Cache filter. Strange things may happen to your filter if you use this flag.
@@ -96,7 +97,7 @@ impl Node {
     ///
     /// # Panics
     /// Panics is `n` is greater than `i32::max_value()`.
-    pub fn get_frame(&self, n: usize) -> Result<Frame, CString> {
+    pub fn get_frame(&self, n: usize) -> Result<Frame, GetFrameError<'static>> {
         assert!(n <= i32::max_value() as usize);
         let n = n as i32;
 
@@ -112,7 +113,7 @@ impl Node {
         if handle.is_null() {
             // TODO: remove this extra allocation by reusing `Box<[c_char]>`.
             let error = unsafe { CStr::from_ptr(err_buf.as_ptr()) }.to_owned();
-            Err(error)
+            Err(GetFrameError::new(Cow::Owned(error)))
         } else {
             Ok(unsafe { Frame::from_ptr(self.api, handle) })
         }
@@ -135,11 +136,25 @@ impl Node {
     /// Panics is `n` is greater than `i32::max_value()`.
     pub fn get_frame_async<F>(&self, n: usize, callback: F)
     where
-        F: FnOnce(Result<Frame, Cow<str>>, usize, Node) + Send + 'static,
+        F: FnOnce(Result<Frame, GetFrameError>, usize, Node) + Send + 'static,
     {
         struct FrameDoneCallbackData {
             api: API,
-            callback: Box<NodeFnBox>,
+            callback: Box<FrameDoneCallbackFn>,
+        }
+
+        // A little bit of magic for Box<FnOnce>.
+        trait FrameDoneCallbackFn {
+            fn call(self: Box<Self>, frame: Result<Frame, GetFrameError>, n: usize, node: Node);
+        }
+
+        impl<F> FrameDoneCallbackFn for F
+        where
+            F: FnOnce(Result<Frame, GetFrameError>, usize, Node),
+        {
+            fn call(self: Box<Self>, frame: Result<Frame, GetFrameError>, n: usize, node: Node) {
+                (self)(frame, n, node)
+            }
         }
 
         unsafe extern "C" fn frame_done_callback(
@@ -154,7 +169,8 @@ impl Node {
             let closure = panic::AssertUnwindSafe(move || {
                 let frame = if frame.is_null() {
                     debug_assert!(!error_msg.is_null());
-                    Err(CStr::from_ptr(error_msg).to_string_lossy())
+                    let error_msg = Cow::Borrowed(CStr::from_ptr(error_msg));
+                    Err(GetFrameError::new(error_msg))
                 } else {
                     debug_assert!(error_msg.is_null());
                     Ok(Frame::from_ptr(user_data.api, frame))
