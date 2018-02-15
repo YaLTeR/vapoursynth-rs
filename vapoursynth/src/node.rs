@@ -1,7 +1,11 @@
 use std::ffi::{CStr, CString};
+use std::{mem, panic};
+use std::os::raw::{c_char, c_void};
+use std::process;
 use vapoursynth_sys as ffi;
 
 use api::API;
+use boxfnonce::NodeFnBox;
 use frame::Frame;
 use video_info::VideoInfo;
 
@@ -111,5 +115,86 @@ impl Node {
         } else {
             Ok(unsafe { Frame::from_ptr(self.api, handle) })
         }
+    }
+
+    /// Requests the generation of a frame. When the frame is ready, a user-provided function is
+    /// called.
+    ///
+    /// If multiple frames were requested, they can be returned in any order.
+    ///
+    /// The callback arguments are:
+    ///
+    /// - the generated frame,
+    /// - the frame number (equal to `n`),
+    /// - the node that generated the frame (the same as `self`),
+    /// - the error message, if any.
+    ///
+    /// If the callback panics, the process is aborted.
+    ///
+    /// # Panics
+    /// Panics is `n` is greater than `i32::max_value()`.
+    pub fn get_frame_async<F>(&self, n: usize, callback: F)
+    where
+        F: FnOnce(Frame, usize, Node, Option<&str>) + Send + 'static,
+    {
+        struct FrameDoneCallbackData {
+            api: API,
+            callback: Box<NodeFnBox<(Frame, usize, Node), ()>>,
+        }
+
+        unsafe extern "C" fn frame_done_callback(
+            user_data: *mut c_void,
+            frame: *const ffi::VSFrameRef,
+            n: i32,
+            node: *mut ffi::VSNodeRef,
+            error_msg: *const c_char,
+        ) {
+            let user_data = Box::from_raw(user_data as *mut FrameDoneCallbackData);
+
+            let frame = Frame::from_ptr(user_data.api, frame);
+            let node = Node::from_ptr(user_data.api, node);
+
+            debug_assert!(n >= 0);
+            let n = n as usize;
+
+            let error_msg = if error_msg.is_null() {
+                None
+            } else {
+                Some(CStr::from_ptr(error_msg).to_string_lossy())
+            };
+
+            let closure = panic::AssertUnwindSafe(move || {
+                user_data
+                    .callback
+                    .call((frame, n, node), error_msg.as_ref().map(|x| x.as_ref()));
+            });
+
+            if panic::catch_unwind(closure).is_err() {
+                eprintln!("panic in the get_frame_async() callback, aborting");
+                process::abort();
+            }
+        }
+
+        assert!(n <= i32::max_value() as usize);
+        let n = n as i32;
+
+        let user_data = Box::new(FrameDoneCallbackData {
+            api: self.api,
+            callback: Box::new(callback),
+        });
+
+        let new_node = self.clone();
+
+        unsafe {
+            self.api.get_frame_async(
+                n,
+                new_node.handle,
+                Some(frame_done_callback),
+                Box::into_raw(user_data) as *mut c_void,
+            );
+        }
+
+        // It'll be dropped by the callback.
+        mem::forget(new_node);
     }
 }

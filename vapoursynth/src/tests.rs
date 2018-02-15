@@ -5,6 +5,8 @@ use super::*;
 #[cfg(all(feature = "vsscript-functions",
           any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
 mod need_api_and_vsscript {
+    use std::sync::mpsc::channel;
+
     use super::*;
     use video_info::{Framerate, Resolution};
 
@@ -41,6 +43,30 @@ mod need_api_and_vsscript {
         }
     }
 
+    fn green_frame_test(frame: &Frame) {
+        let format = frame.format();
+        assert_eq!(format.name().to_string_lossy(), "RGB24");
+        assert_eq!(format.plane_count(), 3);
+
+        for plane in 0..format.plane_count() {
+            let resolution = frame.resolution(plane);
+            assert_eq!(
+                resolution,
+                Resolution {
+                    width: 1920,
+                    height: 1080,
+                }
+            );
+
+            let color = if plane == 1 { [255; 1920] } else { [0; 1920] };
+
+            for row in 0..resolution.height {
+                let data_row = frame.data_row(plane, row);
+                assert_eq!(&data_row[..], &color[..]);
+            }
+        }
+    }
+
     fn green_test(env: &vsscript::Environment) {
         let api = API::get().unwrap();
         let node = env.get_output(api, 0).unwrap();
@@ -73,28 +99,7 @@ mod need_api_and_vsscript {
         assert_eq!(info.num_frames, Property::Constant(100));
 
         let frame = node.get_frame(0).unwrap();
-        let format = frame.format();
-        assert_eq!(format.name().to_string_lossy(), "RGB24");
-        assert_eq!(format.plane_count(), 3);
-
-        for plane in 0..format.plane_count() {
-            let resolution = frame.resolution(plane);
-            assert_eq!(
-                resolution,
-                Resolution {
-                    width: 1920,
-                    height: 1080,
-                }
-            );
-
-            let color = if plane == 1 { [255; 1920] } else { [0; 1920] };
-
-            for row in 0..resolution.height {
-                let data_row = frame.data_row(plane, row);
-                assert_eq!(&data_row[..], &color[..]);
-            }
-        }
-
+        green_frame_test(&frame);
         props_test(&frame, 60);
         env_video_var_test(api, &env);
     }
@@ -221,6 +226,45 @@ mod need_api_and_vsscript {
 
         assert!(env.set_variables(&map.get_ref()).is_ok());
         assert!(env.get_variable("video", &mut map.get_ref_mut()).is_ok());
+    }
+
+    #[test]
+    fn get_frame_async() {
+        let api = API::get().unwrap();
+        let env =
+            vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
+                .unwrap();
+        let node = env.get_output(api, 0).unwrap();
+
+        let mut rxs = Vec::new();
+
+        for i in 0..10 {
+            let (tx, rx) = channel();
+            rxs.push(rx);
+
+            node.get_frame_async(i, move |frame, n, node, error| {
+                assert_eq!(error, None);
+                assert_eq!(n, i);
+                assert_eq!(
+                    node.info().framerate,
+                    Property::Constant(Framerate {
+                        numerator: 60,
+                        denominator: 1,
+                    })
+                );
+
+                green_frame_test(&frame);
+                props_test(&frame, 60);
+
+                assert_eq!(tx.send(()), Ok(()));
+            });
+        }
+
+        drop(node); // Test dropping prematurely.
+
+        for rx in rxs {
+            assert_eq!(rx.recv(), Ok(()));
+        }
     }
 }
 

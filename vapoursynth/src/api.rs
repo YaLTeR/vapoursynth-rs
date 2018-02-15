@@ -1,4 +1,4 @@
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_void};
 use vapoursynth_sys as ffi;
 
 /// A wrapper for the VapourSynth API.
@@ -125,6 +125,21 @@ impl API {
         let len = len as i32;
 
         ((*self.handle).getFrame)(n, node, err_msg.as_mut_ptr(), len)
+    }
+
+    /// Generates a frame directly.
+    ///
+    /// # Safety
+    /// The caller must ensure `node` and `callback` are valid.
+    #[inline]
+    pub(crate) unsafe fn get_frame_async(
+        self,
+        n: i32,
+        node: *mut ffi::VSNodeRef,
+        callback: ffi::VSFrameDoneCallback,
+        user_data: *mut c_void,
+    ) {
+        ((*self.handle).getFrameAsync)(n, node, callback, user_data);
     }
 
     /// Frees `frame`.
