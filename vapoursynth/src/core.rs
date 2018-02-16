@@ -36,6 +36,9 @@ pub struct CoreRef<'a> {
     _owner: PhantomData<&'a ()>,
 }
 
+unsafe impl<'a> Send for CoreRef<'a> {}
+unsafe impl<'a> Sync for CoreRef<'a> {}
+
 impl<'a> CoreRef<'a> {
     /// Wraps `handle` in a `CoreRef`.
     ///
