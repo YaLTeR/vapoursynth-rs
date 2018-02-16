@@ -1,4 +1,5 @@
-use std::ffi::{CString, NulError};
+use std::ffi::{CStr, CString, NulError};
+use std::{mem, panic, process, ptr};
 use std::os::raw::{c_char, c_int, c_void};
 use vapoursynth_sys as ffi;
 
@@ -95,6 +96,66 @@ impl API {
             ((*self.handle).logMessage)(message_type.ffi_type(), message.as_ptr());
         }
         Ok(())
+    }
+
+    /// Installs a custom handler for the various error messages VapourSynth emits. The message
+    /// handler is currently global, i.e. per process, not per VSCore instance.
+    ///
+    /// The default message handler simply sends the messages to the standard error stream.
+    ///
+    /// The callback arguments are the message type and the message itself. If the callback panics,
+    /// the process is aborted.
+    pub fn set_message_handler<F>(&self, callback: F)
+    where
+        F: FnMut(MessageType, &CStr) + Send + 'static,
+    {
+        struct CallbackData {
+            callback: Box<FnMut(MessageType, &CStr) + Send + 'static>,
+        }
+
+        unsafe extern "C" fn c_callback(
+            msg_type: c_int,
+            msg: *const c_char,
+            user_data: *mut c_void,
+        ) {
+            let mut user_data = Box::from_raw(user_data as *mut CallbackData);
+
+            {
+                let closure = panic::AssertUnwindSafe(|| {
+                    let message_type = MessageType::from_ffi_type(msg_type).unwrap();
+                    let message = CStr::from_ptr(msg);
+
+                    (user_data.callback)(message_type, message);
+                });
+
+                if panic::catch_unwind(closure).is_err() {
+                    eprintln!("panic in the set_message_handler() callback, aborting");
+                    process::abort();
+                }
+            }
+
+            // Don't drop user_data, we're not done using it.
+            mem::forget(user_data);
+        }
+
+        let user_data = Box::new(CallbackData {
+            callback: Box::new(callback),
+        });
+
+        unsafe {
+            ((*self.handle).setMessageHandler)(
+                Some(c_callback),
+                Box::into_raw(user_data) as *mut c_void,
+            );
+        }
+    }
+
+    /// Clears any custom message handler, restoring the default one.
+    #[inline]
+    pub fn clear_message_handler(self) {
+        unsafe {
+            ((*self.handle).setMessageHandler)(None, ptr::null_mut());
+        }
     }
 
     /// Frees `node`.
@@ -504,5 +565,16 @@ impl MessageType {
             MessageType::Fatal => ffi::VSMessageType::mtFatal,
         };
         rv as c_int
+    }
+
+    #[inline]
+    fn from_ffi_type(x: c_int) -> Option<Self> {
+        match x {
+            x if x == ffi::VSMessageType::mtDebug as c_int => Some(MessageType::Debug),
+            x if x == ffi::VSMessageType::mtWarning as c_int => Some(MessageType::Warning),
+            x if x == ffi::VSMessageType::mtCritical as c_int => Some(MessageType::Critical),
+            x if x == ffi::VSMessageType::mtFatal as c_int => Some(MessageType::Fatal),
+            _ => None,
+        }
     }
 }

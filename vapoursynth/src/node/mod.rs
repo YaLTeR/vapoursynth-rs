@@ -138,17 +138,17 @@ impl Node {
     where
         F: FnOnce(Result<Frame, GetFrameError>, usize, Node) + Send + 'static,
     {
-        struct FrameDoneCallbackData {
+        struct CallbackData {
             api: API,
-            callback: Box<FrameDoneCallbackFn>,
+            callback: Box<CallbackFn>,
         }
 
         // A little bit of magic for Box<FnOnce>.
-        trait FrameDoneCallbackFn {
+        trait CallbackFn {
             fn call(self: Box<Self>, frame: Result<Frame, GetFrameError>, n: usize, node: Node);
         }
 
-        impl<F> FrameDoneCallbackFn for F
+        impl<F> CallbackFn for F
         where
             F: FnOnce(Result<Frame, GetFrameError>, usize, Node),
         {
@@ -157,14 +157,14 @@ impl Node {
             }
         }
 
-        unsafe extern "C" fn frame_done_callback(
+        unsafe extern "C" fn c_callback(
             user_data: *mut c_void,
             frame: *const ffi::VSFrameRef,
             n: i32,
             node: *mut ffi::VSNodeRef,
             error_msg: *const c_char,
         ) {
-            let user_data = Box::from_raw(user_data as *mut FrameDoneCallbackData);
+            let user_data = Box::from_raw(user_data as *mut CallbackData);
 
             let closure = panic::AssertUnwindSafe(move || {
                 let frame = if frame.is_null() {
@@ -193,7 +193,7 @@ impl Node {
         assert!(n <= i32::max_value() as usize);
         let n = n as i32;
 
-        let user_data = Box::new(FrameDoneCallbackData {
+        let user_data = Box::new(CallbackData {
             api: self.api,
             callback: Box::new(callback),
         });
@@ -204,7 +204,7 @@ impl Node {
             self.api.get_frame_async(
                 n,
                 new_node.handle,
-                Some(frame_done_callback),
+                Some(c_callback),
                 Box::into_raw(user_data) as *mut c_void,
             );
         }

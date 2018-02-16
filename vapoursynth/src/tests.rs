@@ -312,6 +312,9 @@ mod need_api_and_vsscript {
 // We need either VSScript API 3.2 or the VapourSynth functions.
 #[cfg(any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32"))]
 mod need_api {
+    use std::ffi::{CStr, CString};
+    use std::sync::mpsc::channel;
+
     use super::*;
 
     #[test]
@@ -393,5 +396,23 @@ mod need_api {
             map.error().as_ref().map(|x| x.as_ref()),
             Some("hello there")
         );
+    }
+
+    #[test]
+    fn message_handler() {
+        let api = API::get().unwrap();
+        let (tx, rx) = channel();
+
+        // Hopefully no one logs anything here and breaks the test.
+        api.set_message_handler(move |message_type, message: &CStr| {
+            assert_eq!(tx.send((message_type, message.to_owned())), Ok(()));
+        });
+
+        assert_eq!(api.log(MessageType::Warning, "test message"), Ok(()));
+        assert_eq!(
+            rx.recv(),
+            Ok((MessageType::Warning, CString::new("test message").unwrap()))
+        );
+        api.clear_message_handler();
     }
 }
