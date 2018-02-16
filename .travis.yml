@@ -17,9 +17,6 @@ cache: cargo
 
 before_install:
 - bash .travis/install-vapoursynth.sh
-- if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then
-    sudo apt-get install -qq python3;
-  fi
 
 script:
   # Build and test with no features.

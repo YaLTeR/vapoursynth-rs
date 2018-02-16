@@ -23,8 +23,8 @@ if __name__ == '__main__':
         features_string = str.join(' ', features)
         print("Starting tests with features: " + features_string)
 
-        process = subprocess.run(['cargo', 'test', '--quiet', '--features', features_string])
-        if process.returncode != 0:
+        returncode = subprocess.call(['cargo', 'test', '--quiet', '--features', features_string])
+        if returncode != 0:
             someone_failed = True
 
     if someone_failed:
