@@ -17,6 +17,9 @@ cache: cargo
 
 before_install:
 - bash .travis/install-vapoursynth.sh
+- if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then
+    sudo apt-get install -qq python3;
+  fi
 
 script:
   # Build and test with no features.
@@ -31,20 +34,7 @@ script:
 - cp .travis/index.html target/doc/
 
   # Test with all possible combinations of all features.
-  # The Linux dist's VapourSynth is old and doesn't support VSScript API above 3.0.
-  # The quotes are really odd here, but that's how I got it to finally work.
-- cd vapoursynth;
-  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    while read -r features; do
-      echo cargo test --quiet --features "\"$features\"";
-      cargo test --quiet --features "$features";
-    done <<< "`printf "%s\n" {vapoursynth-api-3{1..5},}" "{vsscript-api-3{1..2},}" "{vapoursynth-functions,}" "{vsscript-functions,}`";
-  else
-    while read -r features; do
-      echo cargo test --quiet --features "\"$features\"";
-      cargo test --quiet --features "$features";
-    done <<< "`printf "%s\n" {vapoursynth-api-3{1..5},}" "{vapoursynth-functions,}" "{vsscript-functions,}`";
-  fi
+- cd vapoursynth; python3 ../.travis/run-tests.py
 
 deploy:
   provider: pages
