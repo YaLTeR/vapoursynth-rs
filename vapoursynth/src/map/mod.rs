@@ -610,14 +610,15 @@ pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
     unsafe fn set_values_raw_unchecked(&mut self, key: &CStr, values: Values) {
         macro_rules! set_values {
             ($iter:expr, $value:ident) => ({
-                let first = $iter.next();
+                let mut iter = $iter;
+                let first = iter.next();
                 if first.is_none() {
                     self.touch_raw_unchecked(&key, ValueType::$value);
                 } else {
                     let first = first.unwrap();
                     self.set_value_raw_unchecked(&key, ValueRef::$value(first));
 
-                    for x in $iter {
+                    for x in iter {
                         let result = self.append_value_raw_unchecked(&key, ValueRef::$value(x));
                         debug_assert!(result.is_ok());
                     }
