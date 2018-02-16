@@ -22,6 +22,7 @@ if __name__ == '__main__':
     for features in itertools.product(*features):
         features_string = str.join(' ', features)
         print("Starting tests with features: " + features_string)
+        sys.stdout.flush()
 
         returncode = subprocess.call(['cargo', 'test', '--quiet', '--features', features_string])
         if returncode != 0:
