@@ -252,6 +252,25 @@ impl API {
         ((*self.handle).freeMap)(map);
     }
 
+    /// Returns a pointer to the error message contained in the map, or NULL if there is no error
+    /// message.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` is valid.
+    #[inline]
+    pub(crate) unsafe fn get_error(self, map: *const ffi::VSMap) -> *const c_char {
+        ((*self.handle).getError)(map)
+    }
+
+    /// Adds an error message to a map. The map is cleared first. The error message is copied.
+    ///
+    /// # Safety
+    /// The caller must ensure `map` and `errorMessage` are valid.
+    #[inline]
+    pub(crate) unsafe fn set_error(self, map: *mut ffi::VSMap, error_message: *const c_char) {
+        ((*self.handle).setError)(map, error_message)
+    }
+
     /// Returns the number of keys contained in a map.
     ///
     /// # Safety

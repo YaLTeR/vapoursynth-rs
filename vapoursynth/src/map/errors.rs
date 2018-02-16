@@ -1,3 +1,4 @@
+use std::ffi::NulError;
 use std::result;
 
 /// The error type for `Map` operations.
@@ -12,6 +13,8 @@ pub enum Error {
     WrongValueType,
     #[fail(display = "The key is invalid")]
     InvalidKey(#[cause] InvalidKeyError),
+    #[fail(display = "Couldn't convert to a CString")]
+    CStringConversion(#[cause] NulError),
 }
 
 pub(crate) type Result<T> = result::Result<T, Error>;
@@ -30,5 +33,12 @@ impl From<InvalidKeyError> for Error {
     #[inline]
     fn from(x: InvalidKeyError) -> Self {
         Error::InvalidKey(x)
+    }
+}
+
+impl From<NulError> for Error {
+    #[inline]
+    fn from(x: NulError) -> Self {
+        Error::CStringConversion(x)
     }
 }

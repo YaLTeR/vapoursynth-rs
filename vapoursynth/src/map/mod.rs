@@ -183,6 +183,18 @@ macro_rules! get_something_raw_unchecked {
 ///
 /// This trait is sealed and is not meant for implementation outside of this crate.
 pub trait VSMap: sealed::VSMapInterface {
+    /// Returns the error message contained in the map, if any.
+    #[inline]
+    fn error(&self) -> Option<Cow<str>> {
+        let error_message = unsafe { self.api().get_error(self.handle()) };
+        if error_message.is_null() {
+            return None;
+        }
+
+        let error_message = unsafe { CStr::from_ptr(error_message) };
+        Some(error_message.to_string_lossy())
+    }
+
     /// Returns the number of keys contained in a map.
     #[inline]
     fn key_count(&self) -> usize {
@@ -503,6 +515,17 @@ pub trait VSMapMut: VSMap + sealed::VSMapMutInterface {
         unsafe {
             self.api().clear_map(self.handle_mut());
         }
+    }
+
+    /// Adds an error message to a map. The map is cleared first.
+    #[inline]
+    fn set_error(&mut self, error_message: &str) -> Result<()> {
+        let error_message = CString::new(error_message)?;
+        unsafe {
+            self.api()
+                .set_error(self.handle_mut(), error_message.as_ptr());
+        }
+        Ok(())
     }
 
     /// Deletes the given key.

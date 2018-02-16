@@ -375,5 +375,12 @@ mod need_api {
         } else {
             assert!(false);
         }
+
+        assert_eq!(map.error(), None);
+        assert_eq!(map.set_error("hello there"), Ok(()));
+        assert_eq!(
+            map.error().as_ref().map(|x| x.as_ref()),
+            Some("hello there")
+        );
     }
 }
