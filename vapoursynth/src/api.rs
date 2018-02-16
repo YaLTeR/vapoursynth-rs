@@ -105,7 +105,7 @@ impl API {
     ///
     /// The callback arguments are the message type and the message itself. If the callback panics,
     /// the process is aborted.
-    pub fn set_message_handler<F>(&self, callback: F)
+    pub fn set_message_handler<F>(self, callback: F)
     where
         F: FnMut(MessageType, &CStr) + Send + 'static,
     {
