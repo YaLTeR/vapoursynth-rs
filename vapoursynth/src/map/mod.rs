@@ -151,23 +151,15 @@ impl Map {
             return Err(InvalidKeyError::EmptyKey);
         }
 
-        // TODO: use `AsciiExt` stuff when it gets stabilized.
-        fn is_alpha(c: char) -> bool {
-            (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-        }
-        fn is_numeric(c: char) -> bool {
-            c >= '0' && c <= '9'
-        }
-
         let mut chars = key.chars();
 
         let first = chars.next().unwrap();
-        if !is_alpha(first) && first != '_' {
+        if !first.is_ascii_alphabetic() && first != '_' {
             return Err(InvalidKeyError::InvalidCharacter(0));
         }
 
         for (i, c) in chars.enumerate() {
-            if !is_alpha(c) && !is_numeric(c) && c != '_' {
+            if !c.is_ascii_alphanumeric() && c != '_' {
                 return Err(InvalidKeyError::InvalidCharacter(i + 1));
             }
         }
