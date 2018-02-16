@@ -105,6 +105,9 @@ impl API {
     ///
     /// The callback arguments are the message type and the message itself. If the callback panics,
     /// the process is aborted.
+    ///
+    /// This function allocates to store the callback, this memory is leaked if the message handler
+    /// is subsequently changed.
     pub fn set_message_handler<F>(self, callback: F)
     where
         F: FnMut(MessageType, &CStr) + Send + 'static,
@@ -147,6 +150,42 @@ impl API {
                 Some(c_callback),
                 Box::into_raw(user_data) as *mut c_void,
             );
+        }
+    }
+
+    /// Installs a custom handler for the various error messages VapourSynth emits. The message
+    /// handler is currently global, i.e. per process, not per VSCore instance.
+    ///
+    /// The default message handler simply sends the messages to the standard error stream.
+    ///
+    /// The callback arguments are the message type and the message itself. If the callback panics,
+    /// the process is aborted.
+    ///
+    /// This version does not allocate at the cost of accepting a function pointer rather than an
+    /// arbitrary closure. It can, however, be used with simple closures.
+    pub fn set_message_handler_trivial(self, callback: fn(MessageType, &CStr)) {
+        unsafe extern "C" fn c_callback(
+            msg_type: c_int,
+            msg: *const c_char,
+            user_data: *mut c_void,
+        ) {
+            let closure = panic::AssertUnwindSafe(|| {
+                let message_type = MessageType::from_ffi_type(msg_type).unwrap();
+                let message = CStr::from_ptr(msg);
+
+                // Is there a better way of casting this?
+                let callback = *(&user_data as *const _ as *const fn(MessageType, &CStr));
+                (callback)(message_type, message);
+            });
+
+            if panic::catch_unwind(closure).is_err() {
+                eprintln!("panic in the set_message_handler_trivial() callback, aborting");
+                process::abort();
+            }
+        }
+
+        unsafe {
+            ((*self.handle).setMessageHandler)(Some(c_callback), callback as *mut c_void);
         }
     }
 

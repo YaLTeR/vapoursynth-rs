@@ -9,6 +9,9 @@ failure = "0.1"
 failure_derive = "0.1"
 vapoursynth-sys = { version = "0.1", path = "../vapoursynth-sys" }
 
+[dev-dependencies]
+lazy_static = "1"
+
 [target.'cfg(not(feature = "gte-vsscript-api-32"))'.dependencies]
 lazy_static = "1"
 

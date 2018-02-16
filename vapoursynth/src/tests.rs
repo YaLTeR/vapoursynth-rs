@@ -314,7 +314,8 @@ mod need_api_and_vsscript {
           all(feature = "vsscript-functions", feature = "gte-vsscript-api-32")))]
 mod need_api {
     use std::ffi::CString;
-    use std::sync::mpsc::channel;
+    use std::sync::mpsc::{channel, Sender};
+    use std::sync::Mutex;
 
     use super::*;
 
@@ -442,6 +443,54 @@ mod need_api {
                 CString::new("test critical message").unwrap()
             ))
         );
+
+        {
+            lazy_static! {
+                static ref SENDER: Mutex<Option<Sender<(MessageType, CString)>>> = Mutex::new(None);
+            }
+
+            let (tx, rx) = channel();
+            *SENDER.lock().unwrap() = Some(tx);
+
+            api.set_message_handler_trivial(|message_type, message| {
+                let guard = SENDER.lock().unwrap();
+                let tx = guard.as_ref().unwrap();
+                assert_eq!(tx.send((message_type, message.to_owned())), Ok(()));
+            });
+
+            assert_eq!(
+                api.log(MessageType::Warning, "test warning message"),
+                Ok(())
+            );
+            assert_eq!(
+                rx.recv(),
+                Ok((
+                    MessageType::Warning,
+                    CString::new("test warning message").unwrap()
+                ))
+            );
+
+            assert_eq!(api.log(MessageType::Debug, "test debug message"), Ok(()));
+            assert_eq!(
+                rx.recv(),
+                Ok((
+                    MessageType::Debug,
+                    CString::new("test debug message").unwrap()
+                ))
+            );
+
+            assert_eq!(
+                api.log(MessageType::Critical, "test critical message"),
+                Ok(())
+            );
+            assert_eq!(
+                rx.recv(),
+                Ok((
+                    MessageType::Critical,
+                    CString::new("test critical message").unwrap()
+                ))
+            );
+        }
 
         api.clear_message_handler();
     }
