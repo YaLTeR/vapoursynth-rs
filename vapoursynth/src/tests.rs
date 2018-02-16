@@ -408,11 +408,39 @@ mod need_api {
             assert_eq!(tx.send((message_type, message.to_owned())), Ok(()));
         });
 
-        assert_eq!(api.log(MessageType::Warning, "test message"), Ok(()));
+        assert_eq!(
+            api.log(MessageType::Warning, "test warning message"),
+            Ok(())
+        );
         assert_eq!(
             rx.recv(),
-            Ok((MessageType::Warning, CString::new("test message").unwrap()))
+            Ok((
+                MessageType::Warning,
+                CString::new("test warning message").unwrap()
+            ))
         );
+
+        assert_eq!(api.log(MessageType::Debug, "test debug message"), Ok(()));
+        assert_eq!(
+            rx.recv(),
+            Ok((
+                MessageType::Debug,
+                CString::new("test debug message").unwrap()
+            ))
+        );
+
+        assert_eq!(
+            api.log(MessageType::Critical, "test critical message"),
+            Ok(())
+        );
+        assert_eq!(
+            rx.recv(),
+            Ok((
+                MessageType::Critical,
+                CString::new("test critical message").unwrap()
+            ))
+        );
+
         api.clear_message_handler();
     }
 }
