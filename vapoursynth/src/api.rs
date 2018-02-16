@@ -1,4 +1,5 @@
-use std::os::raw::{c_char, c_void};
+use std::ffi::{CString, NulError};
+use std::os::raw::{c_char, c_int, c_void};
 use vapoursynth_sys as ffi;
 
 /// A wrapper for the VapourSynth API.
@@ -9,6 +10,17 @@ pub struct API {
 
 unsafe impl Send for API {}
 unsafe impl Sync for API {}
+
+/// VapourSynth log message types.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum MessageType {
+    Debug,
+    Warning,
+    Critical,
+
+    /// The process will `abort()` after the message handler returns.
+    Fatal,
+}
 
 // Macros for implementing repetitive functions.
 macro_rules! prop_get_something {
@@ -73,6 +85,16 @@ impl API {
         } else {
             Some(Self { handle })
         }
+    }
+
+    /// Sends a message through VapourSynth’s logging framework.
+    #[cfg(feature = "gte-vapoursynth-api-34")]
+    pub fn log(self, message_type: MessageType, message: &str) -> Result<(), NulError> {
+        let message = CString::new(message)?;
+        unsafe {
+            ((*self.handle).logMessage)(message_type.ffi_type(), message.as_ptr());
+        }
+        Ok(())
     }
 
     /// Frees `node`.
@@ -469,5 +491,18 @@ impl API {
     #[inline]
     pub(crate) unsafe fn get_core_info(self, core: *mut ffi::VSCore) -> *const ffi::VSCoreInfo {
         ((*self.handle).getCoreInfo)(core)
+    }
+}
+
+impl MessageType {
+    #[inline]
+    fn ffi_type(self) -> c_int {
+        let rv = match self {
+            MessageType::Debug => ffi::VSMessageType::mtDebug,
+            MessageType::Warning => ffi::VSMessageType::mtWarning,
+            MessageType::Critical => ffi::VSMessageType::mtCritical,
+            MessageType::Fatal => ffi::VSMessageType::mtFatal,
+        };
+        rv as c_int
     }
 }

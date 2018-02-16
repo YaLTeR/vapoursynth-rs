@@ -12,7 +12,7 @@ extern crate vapoursynth_sys;
 pub mod vsscript;
 
 pub mod api;
-pub use api::API;
+pub use api::{API, MessageType};
 
 pub mod core;
 pub use core::CoreRef;
