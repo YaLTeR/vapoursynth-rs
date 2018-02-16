@@ -461,4 +461,13 @@ impl API {
     pub(crate) unsafe fn clone_func(self, function: *mut ffi::VSFuncRef) -> *mut ffi::VSFuncRef {
         ((*self.handle).cloneFuncRef)(function)
     }
+
+    /// Returns information about the VapourSynth core.
+    ///
+    /// # Safety
+    /// The caller must ensure `core` is valid.
+    #[inline]
+    pub(crate) unsafe fn get_core_info(self, core: *mut ffi::VSCore) -> *const ffi::VSCoreInfo {
+        ((*self.handle).getCoreInfo)(core)
+    }
 }

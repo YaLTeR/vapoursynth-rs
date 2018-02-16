@@ -26,6 +26,12 @@ fn run() -> Result<(), Error> {
     let environment =
         vsscript::Environment::from_file(filename, vsscript::EvalFlags::SetWorkingDir)
             .context("Couldn't create the VSScript environment")?;
+
+    let core = environment
+        .get_core(api)
+        .ok_or_else(|| err_msg("Couldn't get the VapourSynth core"))?;
+    println!("{}", core.info());
+
     let node = environment
         .get_output(api, 0)
         .ok_or_else(|| err_msg("No output at index 0"))?;
