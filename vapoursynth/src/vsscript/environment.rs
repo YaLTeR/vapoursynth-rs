@@ -6,6 +6,7 @@ use std::path::Path;
 use vapoursynth_sys as ffi;
 
 use api::API;
+use core::CoreRef;
 use map::{MapRef, MapRefMut, VSMapInterface, VSMapMutInterface};
 use node::Node;
 use vsscript::*;
@@ -185,6 +186,17 @@ impl Environment {
             None
         } else {
             Some(())
+        }
+    }
+
+    /// Retrieves the VapourSynth core that was created in the script environment. If a VapourSynth
+    /// core has not been created yet, it will be created now, with the default options.
+    pub fn get_core(&self, api: API) -> Option<CoreRef> {
+        let ptr = unsafe { ffi::vsscript_getCore(self.handle) };
+        if ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { CoreRef::from_ptr(api, ptr) })
         }
     }
 

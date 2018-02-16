@@ -296,6 +296,17 @@ mod need_api_and_vsscript {
 
         assert_eq!(rx.recv(), Ok(()));
     }
+
+    #[test]
+    fn core() {
+        let api = API::get().unwrap();
+        let env =
+            vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
+                .unwrap();
+
+        let core = env.get_core(api);
+        assert!(core.is_some());
+    }
 }
 
 // We need either VSScript API 3.2 or the VapourSynth functions.

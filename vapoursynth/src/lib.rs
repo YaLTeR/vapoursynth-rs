@@ -14,6 +14,9 @@ pub mod vsscript;
 pub mod api;
 pub use api::API;
 
+pub mod core;
+pub use core::CoreRef;
+
 pub mod format;
 pub use format::Format;
 
