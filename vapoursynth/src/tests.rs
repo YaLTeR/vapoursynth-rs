@@ -8,6 +8,7 @@ mod need_api_and_vsscript {
     use std::sync::mpsc::channel;
 
     use super::*;
+    use format::PresetFormat;
     use video_info::{Framerate, Resolution};
 
     fn props_test(frame: &Frame, fps_num: i64) {
@@ -344,6 +345,14 @@ mod need_api_and_vsscript {
 
         let core = env.get_core(api);
         assert!(core.is_some());
+        let core = core.unwrap();
+
+        let yuv420p8 = core.get_format(PresetFormat::YUV420P8.into());
+        assert!(yuv420p8.is_some());
+        let yuv420p8 = yuv420p8.unwrap();
+
+        assert_eq!(yuv420p8.name().to_str().unwrap(), "YUV420P8");
+        assert_eq!(yuv420p8.plane_count(), 3);
     }
 }
 

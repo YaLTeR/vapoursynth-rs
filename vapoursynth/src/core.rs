@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 use vapoursynth_sys as ffi;
 
 use api::API;
+use format::Format;
 
 /// Contains information about a VapourSynth core.
 #[derive(Debug, Clone, Copy, Hash)]
@@ -70,6 +71,14 @@ impl<'a> CoreRef<'a> {
             max_framebuffer_size: raw_info.maxFramebufferSize as u64,
             used_framebuffer_size: raw_info.usedFramebufferSize as u64,
         }
+    }
+
+    /// Retrieves a registered or preset `Format` by its id. The id can be of a previously
+    /// registered format, or one of the `PresetFormat`.
+    #[inline]
+    pub fn get_format(&self, id: i32) -> Option<Format> {
+        let ptr = unsafe { self.api.get_format_preset(id, self.handle) };
+        unsafe { ptr.as_ref().map(|p| Format::from_ptr(p)) }
     }
 }
 

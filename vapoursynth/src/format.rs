@@ -8,6 +8,47 @@ pub struct Format {
     handle: *const ffi::VSFormat,
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
+#[repr(i32)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum PresetFormat {
+    Gray8 = 1000010,
+    Gray16 = 1000011,
+    GrayH = 1000012,
+    GrayS = 1000013,
+    YUV420P8 = 3000010,
+    YUV422P8 = 3000011,
+    YUV444P8 = 3000012,
+    YUV410P8 = 3000013,
+    YUV411P8 = 3000014,
+    YUV440P8 = 3000015,
+    YUV420P9 = 3000016,
+    YUV422P9 = 3000017,
+    YUV444P9 = 3000018,
+    YUV420P10 = 3000019,
+    YUV422P10 = 3000020,
+    YUV444P10 = 3000021,
+    YUV420P16 = 3000022,
+    YUV422P16 = 3000023,
+    YUV444P16 = 3000024,
+    YUV444PH = 3000025,
+    YUV444PS = 3000026,
+    YUV420P12 = 3000027,
+    YUV422P12 = 3000028,
+    YUV444P12 = 3000029,
+    YUV420P14 = 3000030,
+    YUV422P14 = 3000031,
+    YUV444P14 = 3000032,
+    RGB24 = 2000010,
+    RGB27 = 2000011,
+    RGB30 = 2000012,
+    RGB48 = 2000013,
+    RGBH = 2000014,
+    RGBS = 2000015,
+    CompatBGR32 = 9000010,
+    CompatYUY2 = 9000011,
+}
+
 impl PartialEq for Format {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -39,5 +80,11 @@ impl Format {
         let plane_count = unsafe { (*self.handle).numPlanes };
         debug_assert!(plane_count >= 0);
         plane_count as usize
+    }
+}
+
+impl From<PresetFormat> for i32 {
+    fn from(x: PresetFormat) -> Self {
+        x as i32
     }
 }

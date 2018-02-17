@@ -592,6 +592,19 @@ impl API {
     pub(crate) unsafe fn get_core_info(self, core: *mut ffi::VSCore) -> *const ffi::VSCoreInfo {
         ((*self.handle).getCoreInfo)(core)
     }
+
+    /// Returns a VSFormat structure from a video format identifier.
+    ///
+    /// # Safety
+    /// The caller must ensure `core` is valid.
+    #[inline]
+    pub(crate) unsafe fn get_format_preset(
+        self,
+        id: i32,
+        core: *mut ffi::VSCore,
+    ) -> *const ffi::VSFormat {
+        ((*self.handle).getFormatPreset)(id, core)
+    }
 }
 
 impl MessageType {
