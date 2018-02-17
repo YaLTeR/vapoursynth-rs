@@ -8,6 +8,14 @@ pub struct Format {
     handle: *const ffi::VSFormat,
 }
 
+/// Preset VapourSynth formats.
+///
+/// The presets suffixed with H and S have floating point sample type. The H and S suffixes stand
+/// for half precision and single precision, respectively.
+///
+/// The compat formats are the only packed formats in VapourSynth. Everything else is planar. They
+/// exist for compatibility with Avisynth plugins. They are not to be implemented in native
+/// VapourSynth plugins.
 #[cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -49,6 +57,7 @@ pub enum PresetFormat {
     CompatYUY2 = 9000011,
 }
 
+/// Format color families.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum ColorFamily {
     Gray,
@@ -58,6 +67,7 @@ pub enum ColorFamily {
     Compat,
 }
 
+/// Format sample types.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum SampleType {
     Integer,
