@@ -101,11 +101,11 @@ impl<'a> CoreRef<'a> {
         unsafe {
             self.api
                 .register_format(
-                    color_family.ffi_type(),
-                    sample_type.ffi_type(),
-                    bits_per_sample as i32,
-                    sub_sampling_w as i32,
-                    sub_sampling_h as i32,
+                    color_family.into(),
+                    sample_type.into(),
+                    i32::from(bits_per_sample),
+                    i32::from(sub_sampling_w),
+                    i32::from(sub_sampling_h),
                     self.handle,
                 )
                 .as_ref()

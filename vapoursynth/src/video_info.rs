@@ -37,9 +37,9 @@ pub enum Property<T: Debug + Clone + Copy + Eq + PartialEq> {
 
 /// Contains information about a video clip.
 #[derive(Debug, Copy, Clone)]
-pub struct VideoInfo {
+pub struct VideoInfo<'a> {
     /// Format of the clip.
-    pub format: Property<Format>,
+    pub format: Property<Format<'a>>,
 
     /// Framerate of the clip.
     pub framerate: Property<Framerate>,
@@ -59,7 +59,7 @@ pub struct VideoInfo {
     pub flags: node::Flags,
 }
 
-impl VideoInfo {
+impl<'a> VideoInfo<'a> {
     /// Creates a `VideoInfo` from a raw pointer.
     ///
     /// # Safety
