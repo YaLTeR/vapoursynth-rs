@@ -36,7 +36,7 @@ fn print_node_info(node: &vapoursynth::Node) {
 
     println!(
         "Format: {}",
-        map_or_variable(&info.format, |x| x.name().to_string_lossy().into_owned())
+        map_or_variable(&info.format, |x| x.name().to_owned())
     );
     println!(
         "Resolution: {}",
@@ -109,7 +109,7 @@ fn run() -> Result<(), Error> {
         println!("Frame #{}", n);
 
         let format = frame.format();
-        println!("Format: {}", format.name().to_string_lossy());
+        println!("Format: {}", format.name());
         println!("Plane count: {}", format.plane_count());
 
         let props = frame.props();

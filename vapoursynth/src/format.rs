@@ -107,8 +107,8 @@ impl<'a> Format<'a> {
 
     /// Gets the printable name of this format.
     #[inline]
-    pub fn name(self) -> &'a CStr {
-        unsafe { CStr::from_ptr(&(*self.handle).name as _) }
+    pub fn name(self) -> &'a str {
+        unsafe { CStr::from_ptr(&(*self.handle).name as _).to_str().unwrap() }
     }
 
     /// Gets the number of planes of this format.

@@ -8,7 +8,7 @@ mod need_api_and_vsscript {
     use std::sync::mpsc::channel;
 
     use super::*;
-    use format::PresetFormat;
+    use format::{ColorFamily, PresetFormat, SampleType};
     use video_info::{Framerate, Resolution};
 
     fn props_test(frame: &Frame, fps_num: i64) {
@@ -46,7 +46,7 @@ mod need_api_and_vsscript {
 
     fn green_frame_test(frame: &Frame) {
         let format = frame.format();
-        assert_eq!(format.name().to_string_lossy(), "RGB24");
+        assert_eq!(format.name(), "RGB24");
         assert_eq!(format.plane_count(), 3);
 
         for plane in 0..format.plane_count() {
@@ -82,7 +82,7 @@ mod need_api_and_vsscript {
         let info = node.info();
 
         if let Property::Constant(format) = info.format {
-            assert_eq!(format.name().to_string_lossy(), "RGB24");
+            assert_eq!(format.name(), "RGB24");
         } else {
             assert!(false);
         }
@@ -157,7 +157,7 @@ mod need_api_and_vsscript {
         // Test the first frame.
         let frame = node.get_frame(0).unwrap();
         let format = frame.format();
-        assert_eq!(format.name().to_string_lossy(), "RGB24");
+        assert_eq!(format.name(), "RGB24");
         assert_eq!(format.plane_count(), 3);
 
         for plane in 0..format.plane_count() {
@@ -183,7 +183,7 @@ mod need_api_and_vsscript {
         // Test the first frame of the next format.
         let frame = node.get_frame(100).unwrap();
         let format = frame.format();
-        assert_eq!(format.name().to_string_lossy(), "Gray8");
+        assert_eq!(format.name(), "Gray8");
         assert_eq!(format.plane_count(), 1);
 
         let plane = 0;
@@ -351,8 +351,19 @@ mod need_api_and_vsscript {
         assert!(yuv420p8.is_some());
         let yuv420p8 = yuv420p8.unwrap();
 
-        assert_eq!(yuv420p8.name().to_str().unwrap(), "YUV420P8");
+        assert_eq!(yuv420p8.id(), PresetFormat::YUV420P8.into());
+        assert_eq!(yuv420p8.name(), "YUV420P8");
         assert_eq!(yuv420p8.plane_count(), 3);
+        assert_eq!(yuv420p8.color_family(), ColorFamily::YUV);
+        assert_eq!(yuv420p8.sample_type(), SampleType::Integer);
+        assert_eq!(yuv420p8.bits_per_sample(), 8);
+        assert_eq!(yuv420p8.bytes_per_sample(), 1);
+        assert_eq!(yuv420p8.sub_sampling_w(), 1);
+        assert_eq!(yuv420p8.sub_sampling_h(), 1);
+
+        let yuv422p8 = core.get_format(PresetFormat::YUV422P8.into()).unwrap();
+        assert_eq!(yuv422p8.sub_sampling_w(), 1);
+        assert_eq!(yuv422p8.sub_sampling_h(), 0);
     }
 }
 
