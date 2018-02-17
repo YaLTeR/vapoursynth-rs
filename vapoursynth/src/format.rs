@@ -1,7 +1,6 @@
 use std::ffi::CStr;
 use vapoursynth_sys as ffi;
 
-// TODO: expand this into fields like `VideoInfo`.
 /// Contains information about a video format.
 #[derive(Debug, Clone, Copy)]
 pub struct Format {
@@ -74,10 +73,14 @@ pub enum SampleType {
     Float,
 }
 
+/// A unique format identifier.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct FormatID(pub(crate) i32);
+
 impl PartialEq for Format {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-        unsafe { (*self.handle).id == (*other.handle).id }
+        self.id() == other.id()
     }
 }
 
@@ -95,8 +98,8 @@ impl Format {
 
     /// Gets the unique identifier of this `Format`.
     #[inline]
-    pub fn id(self) -> i32 {
-        unsafe { (*self.handle).id }
+    pub fn id(self) -> FormatID {
+        FormatID(unsafe { (*self.handle).id })
     }
 
     /// Gets the printable name of this `Format`.
@@ -114,9 +117,9 @@ impl Format {
     }
 }
 
-impl From<PresetFormat> for i32 {
+impl From<PresetFormat> for FormatID {
     fn from(x: PresetFormat) -> Self {
-        x as i32
+        FormatID(x as i32)
     }
 }
 
