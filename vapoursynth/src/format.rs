@@ -49,6 +49,21 @@ pub enum PresetFormat {
     CompatYUY2 = 9000011,
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum ColorFamily {
+    Gray,
+    RGB,
+    YUV,
+    YCoCg,
+    Compat,
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum SampleType {
+    Integer,
+    Float,
+}
+
 impl PartialEq for Format {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -92,5 +107,28 @@ impl Format {
 impl From<PresetFormat> for i32 {
     fn from(x: PresetFormat) -> Self {
         x as i32
+    }
+}
+
+impl ColorFamily {
+    #[inline]
+    pub(crate) fn ffi_type(self) -> ffi::VSColorFamily {
+        match self {
+            ColorFamily::Gray => ffi::VSColorFamily::cmGray,
+            ColorFamily::RGB => ffi::VSColorFamily::cmRGB,
+            ColorFamily::YUV => ffi::VSColorFamily::cmYUV,
+            ColorFamily::YCoCg => ffi::VSColorFamily::cmYCoCg,
+            ColorFamily::Compat => ffi::VSColorFamily::cmCompat,
+        }
+    }
+}
+
+impl SampleType {
+    #[inline]
+    pub(crate) fn ffi_type(self) -> ffi::VSSampleType {
+        match self {
+            SampleType::Integer => ffi::VSSampleType::stInteger,
+            SampleType::Float => ffi::VSSampleType::stFloat,
+        }
     }
 }

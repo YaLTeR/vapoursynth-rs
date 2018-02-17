@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use vapoursynth_sys as ffi;
 
 use api::API;
-use format::Format;
+use format::{ColorFamily, Format, SampleType};
 
 /// Contains information about a VapourSynth core.
 #[derive(Debug, Clone, Copy, Hash)]
@@ -79,6 +79,38 @@ impl<'a> CoreRef<'a> {
     pub fn get_format(&self, id: i32) -> Option<Format> {
         let ptr = unsafe { self.api.get_format_preset(id, self.handle) };
         unsafe { ptr.as_ref().map(|p| Format::from_ptr(p)) }
+    }
+
+    /// Registers a custom video format.
+    ///
+    /// Returns `None` if an invalid format is described.
+    ///
+    /// Registering compat formats is not allowed. Only certain privileged built-in filters are
+    /// allowed to handle compat formats.
+    ///
+    /// RGB formats are not allowed to be subsampled.
+    #[inline]
+    pub fn register_format(
+        &self,
+        color_family: ColorFamily,
+        sample_type: SampleType,
+        bits_per_sample: u8,
+        sub_sampling_w: u8,
+        sub_sampling_h: u8,
+    ) -> Option<Format> {
+        unsafe {
+            self.api
+                .register_format(
+                    color_family.ffi_type(),
+                    sample_type.ffi_type(),
+                    bits_per_sample as i32,
+                    sub_sampling_w as i32,
+                    sub_sampling_h as i32,
+                    self.handle,
+                )
+                .as_ref()
+                .map(|p| Format::from_ptr(p))
+        }
     }
 }
 

@@ -605,6 +605,30 @@ impl API {
     ) -> *const ffi::VSFormat {
         ((*self.handle).getFormatPreset)(id, core)
     }
+
+    /// Registers a custom video format.
+    ///
+    /// # Safety
+    /// The caller must ensure `core` is valid.
+    #[inline]
+    pub(crate) unsafe fn register_format(
+        self,
+        color_family: ffi::VSColorFamily,
+        sample_type: ffi::VSSampleType,
+        bits_per_sample: i32,
+        sub_sampling_w: i32,
+        sub_sampling_h: i32,
+        core: *mut ffi::VSCore,
+    ) -> *const ffi::VSFormat {
+        ((*self.handle).registerFormat)(
+            color_family as i32,
+            sample_type as i32,
+            bits_per_sample,
+            sub_sampling_w,
+            sub_sampling_h,
+            core,
+        )
+    }
 }
 
 impl MessageType {
