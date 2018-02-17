@@ -14,28 +14,11 @@ fn usage() {
     );
 }
 
-#[cfg(all(feature = "vapoursynth-functions", feature = "vsscript-functions"))]
-fn run() -> Result<(), Error> {
+#[cfg(all(feature = "vsscript-functions",
+          any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
+fn print_node_info(node: &vapoursynth::Node) {
     use std::fmt::Debug;
-    use vapoursynth::{vsscript, Property, VSMap};
-
-    let filename = env::args()
-        .nth(1)
-        .ok_or_else(|| err_msg("The filename argument is missing"))?;
-    let api = vapoursynth::API::get().ok_or_else(|| err_msg("Couldn't get the VapourSynth API"))?;
-    let environment =
-        vsscript::Environment::from_file(filename, vsscript::EvalFlags::SetWorkingDir)
-            .context("Couldn't create the VSScript environment")?;
-
-    let core = environment
-        .get_core(api)
-        .ok_or_else(|| err_msg("Couldn't get the VapourSynth core"))?;
-    println!("{}", core.info());
-
-    let node = environment
-        .get_output(api, 0)
-        .ok_or_else(|| err_msg("No output at index 0"))?;
-    let info = node.info();
+    use vapoursynth::Property;
 
     // Helper function for printing properties.
     fn map_or_variable<T, F>(x: &Property<T>, f: F) -> String
@@ -48,6 +31,8 @@ fn run() -> Result<(), Error> {
             Property::Constant(ref x) => f(x),
         }
     }
+
+    let info = node.info();
 
     println!(
         "Format: {}",
@@ -75,6 +60,41 @@ fn run() -> Result<(), Error> {
         "Frame count: {}",
         map_or_variable(&info.num_frames, |x| format!("{}", x))
     );
+}
+
+#[cfg(all(feature = "vsscript-functions",
+          any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
+fn run() -> Result<(), Error> {
+    use vapoursynth::{vsscript, VSMap};
+
+    let filename = env::args()
+        .nth(1)
+        .ok_or_else(|| err_msg("The filename argument is missing"))?;
+    let api = vapoursynth::API::get().ok_or_else(|| err_msg("Couldn't get the VapourSynth API"))?;
+    let environment =
+        vsscript::Environment::from_file(filename, vsscript::EvalFlags::SetWorkingDir)
+            .context("Couldn't create the VSScript environment")?;
+
+    let core = environment
+        .get_core(api)
+        .ok_or_else(|| err_msg("Couldn't get the VapourSynth core"))?;
+    println!("{}", core.info());
+
+    #[cfg(feature = "gte-vsscript-api-31")]
+    let (node, alpha_node) = environment.get_output(api, 0);
+    #[cfg(not(feature = "gte-vsscript-api-31"))]
+    let (node, alpha_node) = (environment.get_output(api, 0), None);
+
+    let node = node.ok_or_else(|| err_msg("No output at index 0"))?;
+    print_node_info(&node);
+
+    println!();
+    if let Some(alpha_node) = alpha_node {
+        println!("Alpha:");
+        print_node_info(&alpha_node);
+    } else {
+        println!("Alpha: No");
+    }
 
     if let Some(n) = env::args().nth(2) {
         let n = n.parse::<usize>()
@@ -119,10 +139,12 @@ fn run() -> Result<(), Error> {
     Ok(())
 }
 
-#[cfg(not(all(feature = "vapoursynth-functions", feature = "vsscript-functions")))]
+#[cfg(not(all(feature = "vsscript-functions",
+              any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32"))))]
 fn run() -> Result<(), Error> {
     Err(err_msg(
-        "This example requires the `vapoursynth-functions vsscript-functions` features.",
+        "This example requires the `vsscript-functions` and either `vapoursynth-functions` or \
+         `vsscript-api-32` features.",
     ))
 }
 

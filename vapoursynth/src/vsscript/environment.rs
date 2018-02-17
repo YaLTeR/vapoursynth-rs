@@ -166,6 +166,7 @@ impl Environment {
     /// for output with the requested index.
     ///
     /// If there's no node corresponding to the given `index`, `None` is returned.
+    #[cfg(not(feature = "gte-vsscript-api-31"))]
     #[inline]
     pub fn get_output(&self, api: API, index: i32) -> Option<Node> {
         let node_handle = unsafe { ffi::vsscript_getOutput(self.handle, index) };
@@ -174,6 +175,23 @@ impl Environment {
         } else {
             Some(unsafe { Node::from_ptr(api, node_handle) })
         }
+    }
+
+    /// Retrieves a node from the script environment. A node in the script must have been marked
+    /// for output with the requested index. The second node, if any, contains the alpha clip.
+    ///
+    /// If there's no node corresponding to the given `index`, `None` is returned.
+    #[cfg(feature = "gte-vsscript-api-31")]
+    #[inline]
+    pub fn get_output(&self, api: API, index: i32) -> (Option<Node>, Option<Node>) {
+        let mut alpha_handle = ptr::null_mut();
+        let node_handle =
+            unsafe { ffi::vsscript_getOutput2(self.handle, index, &mut alpha_handle) };
+
+        let node = unsafe { node_handle.as_mut().map(|p| Node::from_ptr(api, p)) };
+        let alpha_node = unsafe { alpha_handle.as_mut().map(|p| Node::from_ptr(api, p)) };
+
+        (node, alpha_node)
     }
 
     /// Cancels a node set for output. The node will no longer be available to `get_output()`.

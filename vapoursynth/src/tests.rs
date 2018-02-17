@@ -69,7 +69,15 @@ mod need_api_and_vsscript {
 
     fn green_test(env: &vsscript::Environment) {
         let api = API::get().unwrap();
-        let node = env.get_output(api, 0).unwrap();
+
+        #[cfg(feature = "gte-vsscript-api-31")]
+        let (node, alpha_node) = env.get_output(api, 0);
+        #[cfg(not(feature = "gte-vsscript-api-31"))]
+        let (node, alpha_node) = (env.get_output(api, 0), None::<Node>);
+
+        let node = node.unwrap();
+        assert!(alpha_node.is_none());
+
         let info = node.info();
 
         if let Property::Constant(format) = info.format {
@@ -125,7 +133,15 @@ mod need_api_and_vsscript {
         let env =
             vsscript::Environment::from_file("test-vpy/variable.vpy", vsscript::EvalFlags::Nothing)
                 .unwrap();
-        let node = env.get_output(api, 0).unwrap();
+
+        #[cfg(feature = "gte-vsscript-api-31")]
+        let (node, alpha_node) = env.get_output(api, 0);
+        #[cfg(not(feature = "gte-vsscript-api-31"))]
+        let (node, alpha_node) = (env.get_output(api, 0), None::<Node>);
+
+        let node = node.unwrap();
+        assert!(alpha_node.is_none());
+
         let info = node.info();
 
         assert_eq!(info.format, Property::Variable);
@@ -204,7 +220,15 @@ mod need_api_and_vsscript {
         let api = API::get().unwrap();
         let env =
             vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
-        let node = env.get_output(api, 0).unwrap();
+
+        #[cfg(feature = "gte-vsscript-api-31")]
+        let (node, alpha_node) = env.get_output(api, 0);
+        #[cfg(not(feature = "gte-vsscript-api-31"))]
+        let (node, alpha_node) = (env.get_output(api, 0), None::<Node>);
+
+        let node = node.unwrap();
+        assert!(alpha_node.is_none());
+
         let frame = node.get_frame(0).unwrap();
         let props = frame.props();
 
@@ -234,7 +258,14 @@ mod need_api_and_vsscript {
         let env =
             vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
                 .unwrap();
-        let node = env.get_output(api, 0).unwrap();
+
+        #[cfg(feature = "gte-vsscript-api-31")]
+        let (node, alpha_node) = env.get_output(api, 0);
+        #[cfg(not(feature = "gte-vsscript-api-31"))]
+        let (node, alpha_node) = (env.get_output(api, 0), None::<Node>);
+
+        let node = node.unwrap();
+        assert!(alpha_node.is_none());
 
         let mut rxs = Vec::new();
 
@@ -275,7 +306,14 @@ mod need_api_and_vsscript {
         let env =
             vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
                 .unwrap();
-        let node = env.get_output(api, 0).unwrap();
+
+        #[cfg(feature = "gte-vsscript-api-31")]
+        let (node, alpha_node) = env.get_output(api, 0);
+        #[cfg(not(feature = "gte-vsscript-api-31"))]
+        let (node, alpha_node) = (env.get_output(api, 0), None::<Node>);
+
+        let node = node.unwrap();
+        assert!(alpha_node.is_none());
 
         let (tx, rx) = channel();
 
