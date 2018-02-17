@@ -68,6 +68,12 @@ impl Format {
         Self { handle: ptr }
     }
 
+    /// Gets the unique identifier of this `Format`.
+    #[inline]
+    pub fn id(self) -> i32 {
+        unsafe { (*self.handle).id }
+    }
+
     /// Gets the printable name of this `Format`.
     #[inline]
     pub fn name(self) -> &'static CStr {
