@@ -1,8 +1,7 @@
 # vapoursynth-sys
 
 [![crates.io](https://img.shields.io/crates/v/vapoursynth-sys.svg)](https://crates.io/crates/vapoursynth-sys)
-
-[Documentation with all features enabled](https://yalter.github.io/vapoursynth-rs/vapoursynth_sys/index.html)
+[![Documentation](https://docs.rs/vapoursynth-sys/badge.svg)](https://docs.rs/vapoursynth-sys)
 
 Raw bindings to [VapourSynth](https://github.com/vapoursynth/vapoursynth).
 
