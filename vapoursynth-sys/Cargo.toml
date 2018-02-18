@@ -53,3 +53,6 @@ gte-vapoursynth-api-35 = []
 
 gte-vsscript-api-31 = []
 gte-vsscript-api-32 = []
+
+[package.metadata.docs.rs]
+features = ["vapoursynth-api-35", "vsscript-api-32", "vapoursynth-functions", "vsscript-functions"]

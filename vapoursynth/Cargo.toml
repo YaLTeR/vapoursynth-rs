@@ -74,3 +74,6 @@ gte-vsscript-api-32 = []
 
 # For development.
 #default = ["vapoursynth-api-35", "vsscript-api-32", "vapoursynth-functions", "vsscript-functions"]
+
+[package.metadata.docs.rs]
+features = ["vapoursynth-api-35", "vsscript-api-32", "vapoursynth-functions", "vsscript-functions"]
