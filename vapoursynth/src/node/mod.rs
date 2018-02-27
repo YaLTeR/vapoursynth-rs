@@ -41,7 +41,6 @@ impl From<ffi::VSNodeFlags> for Flags {
 /// A reference to a node in the constructed filter graph.
 #[derive(Debug)]
 pub struct Node {
-    api: API,
     handle: *mut ffi::VSNodeRef,
 }
 
@@ -52,7 +51,7 @@ impl Drop for Node {
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            self.api.free_node(self.handle);
+            API::get_cached().free_node(self.handle);
         }
     }
 }
@@ -60,11 +59,8 @@ impl Drop for Node {
 impl Clone for Node {
     #[inline]
     fn clone(&self) -> Self {
-        let handle = unsafe { self.api.clone_node(self.handle) };
-        Self {
-            api: self.api,
-            handle,
-        }
+        let handle = unsafe { API::get_cached().clone_node(self.handle) };
+        Self { handle }
     }
 }
 
@@ -72,10 +68,10 @@ impl Node {
     /// Wraps `handle` in a `Node`.
     ///
     /// # Safety
-    /// The caller must ensure `handle` is valid.
+    /// The caller must ensure `handle` is valid and API is cached.
     #[inline]
-    pub(crate) unsafe fn from_ptr(api: API, handle: *mut ffi::VSNodeRef) -> Self {
-        Self { api, handle }
+    pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSNodeRef) -> Self {
+        Self { handle }
     }
 
     /// Returns the underlying pointer.
@@ -88,7 +84,7 @@ impl Node {
     #[inline]
     pub fn info(&self) -> VideoInfo {
         unsafe {
-            let ptr = self.api.get_video_info(self.handle);
+            let ptr = API::get_cached().get_video_info(self.handle);
             VideoInfo::from_ptr(ptr)
         }
     }
@@ -108,14 +104,14 @@ impl Node {
         err_buf.resize(ERROR_BUF_CAPACITY, 0);
         let mut err_buf = err_buf.into_boxed_slice();
 
-        let handle = unsafe { self.api.get_frame(n, self.handle, &mut *err_buf) };
+        let handle = unsafe { API::get_cached().get_frame(n, self.handle, &mut *err_buf) };
 
         if handle.is_null() {
             // TODO: remove this extra allocation by reusing `Box<[c_char]>`.
             let error = unsafe { CStr::from_ptr(err_buf.as_ptr()) }.to_owned();
             Err(GetFrameError::new(Cow::Owned(error)))
         } else {
-            Ok(unsafe { Frame::from_ptr(self.api, handle) })
+            Ok(unsafe { Frame::from_ptr(handle) })
         }
     }
 
@@ -139,7 +135,6 @@ impl Node {
         F: FnOnce(Result<Frame, GetFrameError>, usize, Node) + Send + 'static,
     {
         struct CallbackData {
-            api: API,
             callback: Box<CallbackFn>,
         }
 
@@ -173,10 +168,10 @@ impl Node {
                     Err(GetFrameError::new(error_msg))
                 } else {
                     debug_assert!(error_msg.is_null());
-                    Ok(Frame::from_ptr(user_data.api, frame))
+                    Ok(Frame::from_ptr(frame))
                 };
 
-                let node = Node::from_ptr(user_data.api, node);
+                let node = Node::from_ptr(node);
 
                 debug_assert!(n >= 0);
                 let n = n as usize;
@@ -194,14 +189,13 @@ impl Node {
         let n = n as i32;
 
         let user_data = Box::new(CallbackData {
-            api: self.api,
             callback: Box::new(callback),
         });
 
         let new_node = self.clone();
 
         unsafe {
-            self.api.get_frame_async(
+            API::get_cached().get_frame_async(
                 n,
                 new_node.handle,
                 Some(c_callback),

@@ -18,30 +18,18 @@ mod need_api_and_vsscript {
         assert_eq!(props.key(1), "_DurationNum");
 
         assert_eq!(props.value_count(props.key(0)), Ok(1));
-        if let Ok(Value::Int(x)) = props.value(props.key(0), 0) {
-            assert_eq!(x, fps_num);
-        } else {
-            assert!(false);
-        }
+        assert_eq!(props.get_int(props.key(0)), Ok(fps_num));
         assert_eq!(props.value_count(props.key(1)), Ok(1));
-        if let Ok(Value::Int(1)) = props.value(props.key(1), 0) {
-        } else {
-            assert!(false);
-        }
+        assert_eq!(props.get_int(props.key(1)), Ok(1));
     }
 
-    fn env_video_var_test(api: API, env: &vsscript::Environment) {
-        let mut map = Map::new(api);
-        assert!(env.get_variable("video", &mut map.get_ref_mut()).is_ok());
-        let value = map.iter().next();
-        assert!(value.is_some());
-        let value = value.unwrap();
-        assert_eq!(value.0, "video");
-        if let ValueArray::Nodes(x) = value.1 {
-            assert_eq!(x.len(), 1);
-        } else {
-            assert!(false);
-        }
+    fn env_video_var_test(env: &vsscript::Environment) {
+        let mut map = OwnedMap::new(API::get().unwrap());
+        assert!(env.get_variable("video", &mut map).is_ok());
+        assert_eq!(map.key_count(), 1);
+        assert_eq!(map.key(0), "video");
+        let node = map.get_node("video");
+        assert!(node.is_ok());
     }
 
     fn green_frame_test(frame: &Frame) {
@@ -69,14 +57,15 @@ mod need_api_and_vsscript {
     }
 
     fn green_test(env: &vsscript::Environment) {
-        let api = API::get().unwrap();
-
         #[cfg(feature = "gte-vsscript-api-31")]
-        let (node, alpha_node) = env.get_output(api, 0);
+        let (node, alpha_node) = {
+            let output = env.get_output(0);
+            assert!(output.is_ok());
+            output.unwrap()
+        };
         #[cfg(not(feature = "gte-vsscript-api-31"))]
-        let (node, alpha_node) = (env.get_output(api, 0), None::<Node>);
+        let (node, alpha_node) = (env.get_output(0), None::<Node>);
 
-        let node = node.unwrap();
         assert!(alpha_node.is_none());
 
         let info = node.info();
@@ -110,7 +99,7 @@ mod need_api_and_vsscript {
         let frame = node.get_frame(0).unwrap();
         green_frame_test(&frame);
         props_test(&frame, 60);
-        env_video_var_test(api, &env);
+        env_video_var_test(&env);
     }
 
     #[test]
@@ -130,17 +119,19 @@ mod need_api_and_vsscript {
 
     #[test]
     fn variable() {
-        let api = API::get().unwrap();
         let env =
             vsscript::Environment::from_file("test-vpy/variable.vpy", vsscript::EvalFlags::Nothing)
                 .unwrap();
 
         #[cfg(feature = "gte-vsscript-api-31")]
-        let (node, alpha_node) = env.get_output(api, 0);
+        let (node, alpha_node) = {
+            let output = env.get_output(0);
+            assert!(output.is_ok());
+            output.unwrap()
+        };
         #[cfg(not(feature = "gte-vsscript-api-31"))]
-        let (node, alpha_node) = (env.get_output(api, 0), None::<Node>);
+        let (node, alpha_node) = (env.get_output(0), None::<Node>);
 
-        let node = node.unwrap();
         assert!(alpha_node.is_none());
 
         let info = node.info();
@@ -204,68 +195,85 @@ mod need_api_and_vsscript {
         }
 
         props_test(&frame, 30);
-        env_video_var_test(api, &env);
+        env_video_var_test(&env);
     }
 
     #[test]
     fn clear_output() {
         let env =
             vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
-        assert!(env.clear_output(1).is_none());
-        assert!(env.clear_output(0).is_some());
-        assert!(env.clear_output(0).is_none());
+        assert!(
+            env.clear_output(1)
+                .err()
+                .map(|e| if let vsscript::errors::Error::NoOutput = e {
+                    true
+                } else {
+                    false
+                })
+                .unwrap_or(false)
+        );
+        assert!(env.clear_output(0).is_ok());
+        assert!(
+            env.clear_output(0)
+                .err()
+                .map(|e| if let vsscript::errors::Error::NoOutput = e {
+                    true
+                } else {
+                    false
+                })
+                .unwrap_or(false)
+        );
     }
 
     #[test]
     fn iterators() {
-        let api = API::get().unwrap();
         let env =
             vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
 
         #[cfg(feature = "gte-vsscript-api-31")]
-        let (node, alpha_node) = env.get_output(api, 0);
+        let (node, alpha_node) = env.get_output(0).unwrap();
         #[cfg(not(feature = "gte-vsscript-api-31"))]
-        let (node, alpha_node) = (env.get_output(api, 0), None::<Node>);
+        let (node, alpha_node) = (env.get_output(0).unwrap(), None::<Node>);
 
-        let node = node.unwrap();
         assert!(alpha_node.is_none());
 
         let frame = node.get_frame(0).unwrap();
         let props = frame.props();
 
         assert_eq!(props.keys().size_hint(), (2, Some(2)));
-        assert_eq!(props.iter().size_hint(), (2, Some(2)));
+        // assert_eq!(props.iter().size_hint(), (2, Some(2)));
     }
 
     #[test]
     fn vsscript_variables() {
-        let api = API::get().unwrap();
         let env =
             vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
 
-        let mut map = Map::new(api);
-        assert!(env.get_variable("video", &mut map.get_ref_mut()).is_ok());
+        let mut map = OwnedMap::new(API::get().unwrap());
+        assert!(env.get_variable("video", &mut map).is_ok());
         assert!(env.clear_variable("video").is_ok());
         assert!(env.clear_variable("video").is_err());
-        assert!(env.get_variable("video", &mut map.get_ref_mut()).is_err());
+        assert!(env.get_variable("video", &mut map).is_err());
 
-        assert!(env.set_variables(&map.get_ref()).is_ok());
-        assert!(env.get_variable("video", &mut map.get_ref_mut()).is_ok());
+        assert!(env.set_variables(&map).is_ok());
+        assert!(env.get_variable("video", &mut map).is_ok());
     }
 
     #[test]
     fn get_frame_async() {
-        let api = API::get().unwrap();
         let env =
             vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
                 .unwrap();
 
         #[cfg(feature = "gte-vsscript-api-31")]
-        let (node, alpha_node) = env.get_output(api, 0);
+        let (node, alpha_node) = {
+            let output = env.get_output(0);
+            assert!(output.is_ok());
+            output.unwrap()
+        };
         #[cfg(not(feature = "gte-vsscript-api-31"))]
-        let (node, alpha_node) = (env.get_output(api, 0), None::<Node>);
+        let (node, alpha_node) = (env.get_output(0), None::<Node>);
 
-        let node = node.unwrap();
         assert!(alpha_node.is_none());
 
         let mut rxs = Vec::new();
@@ -303,17 +311,19 @@ mod need_api_and_vsscript {
 
     #[test]
     fn get_frame_async_error() {
-        let api = API::get().unwrap();
         let env =
             vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
                 .unwrap();
 
         #[cfg(feature = "gte-vsscript-api-31")]
-        let (node, alpha_node) = env.get_output(api, 0);
+        let (node, alpha_node) = {
+            let output = env.get_output(0);
+            assert!(output.is_ok());
+            output.unwrap()
+        };
         #[cfg(not(feature = "gte-vsscript-api-31"))]
-        let (node, alpha_node) = (env.get_output(api, 0), None::<Node>);
+        let (node, alpha_node) = (env.get_output(0), None::<Node>);
 
-        let node = node.unwrap();
         assert!(alpha_node.is_none());
 
         let (tx, rx) = channel();
@@ -338,13 +348,12 @@ mod need_api_and_vsscript {
 
     #[test]
     fn core() {
-        let api = API::get().unwrap();
         let env =
             vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
                 .unwrap();
 
-        let core = env.get_core(api);
-        assert!(core.is_some());
+        let core = env.get_core();
+        assert!(core.is_ok());
         let core = core.unwrap();
 
         let yuv420p8 = core.get_format(PresetFormat::YUV420P8.into());
@@ -379,76 +388,77 @@ mod need_api {
 
     #[test]
     fn maps() {
-        let api = API::get().unwrap();
-        let mut map = Map::new(api);
+        let mut map = OwnedMap::new(API::get().unwrap());
 
         assert_eq!(map.key_count(), 0);
 
         assert_eq!(map.touch("test_frame", ValueType::Frame), Ok(()));
         assert_eq!(map.value_type("test_frame"), Ok(ValueType::Frame));
         assert_eq!(map.value_count("test_frame"), Ok(0));
-
         assert_eq!(
-            map.append_value("test_frame", ValueRef::Int(0)),
-            Err(Error::WrongValueType)
+            map.append_int("test_frame", 42),
+            Err(map::Error::WrongValueType)
         );
-        assert_eq!(map.set_value("test_frame", ValueRef::Float(1f64)), Ok(()));
-        if let Ok(Value::Float(x)) = map.value("test_frame", 0) {
-            assert_eq!(x, 1f64);
-        } else {
-            assert!(false);
+
+        assert_eq!(map.set_int("i", 42), Ok(()));
+        assert_eq!(map.get_int("i"), Ok(42));
+        assert_eq!(map.append_int("i", 43), Ok(()));
+        assert_eq!(map.get_int("i"), Ok(42));
+        {
+            let iter = map.get_int_iter("i");
+            assert!(iter.is_ok());
+            let mut iter = iter.unwrap();
+            assert_eq!(iter.next(), Some(42));
+            assert_eq!(iter.next(), Some(43));
+            assert_eq!(iter.next(), None);
         }
 
-        const TEST_DATA: &[&[u8]] = &[&[0, 1, 2], &[3, 4, 5], &[1], &[3]];
-        assert_eq!(
-            map.set_values("test_frame", Values::Data(&mut TEST_DATA.iter().cloned())),
-            Ok(())
-        );
-        if let Ok(ValueArray::Data(xs)) = map.values("test_frame") {
-            assert_eq!(xs, TEST_DATA);
-        } else {
-            assert!(false);
+        #[cfg(feature = "gte-vapoursynth-api-31")]
+        {
+            assert_eq!(map.get_int_array("i"), Ok(&[42, 43][..]));
+
+            assert_eq!(map.set_int_array("ia", &[10, 20, 30]), Ok(()));
+            assert_eq!(map.get_int_array("ia"), Ok(&[10, 20, 30][..]));
         }
 
-        assert_eq!(
-            map.set_values("other", Values::IntArray(&[1, 2, 3])),
-            Ok(())
-        );
-        if let Ok(ValueArray::Ints(xs)) = map.values("other") {
-            assert_eq!(xs, &[1, 2, 3]);
-        } else {
-            assert!(false);
+        assert_eq!(map.set_float("f", 42f64), Ok(()));
+        assert_eq!(map.get_float("f"), Ok(42f64));
+        assert_eq!(map.append_float("f", 43f64), Ok(()));
+        assert_eq!(map.get_float("f"), Ok(42f64));
+        {
+            let iter = map.get_float_iter("f");
+            assert!(iter.is_ok());
+            let mut iter = iter.unwrap();
+            assert_eq!(iter.next(), Some(42f64));
+            assert_eq!(iter.next(), Some(43f64));
+            assert_eq!(iter.next(), None);
         }
 
-        let clone = map.clone();
-        assert_eq!(
-            map.keys().collect::<Vec<_>>(),
-            clone.keys().collect::<Vec<_>>()
-        );
-        if let Ok(ValueArray::Data(xs)) = clone.values("test_frame") {
-            assert_eq!(xs, TEST_DATA);
-        } else {
-            assert!(false);
+        #[cfg(feature = "gte-vapoursynth-api-31")]
+        {
+            assert_eq!(map.get_float_array("f"), Ok(&[42f64, 43f64][..]));
+
+            assert_eq!(map.set_float_array("fa", &[10f64, 20f64, 30f64]), Ok(()));
+            assert_eq!(map.get_float_array("fa"), Ok(&[10f64, 20f64, 30f64][..]));
         }
 
-        if let Ok(ValueArray::Ints(xs)) = clone.values("other") {
-            assert_eq!(xs, &[1, 2, 3]);
-        } else {
-            assert!(false);
+        assert_eq!(map.set_data("d", &[1, 2, 3]), Ok(()));
+        assert_eq!(map.get_data("d"), Ok(&[1, 2, 3][..]));
+        assert_eq!(map.append_data("d", &[4, 5, 6]), Ok(()));
+        assert_eq!(map.get_data("d"), Ok(&[1, 2, 3][..]));
+        {
+            let iter = map.get_data_iter("d");
+            assert!(iter.is_ok());
+            let mut iter = iter.unwrap();
+            assert_eq!(iter.next(), Some(&[1, 2, 3][..]));
+            assert_eq!(iter.next(), Some(&[4, 5, 6][..]));
+            assert_eq!(iter.next(), None);
         }
+
+        // TODO: node, frame and function method tests when we can make them.
 
         assert_eq!(map.delete_key("test_frame"), Ok(()));
-        assert_eq!(map.delete_key("test_frame"), Err(Error::KeyNotFound));
-
-        if let Ok(ValueIterEnum::Data(mut iter)) = clone.value_iter("test_frame") {
-            assert_eq!(iter.next(), Some(TEST_DATA[0]));
-            assert_eq!(iter.next(), Some(TEST_DATA[1]));
-            assert_eq!(iter.next(), Some(TEST_DATA[2]));
-            assert_eq!(iter.next(), Some(TEST_DATA[3]));
-            assert_eq!(iter.next(), None);
-        } else {
-            assert!(false);
-        }
+        assert_eq!(map.delete_key("test_frame"), Err(map::Error::KeyNotFound));
 
         assert_eq!(map.error(), None);
         assert_eq!(map.set_error("hello there"), Ok(()));

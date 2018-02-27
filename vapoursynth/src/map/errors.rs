@@ -9,7 +9,7 @@ pub enum Error {
     KeyNotFound,
     #[fail(display = "The requested index was out of bounds")]
     IndexOutOfBounds,
-    #[fail(display = "The type of the given value doesn't match the type of the property")]
+    #[fail(display = "The given/requested value type doesn't match the type of the property")]
     WrongValueType,
     #[fail(display = "The key is invalid")]
     InvalidKey(#[cause] InvalidKeyError),
@@ -17,7 +17,8 @@ pub enum Error {
     CStringConversion(#[cause] NulError),
 }
 
-pub(crate) type Result<T> = result::Result<T, Error>;
+/// A specialized `Result` type for `Map` operations.
+pub type Result<T> = result::Result<T, Error>;
 
 /// An error indicating the map key is invalid.
 #[derive(Fail, Debug, Eq, PartialEq)]

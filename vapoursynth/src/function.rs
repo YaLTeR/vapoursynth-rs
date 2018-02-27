@@ -5,7 +5,6 @@ use api::API;
 /// Holds a reference to a function that may be called.
 #[derive(Debug)]
 pub struct Function {
-    api: API,
     handle: *mut ffi::VSFuncRef,
 }
 
@@ -16,7 +15,7 @@ impl Drop for Function {
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            self.api.free_func(self.handle);
+            API::get_cached().free_func(self.handle);
         }
     }
 }
@@ -24,11 +23,8 @@ impl Drop for Function {
 impl Clone for Function {
     #[inline]
     fn clone(&self) -> Self {
-        let handle = unsafe { self.api.clone_func(self.handle) };
-        Self {
-            api: self.api,
-            handle,
-        }
+        let handle = unsafe { API::get_cached().clone_func(self.handle) };
+        Self { handle }
     }
 }
 
@@ -36,10 +32,10 @@ impl Function {
     /// Wraps `handle` in a `Function`.
     ///
     /// # Safety
-    /// The caller must ensure `handle` is valid.
+    /// The caller must ensure `handle` is valid and API is cached.
     #[inline]
-    pub(crate) unsafe fn from_ptr(api: API, handle: *mut ffi::VSFuncRef) -> Self {
-        Self { api, handle }
+    pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSFuncRef) -> Self {
+        Self { handle }
     }
 
     /// Returns the underlying pointer.

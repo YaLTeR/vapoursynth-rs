@@ -17,6 +17,12 @@ pub enum Error {
     VSScript(#[cause] VSScriptError),
     #[fail(display = "There's no such variable")]
     NoSuchVariable,
+    #[fail(display = "Couldn't get the core")]
+    NoCore,
+    #[fail(display = "There's no output on the requested index")]
+    NoOutput,
+    #[fail(display = "Couldn't get the VapourSynth API")]
+    NoAPI,
 }
 
 impl From<NulError> for Error {

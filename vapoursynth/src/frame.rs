@@ -1,9 +1,9 @@
-use std::slice;
+use std::{mem, slice};
 use vapoursynth_sys as ffi;
 
 use api::API;
 use format::Format;
-use map::MapRef;
+use map::Map;
 use video_info::Resolution;
 
 /// An error indicating that the frame data has non-zero padding.
@@ -14,7 +14,6 @@ pub struct NonZeroPadding(usize);
 /// Contains one frame of a clip.
 #[derive(Debug)]
 pub struct Frame {
-    api: API,
     handle: *const ffi::VSFrameRef,
 }
 
@@ -25,7 +24,7 @@ impl Drop for Frame {
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            self.api.free_frame(self.handle);
+            API::get_cached().free_frame(self.handle);
         }
     }
 }
@@ -33,11 +32,8 @@ impl Drop for Frame {
 impl Clone for Frame {
     #[inline]
     fn clone(&self) -> Self {
-        let handle = unsafe { self.api.clone_frame(self.handle) };
-        Self {
-            api: self.api,
-            handle,
-        }
+        let handle = unsafe { API::get_cached().clone_frame(self.handle) };
+        Self { handle }
     }
 }
 
@@ -45,10 +41,10 @@ impl Frame {
     /// Wraps `handle` in a `Frame`.
     ///
     /// # Safety
-    /// The caller must ensure `handle` is valid.
+    /// The caller must ensure `handle` is valid and API is cached.
     #[inline]
-    pub(crate) unsafe fn from_ptr(api: API, handle: *const ffi::VSFrameRef) -> Self {
-        Self { api, handle }
+    pub(crate) unsafe fn from_ptr(handle: *const ffi::VSFrameRef) -> Self {
+        Self { handle }
     }
 
     /// Returns the underlying pointer.
@@ -61,7 +57,7 @@ impl Frame {
     #[inline]
     pub fn format(&self) -> Format {
         unsafe {
-            let ptr = self.api.get_frame_format(self.handle);
+            let ptr = API::get_cached().get_frame_format(self.handle);
             Format::from_ptr(ptr)
         }
     }
@@ -76,7 +72,7 @@ impl Frame {
     pub fn width(&self, plane: usize) -> usize {
         assert!(plane < self.format().plane_count());
 
-        unsafe { self.api.get_frame_width(self.handle, plane as i32) as usize }
+        unsafe { API::get_cached().get_frame_width(self.handle, plane as i32) as usize }
     }
 
     /// Returns the height of a plane, in pixels.
@@ -89,7 +85,7 @@ impl Frame {
     pub fn height(&self, plane: usize) -> usize {
         assert!(plane < self.format().plane_count());
 
-        unsafe { self.api.get_frame_height(self.handle, plane as i32) as usize }
+        unsafe { API::get_cached().get_frame_height(self.handle, plane as i32) as usize }
     }
 
     /// Returns the resolution of a plane.
@@ -116,7 +112,7 @@ impl Frame {
     pub fn stride(&self, plane: usize) -> usize {
         assert!(plane < self.format().plane_count());
 
-        unsafe { self.api.get_frame_stride(self.handle, plane as i32) as usize }
+        unsafe { API::get_cached().get_frame_stride(self.handle, plane as i32) as usize }
     }
 
     /// Returns a pointer to the plane's pixels.
@@ -129,7 +125,7 @@ impl Frame {
     pub fn data_ptr(&self, plane: usize) -> *const u8 {
         assert!(plane < self.format().plane_count());
 
-        unsafe { self.api.get_frame_read_ptr(self.handle, plane as i32) }
+        unsafe { API::get_cached().get_frame_read_ptr(self.handle, plane as i32) }
     }
 
     /// Returns a slice of a plane's pixel row.
@@ -183,7 +179,7 @@ impl Frame {
 
     /// Returns a map of frame's properties.
     #[inline]
-    pub fn props(&self) -> MapRef {
-        unsafe { MapRef::from_ptr(self.api, self.api.get_frame_props_ro(self.handle)) }
+    pub fn props(&self) -> &Map {
+        unsafe { mem::transmute(API::get_cached().get_frame_props_ro(self.handle)) }
     }
 }

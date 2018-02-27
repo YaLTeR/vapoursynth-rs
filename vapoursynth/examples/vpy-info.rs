@@ -65,27 +65,32 @@ fn print_node_info(node: &vapoursynth::Node) {
 #[cfg(all(feature = "vsscript-functions",
           any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
 fn run() -> Result<(), Error> {
-    use vapoursynth::{vsscript, VSMap};
+    use vapoursynth::vsscript;
+    use vapoursynth::map::ValueType;
 
     let filename = env::args()
         .nth(1)
         .ok_or_else(|| err_msg("The filename argument is missing"))?;
-    let api = vapoursynth::API::get().ok_or_else(|| err_msg("Couldn't get the VapourSynth API"))?;
     let environment =
         vsscript::Environment::from_file(filename, vsscript::EvalFlags::SetWorkingDir)
             .context("Couldn't create the VSScript environment")?;
 
     let core = environment
-        .get_core(api)
-        .ok_or_else(|| err_msg("Couldn't get the VapourSynth core"))?;
+        .get_core()
+        .context("Couldn't get the VapourSynth core")?;
     println!("{}", core.info());
 
     #[cfg(feature = "gte-vsscript-api-31")]
-    let (node, alpha_node) = environment.get_output(api, 0);
+    let (node, alpha_node) = environment
+        .get_output(0)
+        .context("Couldn't get the output at index 0")?;
     #[cfg(not(feature = "gte-vsscript-api-31"))]
-    let (node, alpha_node) = (environment.get_output(api, 0), None);
+    let (node, alpha_node) = (
+        env.get_output(0)
+            .context("Couldn't get the output at index 0")?,
+        None::<Node>,
+    );
 
-    let node = node.ok_or_else(|| err_msg("No output at index 0"))?;
     print_node_info(&node);
 
     println!();
@@ -121,7 +126,23 @@ fn run() -> Result<(), Error> {
 
         for k in 0..count {
             let key = props.key(k);
-            println!("Property: {} => {:?}", key, props.values(key).unwrap());
+
+            macro_rules! print_value {
+                ($func:ident) => (
+                    println!("Property: {} => {:?}",
+                             key,
+                             props.$func(key).unwrap().collect::<Vec<_>>())
+                )
+            }
+
+            match props.value_type(key).unwrap() {
+                ValueType::Int => print_value!(get_int_iter),
+                ValueType::Float => print_value!(get_float_iter),
+                ValueType::Data => print_value!(get_data_iter),
+                ValueType::Node => print_value!(get_node_iter),
+                ValueType::Frame => print_value!(get_frame_iter),
+                ValueType::Function => print_value!(get_function_iter),
+            }
         }
 
         for plane in 0..format.plane_count() {

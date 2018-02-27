@@ -32,7 +32,6 @@ pub struct Info {
 /// A reference to a VapourSynth core.
 #[derive(Debug, Clone, Copy)]
 pub struct CoreRef<'a> {
-    api: API,
     handle: *mut ffi::VSCore,
     _owner: PhantomData<&'a ()>,
 }
@@ -44,11 +43,10 @@ impl<'a> CoreRef<'a> {
     /// Wraps `handle` in a `CoreRef`.
     ///
     /// # Safety
-    /// The caller must ensure `handle` is valid.
+    /// The caller must ensure `handle` is valid and API is cached.
     #[inline]
-    pub(crate) unsafe fn from_ptr(api: API, handle: *mut ffi::VSCore) -> Self {
+    pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSCore) -> Self {
         Self {
-            api,
             handle,
             _owner: PhantomData,
         }
@@ -56,7 +54,12 @@ impl<'a> CoreRef<'a> {
 
     /// Returns information about the VapourSynth core.
     pub fn info(self) -> Info {
-        let raw_info = unsafe { self.api.get_core_info(self.handle).as_ref().unwrap() };
+        let raw_info = unsafe {
+            API::get_cached()
+                .get_core_info(self.handle)
+                .as_ref()
+                .unwrap()
+        };
 
         let version_string = unsafe { CStr::from_ptr(raw_info.versionString).to_str().unwrap() };
         debug_assert!(raw_info.numThreads >= 0);
@@ -77,7 +80,7 @@ impl<'a> CoreRef<'a> {
     /// registered format, or one of the `PresetFormat`.
     #[inline]
     pub fn get_format(&self, id: FormatID) -> Option<Format> {
-        let ptr = unsafe { self.api.get_format_preset(id.0, self.handle) };
+        let ptr = unsafe { API::get_cached().get_format_preset(id.0, self.handle) };
         unsafe { ptr.as_ref().map(|p| Format::from_ptr(p)) }
     }
 
@@ -99,7 +102,7 @@ impl<'a> CoreRef<'a> {
         sub_sampling_h: u8,
     ) -> Option<Format> {
         unsafe {
-            self.api
+            API::get_cached()
                 .register_format(
                     color_family.into(),
                     sample_type.into(),

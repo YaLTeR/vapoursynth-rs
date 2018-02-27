@@ -27,7 +27,7 @@ pub mod function;
 pub use function::Function;
 
 pub mod map;
-pub use map::*;
+pub use map::{Map, OwnedMap, ValueType};
 
 pub mod node;
 pub use node::Node;

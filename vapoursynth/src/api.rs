@@ -1,4 +1,5 @@
 use std::ffi::{CStr, CString, NulError};
+use std::sync::atomic::{AtomicPtr, Ordering};
 use std::{mem, panic, process, ptr};
 use std::os::raw::{c_char, c_int, c_void};
 use vapoursynth_sys as ffi;
@@ -11,6 +12,9 @@ pub struct API {
 
 unsafe impl Send for API {}
 unsafe impl Sync for API {}
+
+/// A cached API pointer. Note that this is `*const ffi::VSAPI`, not `*mut`.
+static RAW_API: AtomicPtr<ffi::VSAPI> = AtomicPtr::new(ptr::null_mut());
 
 /// VapourSynth log message types.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -29,7 +33,7 @@ macro_rules! prop_get_something {
         #[inline]
         pub(crate) unsafe fn $name(
             self,
-            map: *const ffi::VSMap,
+            map: &ffi::VSMap,
             key: *const c_char,
             index: i32,
             error: &mut i32,
@@ -44,7 +48,7 @@ macro_rules! prop_set_something {
         #[inline]
         pub(crate) unsafe fn $name(
             self,
-            map: *mut ffi::VSMap,
+            map: &mut ffi::VSMap,
             key: *const c_char,
             value: $type,
             append: ffi::VSPropAppendMode,
@@ -63,9 +67,24 @@ impl API {
     #[inline]
     pub fn get() -> Option<Self> {
         use vsscript;
-        vsscript::maybe_initialize();
 
-        let handle = unsafe { ffi::vsscript_getVSApi2(ffi::VAPOURSYNTH_API_VERSION) };
+        // Check if we already have the API.
+        let handle = RAW_API.load(Ordering::Relaxed);
+
+        let handle = if handle.is_null() {
+            // Attempt retrieving it otherwise.
+            vsscript::maybe_initialize();
+            let handle = unsafe { ffi::vsscript_getVSApi2(ffi::VAPOURSYNTH_API_VERSION) };
+
+            if !handle.is_null() {
+                // If we successfully retrieved the API, cache it.
+                RAW_API.store(handle as *mut _, Ordering::Relaxed);
+            }
+            handle
+        } else {
+            handle
+        };
+
         if handle.is_null() {
             None
         } else {
@@ -80,11 +99,36 @@ impl API {
               not(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))))]
     #[inline]
     pub fn get() -> Option<Self> {
-        let handle = unsafe { ffi::getVapourSynthAPI(ffi::VAPOURSYNTH_API_VERSION) };
+        // Check if we already have the API.
+        let handle = RAW_API.load(Ordering::Relaxed);
+
+        let handle = if handle.is_null() {
+            // Attempt retrieving it otherwise.
+            let handle = unsafe { ffi::getVapourSynthAPI(ffi::VAPOURSYNTH_API_VERSION) };
+
+            if !handle.is_null() {
+                // If we successfully retrieved the API, cache it.
+                RAW_API.store(handle as *mut _, Ordering::Relaxed);
+            }
+            handle
+        } else {
+            handle
+        };
+
         if handle.is_null() {
             None
         } else {
             Some(Self { handle })
+        }
+    }
+
+    /// Returns the cached API.
+    ///
+    /// # Safety
+    /// This function assumes the cache contains a valid API pointer.
+    pub(crate) unsafe fn get_cached() -> Self {
+        Self {
+            handle: RAW_API.load(Ordering::Relaxed),
         }
     }
 
@@ -361,7 +405,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `map` is valid.
     #[inline]
-    pub(crate) unsafe fn clear_map(self, map: *mut ffi::VSMap) {
+    pub(crate) unsafe fn clear_map(self, map: &mut ffi::VSMap) {
         ((*self.handle).clearMap)(map);
     }
 
@@ -370,7 +414,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `map` is valid.
     #[inline]
-    pub(crate) unsafe fn free_map(self, map: *mut ffi::VSMap) {
+    pub(crate) unsafe fn free_map(self, map: &mut ffi::VSMap) {
         ((*self.handle).freeMap)(map);
     }
 
@@ -380,7 +424,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `map` is valid.
     #[inline]
-    pub(crate) unsafe fn get_error(self, map: *const ffi::VSMap) -> *const c_char {
+    pub(crate) unsafe fn get_error(self, map: &ffi::VSMap) -> *const c_char {
         ((*self.handle).getError)(map)
     }
 
@@ -389,7 +433,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `map` and `errorMessage` are valid.
     #[inline]
-    pub(crate) unsafe fn set_error(self, map: *mut ffi::VSMap, error_message: *const c_char) {
+    pub(crate) unsafe fn set_error(self, map: &mut ffi::VSMap, error_message: *const c_char) {
         ((*self.handle).setError)(map, error_message)
     }
 
@@ -398,7 +442,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `map` is valid.
     #[inline]
-    pub(crate) unsafe fn prop_num_keys(self, map: *const ffi::VSMap) -> i32 {
+    pub(crate) unsafe fn prop_num_keys(self, map: &ffi::VSMap) -> i32 {
         ((*self.handle).propNumKeys)(map)
     }
 
@@ -407,7 +451,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `map` is valid and `index` is valid for `map`.
     #[inline]
-    pub(crate) unsafe fn prop_get_key(self, map: *const ffi::VSMap, index: i32) -> *const c_char {
+    pub(crate) unsafe fn prop_get_key(self, map: &ffi::VSMap, index: i32) -> *const c_char {
         ((*self.handle).propGetKey)(map, index)
     }
 
@@ -416,7 +460,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `map` and `key` are valid.
     #[inline]
-    pub(crate) unsafe fn prop_delete_key(self, map: *mut ffi::VSMap, key: *const c_char) -> i32 {
+    pub(crate) unsafe fn prop_delete_key(self, map: &mut ffi::VSMap, key: *const c_char) -> i32 {
         ((*self.handle).propDeleteKey)(map, key)
     }
 
@@ -425,11 +469,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `map` and `key` are valid.
     #[inline]
-    pub(crate) unsafe fn prop_num_elements(
-        self,
-        map: *const ffi::VSMap,
-        key: *const c_char,
-    ) -> i32 {
+    pub(crate) unsafe fn prop_num_elements(self, map: &ffi::VSMap, key: *const c_char) -> i32 {
         ((*self.handle).propNumElements)(map, key)
     }
 
@@ -438,7 +478,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `map` and `key` are valid.
     #[inline]
-    pub(crate) unsafe fn prop_get_type(self, map: *const ffi::VSMap, key: *const c_char) -> c_char {
+    pub(crate) unsafe fn prop_get_type(self, map: &ffi::VSMap, key: *const c_char) -> c_char {
         ((*self.handle).propGetType)(map, key)
     }
 
@@ -449,7 +489,7 @@ impl API {
     #[inline]
     pub(crate) unsafe fn prop_get_data_size(
         self,
-        map: *const ffi::VSMap,
+        map: &ffi::VSMap,
         key: *const c_char,
         index: i32,
         error: &mut i32,
@@ -478,7 +518,7 @@ impl API {
     #[inline]
     pub(crate) unsafe fn prop_get_int_array(
         self,
-        map: *const ffi::VSMap,
+        map: &ffi::VSMap,
         key: *const c_char,
         error: &mut i32,
     ) -> *const i64 {
@@ -493,7 +533,7 @@ impl API {
     #[inline]
     pub(crate) unsafe fn prop_get_float_array(
         self,
-        map: *const ffi::VSMap,
+        map: &ffi::VSMap,
         key: *const c_char,
         error: &mut i32,
     ) -> *const f64 {
@@ -510,7 +550,7 @@ impl API {
     #[inline]
     pub(crate) unsafe fn prop_set_data(
         self,
-        map: *mut ffi::VSMap,
+        map: &mut ffi::VSMap,
         key: *const c_char,
         value: &[u8],
         append: ffi::VSPropAppendMode,
@@ -533,7 +573,7 @@ impl API {
     #[inline]
     pub(crate) unsafe fn prop_set_int_array(
         self,
-        map: *mut ffi::VSMap,
+        map: &mut ffi::VSMap,
         key: *const c_char,
         value: &[i64],
     ) -> i32 {
@@ -555,7 +595,7 @@ impl API {
     #[inline]
     pub(crate) unsafe fn prop_set_float_array(
         self,
-        map: *mut ffi::VSMap,
+        map: &mut ffi::VSMap,
         key: *const c_char,
         value: &[f64],
     ) -> i32 {

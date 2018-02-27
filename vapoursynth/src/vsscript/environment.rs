@@ -2,12 +2,13 @@ use std::ffi::{CStr, CString};
 use std::fs::File;
 use std::ptr;
 use std::io::Read;
+use std::ops::{Deref, DerefMut};
 use std::path::Path;
 use vapoursynth_sys as ffi;
 
 use api::API;
 use core::CoreRef;
-use map::{MapRef, MapRefMut, VSMapInterface, VSMapMutInterface};
+use map::Map;
 use node::Node;
 use vsscript::*;
 use vsscript::errors::Result;
@@ -164,64 +165,71 @@ impl Environment {
 
     /// Retrieves a node from the script environment. A node in the script must have been marked
     /// for output with the requested index.
-    ///
-    /// If there's no node corresponding to the given `index`, `None` is returned.
     #[cfg(not(feature = "gte-vsscript-api-31"))]
     #[inline]
-    pub fn get_output(&self, api: API, index: i32) -> Option<Node> {
+    pub fn get_output(&self, index: i32) -> Result<Node> {
+        // Node needs the API.
+        API::get().ok_or(Error::NoAPI)?;
+
         let node_handle = unsafe { ffi::vsscript_getOutput(self.handle, index) };
         if node_handle.is_null() {
-            None
+            Err(Error::NoOutput)
         } else {
-            Some(unsafe { Node::from_ptr(api, node_handle) })
+            Ok(unsafe { Node::from_ptr(node_handle) })
         }
     }
 
     /// Retrieves a node from the script environment. A node in the script must have been marked
     /// for output with the requested index. The second node, if any, contains the alpha clip.
-    ///
-    /// If there's no node corresponding to the given `index`, `None` is returned.
     #[cfg(feature = "gte-vsscript-api-31")]
     #[inline]
-    pub fn get_output(&self, api: API, index: i32) -> (Option<Node>, Option<Node>) {
+    pub fn get_output(&self, index: i32) -> Result<(Node, Option<Node>)> {
+        // Node needs the API.
+        API::get().ok_or(Error::NoAPI)?;
+
         let mut alpha_handle = ptr::null_mut();
         let node_handle =
             unsafe { ffi::vsscript_getOutput2(self.handle, index, &mut alpha_handle) };
 
-        let node = unsafe { node_handle.as_mut().map(|p| Node::from_ptr(api, p)) };
-        let alpha_node = unsafe { alpha_handle.as_mut().map(|p| Node::from_ptr(api, p)) };
+        if node_handle.is_null() {
+            return Err(Error::NoOutput);
+        }
 
-        (node, alpha_node)
+        let node = unsafe { Node::from_ptr(node_handle) };
+        let alpha_node = unsafe { alpha_handle.as_mut().map(|p| Node::from_ptr(p)) };
+
+        Ok((node, alpha_node))
     }
 
     /// Cancels a node set for output. The node will no longer be available to `get_output()`.
-    ///
-    /// If there's no node corresponding to the given `index`, `None` is returned.
     #[inline]
-    pub fn clear_output(&self, index: i32) -> Option<()> {
+    pub fn clear_output(&self, index: i32) -> Result<()> {
         let rv = unsafe { ffi::vsscript_clearOutput(self.handle, index) };
         if rv != 0 {
-            None
+            Err(Error::NoOutput)
         } else {
-            Some(())
+            Ok(())
         }
     }
 
     /// Retrieves the VapourSynth core that was created in the script environment. If a VapourSynth
     /// core has not been created yet, it will be created now, with the default options.
-    pub fn get_core(&self, api: API) -> Option<CoreRef> {
+    pub fn get_core(&self) -> Result<CoreRef> {
+        // CoreRef needs the API.
+        API::get().ok_or(Error::NoAPI)?;
+
         let ptr = unsafe { ffi::vsscript_getCore(self.handle) };
         if ptr.is_null() {
-            None
+            Err(Error::NoCore)
         } else {
-            Some(unsafe { CoreRef::from_ptr(api, ptr) })
+            Ok(unsafe { CoreRef::from_ptr(ptr) })
         }
     }
 
     /// Retrieves a variable from the script environment.
-    pub fn get_variable<'a>(&self, name: &str, map: &mut MapRefMut<'a>) -> Result<()> {
+    pub fn get_variable(&self, name: &str, map: &mut Map) -> Result<()> {
         let name = CString::new(name)?;
-        let rv = unsafe { ffi::vsscript_getVariable(self.handle, name.as_ptr(), map.handle_mut()) };
+        let rv = unsafe { ffi::vsscript_getVariable(self.handle, name.as_ptr(), map.deref_mut()) };
         if rv != 0 {
             Err(Error::NoSuchVariable)
         } else {
@@ -230,8 +238,8 @@ impl Environment {
     }
 
     /// Sets variables in the script environment.
-    pub fn set_variables<'a>(&self, variables: &MapRef<'a>) -> Result<()> {
-        let rv = unsafe { ffi::vsscript_setVariable(self.handle, variables.handle()) };
+    pub fn set_variables(&self, variables: &Map) -> Result<()> {
+        let rv = unsafe { ffi::vsscript_setVariable(self.handle, variables.deref()) };
         if rv != 0 {
             Err(Error::NoSuchVariable)
         } else {
