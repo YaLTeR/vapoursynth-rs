@@ -67,6 +67,7 @@ fn print_node_info(node: &vapoursynth::Node) {
 fn run() -> Result<(), Error> {
     use vapoursynth::vsscript;
     use vapoursynth::map::ValueType;
+    use vapoursynth::node::Node;
 
     let filename = env::args()
         .nth(1)
@@ -86,7 +87,8 @@ fn run() -> Result<(), Error> {
         .context("Couldn't get the output at index 0")?;
     #[cfg(not(feature = "gte-vsscript-api-31"))]
     let (node, alpha_node) = (
-        env.get_output(0)
+        environment
+            .get_output(0)
             .context("Couldn't get the output at index 0")?,
         None::<Node>,
     );

@@ -64,7 +64,7 @@ mod need_api_and_vsscript {
             output.unwrap()
         };
         #[cfg(not(feature = "gte-vsscript-api-31"))]
-        let (node, alpha_node) = (env.get_output(0), None::<Node>);
+        let (node, alpha_node) = (env.get_output(0).unwrap(), None::<Node>);
 
         assert!(alpha_node.is_none());
 
@@ -130,7 +130,7 @@ mod need_api_and_vsscript {
             output.unwrap()
         };
         #[cfg(not(feature = "gte-vsscript-api-31"))]
-        let (node, alpha_node) = (env.get_output(0), None::<Node>);
+        let (node, alpha_node) = (env.get_output(0).unwrap(), None::<Node>);
 
         assert!(alpha_node.is_none());
 
@@ -272,7 +272,7 @@ mod need_api_and_vsscript {
             output.unwrap()
         };
         #[cfg(not(feature = "gte-vsscript-api-31"))]
-        let (node, alpha_node) = (env.get_output(0), None::<Node>);
+        let (node, alpha_node) = (env.get_output(0).unwrap(), None::<Node>);
 
         assert!(alpha_node.is_none());
 
@@ -322,7 +322,7 @@ mod need_api_and_vsscript {
             output.unwrap()
         };
         #[cfg(not(feature = "gte-vsscript-api-31"))]
-        let (node, alpha_node) = (env.get_output(0), None::<Node>);
+        let (node, alpha_node) = (env.get_output(0).unwrap(), None::<Node>);
 
         assert!(alpha_node.is_none());
 
