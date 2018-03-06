@@ -199,6 +199,70 @@ mod need_api_and_vsscript {
     }
 
     #[test]
+    #[cfg(feature = "gte-vsscript-api-31")]
+    fn alpha() {
+        let env =
+            vsscript::Environment::from_file("test-vpy/alpha.vpy", vsscript::EvalFlags::Nothing)
+                .unwrap();
+
+        let (_, alpha_node) = {
+            let output = env.get_output(0);
+            assert!(output.is_ok());
+            output.unwrap()
+        };
+
+        assert!(alpha_node.is_some());
+        let alpha_node = alpha_node.unwrap();
+
+        let info = alpha_node.info();
+
+        if let Property::Constant(format) = info.format {
+            assert_eq!(format.name(), "Gray8");
+        } else {
+            assert!(false);
+        }
+
+        assert_eq!(
+            info.framerate,
+            Property::Constant(Framerate {
+                numerator: 60,
+                denominator: 1,
+            })
+        );
+        assert_eq!(
+            info.resolution,
+            Property::Constant(Resolution {
+                width: 1920,
+                height: 1080,
+            })
+        );
+
+        #[cfg(feature = "gte-vapoursynth-api-32")]
+        assert_eq!(info.num_frames, 100);
+        #[cfg(not(feature = "gte-vapoursynth-api-32"))]
+        assert_eq!(info.num_frames, Property::Constant(100));
+
+        let frame = alpha_node.get_frame(0).unwrap();
+        let format = frame.format();
+        assert_eq!(format.name(), "Gray8");
+        assert_eq!(format.plane_count(), 1);
+
+        let resolution = frame.resolution(0);
+        assert_eq!(
+            resolution,
+            Resolution {
+                width: 1920,
+                height: 1080,
+            }
+        );
+
+        for row in 0..resolution.height {
+            let data_row = frame.data_row(0, row);
+            assert_eq!(&data_row[..], &[128; 1920][..]);
+        }
+    }
+
+    #[test]
     fn clear_output() {
         let env =
             vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
