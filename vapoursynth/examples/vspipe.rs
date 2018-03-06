@@ -64,7 +64,7 @@ mod inner {
         }
     }
 
-    fn print_info(writer: &mut Write, node: Node, alpha: Option<Node>) -> Result<(), Error> {
+    fn print_info(writer: &mut Write, node: &Node, alpha: Option<&Node>) -> Result<(), Error> {
         let info = node.info();
 
         writeln!(
@@ -119,6 +119,15 @@ mod inner {
             }
         }
 
+        Ok(())
+    }
+
+    fn output(
+        node: &Node,
+        alpha_node: Option<&Node>,
+        start_frame: usize,
+        end_frame: usize,
+    ) -> Result<(), Error> {
         Ok(())
     }
 
@@ -314,12 +323,68 @@ mod inner {
 
         if matches.is_present("info") {
             if let Some(mut writer) = output_target.writer() {
-                print_info(&mut writer, node, alpha_node)
+                print_info(&mut writer, &node, alpha_node.as_ref())
                     .context("Couldn't print info to the output file")?;
 
                 writer.flush().context("Couldn't flush the output file")?;
             }
         } else {
+            let info = node.info();
+
+            if let Property::Variable = info.format {
+                return Err(err_msg("Cannot output clips with varying dimensions"));
+            }
+
+            #[cfg(feature = "gte-vapoursynth-api-32")]
+            let num_frames = info.num_frames;
+
+            #[cfg(not(feature = "gte-vapoursynth-api-32"))]
+            let num_frames = {
+                match info.num_frames {
+                    Property::Variable => {
+                        // TODO: make it possible?
+                        return Err(err_msg("Cannot output clips with unknown length"));
+                    }
+                    Property::Constant(x) => x,
+                }
+            };
+
+            let start_frame = matches
+                .value_of("start")
+                .map(str::parse::<i32>)
+                .unwrap_or(Ok(0))
+                .context("Couldn't convert the start frame to an integer")?;
+            let end_frame = matches
+                .value_of("end")
+                .map(str::parse::<i32>)
+                .unwrap_or(Ok(num_frames as i32 - 1))
+                .context("Couldn't convert the end frame to an integer")?;
+
+            // Check if the input start and end frames make sense.
+            if start_frame < 0 || end_frame < start_frame || end_frame as usize >= num_frames {
+                return Err(err_msg(format!(
+                    "Invalid range of frames to output specified:\n\
+                     first: {}\n\
+                     last: {}\n\
+                     clip length: {}\n\
+                     frames to output: {}",
+                    start_frame,
+                    end_frame,
+                    num_frames,
+                    end_frame
+                        .checked_sub(start_frame)
+                        .and_then(|x| x.checked_add(1))
+                        .map(|x| format!("{}", x))
+                        .unwrap_or_else(|| "<overflow>".to_owned())
+                )));
+            }
+
+            output(
+                &node,
+                alpha_node.as_ref(),
+                start_frame as usize,
+                end_frame as usize,
+            ).context("Couldn't output the frames")?;
         }
 
         Ok(())
