@@ -1,4 +1,5 @@
 use std::ffi::CStr;
+use std::fmt::{self, Display};
 use std::marker::PhantomData;
 use vapoursynth_sys as ffi;
 
@@ -204,5 +205,34 @@ impl From<SampleType> for ffi::VSSampleType {
             SampleType::Integer => ffi::VSSampleType::stInteger,
             SampleType::Float => ffi::VSSampleType::stFloat,
         }
+    }
+}
+
+impl Display for ColorFamily {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(
+            f,
+            "{}",
+            match *self {
+                ColorFamily::Gray => "Gray",
+                ColorFamily::RGB => "RGB",
+                ColorFamily::YUV => "YUV",
+                ColorFamily::YCoCg => "YCoCg",
+                ColorFamily::Compat => "Compat",
+            }
+        )
+    }
+}
+
+impl Display for SampleType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(
+            f,
+            "{}",
+            match *self {
+                SampleType::Integer => "Integer",
+                SampleType::Float => "Float",
+            }
+        )
     }
 }
