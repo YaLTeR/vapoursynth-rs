@@ -16,12 +16,25 @@ mod inner {
     use self::clap::{App, Arg};
     use self::vapoursynth::vsscript::{Environment, EvalFlags};
     use self::vapoursynth::{Node, OwnedMap, Property, API};
+    use self::vapoursynth::format::{ColorFamily, SampleType};
     use super::*;
 
     enum OutputTarget {
         File(File),
         Stdout(Stdout),
         Empty,
+    }
+
+    struct OutputParameters {
+        output_target: OutputTarget,
+        timecodes_file: Option<File>,
+        node: Node,
+        alpha_node: Option<Node>,
+        start_frame: usize,
+        end_frame: usize,
+        requests: usize,
+        y4m: bool,
+        progress: bool,
     }
 
     impl OutputTarget {
@@ -122,12 +135,110 @@ mod inner {
         Ok(())
     }
 
-    fn output(
-        node: &Node,
-        alpha_node: Option<&Node>,
-        start_frame: usize,
-        end_frame: usize,
-    ) -> Result<(), Error> {
+    fn print_y4m_header(writer: &mut Write, node: &Node) -> Result<(), Error> {
+        let info = node.info();
+
+        if let Property::Constant(format) = info.format {
+            write!(writer, "YUV4MPEG2 C")?;
+
+            match format.color_family() {
+                ColorFamily::Gray => {
+                    write!(writer, "mono")?;
+                    if format.bits_per_sample() > 8 {
+                        write!(writer, "{}", format.bits_per_sample())?;
+                    }
+                }
+                ColorFamily::YUV => {
+                    write!(
+                        writer,
+                        "{}",
+                        match (format.sub_sampling_w(), format.sub_sampling_h()) {
+                            (1, 1) => "420",
+                            (1, 0) => "422",
+                            (0, 0) => "444",
+                            (2, 2) => "410",
+                            (2, 0) => "411",
+                            (0, 1) => "440",
+                            _ => {
+                                return Err(err_msg(
+                                    "No y4m identifier exists for the current format"
+                                ))
+                            }
+                        }
+                    )?;
+
+                    if format.bits_per_sample() > 8 && format.sample_type() == SampleType::Integer {
+                        write!(writer, "p{}", format.bits_per_sample())?;
+                    } else if format.sample_type() == SampleType::Float {
+                        write!(
+                            writer,
+                            "p{}",
+                            match format.bits_per_sample() {
+                                16 => "h",
+                                32 => "s",
+                                64 => "d",
+                                _ => unreachable!(),
+                            }
+                        )?;
+                    }
+                }
+                _ => return Err(err_msg("No y4m identifier exists for the current format")),
+            }
+
+            if let Property::Constant(resolution) = info.resolution {
+                write!(writer, " W{} H{}", resolution.width, resolution.height)?;
+            } else {
+                unreachable!();
+            }
+
+            if let Property::Constant(framerate) = info.framerate {
+                write!(
+                    writer,
+                    " F{}:{}",
+                    framerate.numerator, framerate.denominator
+                )?;
+            } else {
+                unreachable!();
+            }
+
+            #[cfg(feature = "gte-vapoursynth-api-32")]
+            let num_frames = info.num_frames;
+
+            #[cfg(not(feature = "gte-vapoursynth-api-32"))]
+            let num_frames = {
+                match info.num_frames {
+                    Property::Variable => {
+                        // TODO: make it possible?
+                        return Err(err_msg("Cannot output clips with unknown length"));
+                    }
+                    Property::Constant(x) => x,
+                }
+            };
+
+            write!(writer, " Ip A0:0 XLENGTH={}", num_frames)?;
+
+            Ok(())
+        } else {
+            unreachable!();
+        }
+    }
+
+    fn output(mut parameters: OutputParameters) -> Result<(), Error> {
+        if parameters.y4m {
+            if parameters.alpha_node.is_some() {
+                return Err(err_msg("Can't apply y4m headers to a clip with alpha"));
+            }
+
+            if let Some(writer) = parameters.output_target.writer() {
+                print_y4m_header(writer, &parameters.node)
+                    .context("Couldn't write the y4m header")?;
+            }
+        }
+
+        if let Some(ref mut timecodes_file) = parameters.timecodes_file {
+            writeln!(timecodes_file, "# timecode format v2")?;
+        }
+
         Ok(())
     }
 
@@ -329,24 +440,34 @@ mod inner {
                 writer.flush().context("Couldn't flush the output file")?;
             }
         } else {
-            let info = node.info();
-
-            if let Property::Variable = info.format {
-                return Err(err_msg("Cannot output clips with varying dimensions"));
-            }
-
-            #[cfg(feature = "gte-vapoursynth-api-32")]
-            let num_frames = info.num_frames;
-
-            #[cfg(not(feature = "gte-vapoursynth-api-32"))]
             let num_frames = {
-                match info.num_frames {
-                    Property::Variable => {
-                        // TODO: make it possible?
-                        return Err(err_msg("Cannot output clips with unknown length"));
-                    }
-                    Property::Constant(x) => x,
+                let info = node.info();
+
+                if let Property::Variable = info.format {
+                    return Err(err_msg("Cannot output clips with varying format"));
                 }
+                if let Property::Variable = info.resolution {
+                    return Err(err_msg("Cannot output clips with varying dimensions"));
+                }
+                if let Property::Variable = info.framerate {
+                    return Err(err_msg("Cannot output clips with varying framerate"));
+                }
+
+                #[cfg(feature = "gte-vapoursynth-api-32")]
+                let num_frames = info.num_frames;
+
+                #[cfg(not(feature = "gte-vapoursynth-api-32"))]
+                let num_frames = {
+                    match info.num_frames {
+                        Property::Variable => {
+                            // TODO: make it possible?
+                            return Err(err_msg("Cannot output clips with unknown length"));
+                        }
+                        Property::Constant(x) => x,
+                    }
+                };
+
+                num_frames
             };
 
             let start_frame = matches
@@ -379,12 +500,34 @@ mod inner {
                 )));
             }
 
-            output(
-                &node,
-                alpha_node.as_ref(),
-                start_frame as usize,
-                end_frame as usize,
-            ).context("Couldn't output the frames")?;
+            let requests = {
+                let requests = matches
+                    .value_of("requests")
+                    .map(str::parse::<usize>)
+                    .unwrap_or(Ok(0))
+                    .context("Couldn't convert the request count to an unsigned integer")?;
+
+                if requests == 0 {
+                    environment.get_core().unwrap().info().num_threads
+                } else {
+                    requests
+                }
+            };
+
+            let y4m = matches.is_present("y4m");
+            let progress = matches.is_present("progress");
+
+            output(OutputParameters {
+                output_target,
+                timecodes_file,
+                node,
+                alpha_node,
+                start_frame: start_frame as usize,
+                end_frame: end_frame as usize,
+                requests,
+                y4m,
+                progress,
+            }).context("Couldn't output the frames")?;
         }
 
         Ok(())
