@@ -10,7 +10,7 @@ mod inner {
 
     use std::fmt::Debug;
     use std::fs::File;
-    use std::io::{stdout, Stdout, Write};
+    use std::io::{self, stdout, Stdout, Write};
     use std::ffi::OsStr;
 
     use self::clap::{App, Arg};
@@ -37,12 +37,20 @@ mod inner {
         progress: bool,
     }
 
-    impl OutputTarget {
-        fn writer(&mut self) -> Option<&mut Write> {
+    impl Write for OutputTarget {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             match *self {
-                OutputTarget::File(ref mut file) => Some(file),
-                OutputTarget::Stdout(ref mut stdout) => Some(stdout),
-                OutputTarget::Empty => None,
+                OutputTarget::File(ref mut file) => file.write(buf),
+                OutputTarget::Stdout(ref mut out) => out.write(buf),
+                OutputTarget::Empty => Ok(buf.len()),
+            }
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            match *self {
+                OutputTarget::File(ref mut file) => file.flush(),
+                OutputTarget::Stdout(ref mut out) => out.flush(),
+                OutputTarget::Empty => Ok(()),
             }
         }
     }
@@ -227,10 +235,8 @@ mod inner {
                 return Err(err_msg("Can't apply y4m headers to a clip with alpha"));
             }
 
-            if let Some(writer) = parameters.output_target.writer() {
-                print_y4m_header(writer, &parameters.node)
-                    .context("Couldn't write the y4m header")?;
-            }
+            print_y4m_header(&mut parameters.output_target, &parameters.node)
+                .context("Couldn't write the y4m header")?;
         }
 
         if let Some(ref mut timecodes_file) = parameters.timecodes_file {
@@ -431,12 +437,12 @@ mod inner {
         );
 
         if matches.is_present("info") {
-            if let Some(mut writer) = output_target.writer() {
-                print_info(&mut writer, &node, alpha_node.as_ref())
-                    .context("Couldn't print info to the output file")?;
+            print_info(&mut output_target, &node, alpha_node.as_ref())
+                .context("Couldn't print info to the output file")?;
 
-                writer.flush().context("Couldn't flush the output file")?;
-            }
+            output_target
+                .flush()
+                .context("Couldn't flush the output file")?;
         } else {
             let num_frames = {
                 let info = node.info();
