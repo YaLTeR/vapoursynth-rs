@@ -206,12 +206,10 @@ mod inner {
 
             #[cfg(not(feature = "gte-vapoursynth-api-32"))]
             let num_frames = {
-                match info.num_frames {
-                    Property::Variable => {
-                        // TODO: make it possible?
-                        return Err(err_msg("Cannot output clips with unknown length"));
-                    }
-                    Property::Constant(x) => x,
+                if let Property::Constant(num_frames) = info.num_frames {
+                    num_frames
+                } else {
+                    unreachable!();
                 }
             };
 
