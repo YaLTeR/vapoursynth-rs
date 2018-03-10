@@ -38,7 +38,8 @@ deploy:
   skip_cleanup: true
   github_token: "$GITHUB_TOKEN"
   local_dir: target/doc
-  verbose: true
+  edge:
+    branch: pages-ivar-set
   on:
     branch: master
     rust: stable
