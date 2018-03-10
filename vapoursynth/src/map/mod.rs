@@ -740,7 +740,7 @@ impl Map {
 
     /// Sets a property value to an integer array.
     ///
-    /// This is faster than calling `set_int()` and `append_int()` in a loop.
+    /// This is faster than calling `append_int()` in a loop.
     #[cfg(feature = "gte-vapoursynth-api-31")]
     #[inline]
     pub fn set_int_array(&mut self, key: &str, x: &[i64]) -> Result<()> {
@@ -763,7 +763,7 @@ impl Map {
 
     /// Sets a property value to a floating point number array.
     ///
-    /// This is faster than calling `set_float()` and `append_float()` in a loop.
+    /// This is faster than calling `append_float()` in a loop.
     #[cfg(feature = "gte-vapoursynth-api-31")]
     #[inline]
     pub fn set_float_array(&mut self, key: &str, x: &[f64]) -> Result<()> {
