@@ -10,7 +10,7 @@ mod inner {
 
     use std::cmp;
     use std::collections::HashMap;
-    use std::ffi::{CString, OsStr};
+    use std::ffi::OsStr;
     use std::fmt::Debug;
     use std::fs::File;
     use std::io::{self, stdout, Stdout, Write};
@@ -30,8 +30,6 @@ mod inner {
     }
 
     struct OutputParameters {
-        output_target: OutputTarget,
-        timecodes_file: Option<File>,
         node: Node,
         alpha_node: Option<Node>,
         start_frame: usize,
@@ -42,15 +40,17 @@ mod inner {
     }
 
     struct OutputState {
+        output_target: OutputTarget,
+        timecodes_file: Option<File>,
+        error: Option<(usize, Error)>,
         reorder_map: HashMap<usize, (Option<Frame>, Option<Frame>)>,
         last_requested_frame: usize,
         next_output_frame: usize,
     }
 
     struct SharedData {
-        output_error: Mutex<Option<(usize, Error)>>,
         output_done_pair: (Mutex<bool>, Condvar),
-        output_parameters: Mutex<OutputParameters>,
+        output_parameters: OutputParameters,
         output_state: Mutex<OutputState>,
     }
 
@@ -160,7 +160,7 @@ mod inner {
         Ok(())
     }
 
-    fn print_y4m_header(writer: &mut Write, node: &Node) -> Result<(), Error> {
+    fn print_y4m_header<W: Write>(writer: &mut W, node: &Node) -> Result<(), Error> {
         let info = node.info();
 
         if let Property::Constant(format) = info.format {
@@ -251,7 +251,7 @@ mod inner {
         entry.0.is_some() && (!have_alpha || entry.1.is_some())
     }
 
-    fn print_frame(writer: &mut Write, frame: &Frame) -> Result<(), Error> {
+    fn print_frame<W: Write>(writer: &mut W, frame: &Frame) -> Result<(), Error> {
         const RGB_REMAP: [usize; 3] = [1, 2, 0];
 
         let format = frame.format();
@@ -274,19 +274,19 @@ mod inner {
         Ok(())
     }
 
-    fn print_frames(
+    fn print_frames<W: Write>(
+        writer: &mut W,
+        parameters: &OutputParameters,
         frame: Frame,
         alpha_frame: Option<Frame>,
-        parameters: &mut OutputParameters,
     ) -> Result<(), Error> {
         if parameters.y4m {
-            write!(parameters.output_target, "FRAME\n")
-                .context("Couldn't output the frame header")?;
+            write!(writer, "FRAME\n").context("Couldn't output the frame header")?;
         }
 
-        print_frame(&mut parameters.output_target, &frame)?;
+        print_frame(writer, &frame)?;
         if let Some(alpha_frame) = alpha_frame {
-            print_frame(&mut parameters.output_target, &alpha_frame)?;
+            print_frame(writer, &alpha_frame)?;
         }
 
         Ok(())
@@ -299,12 +299,12 @@ mod inner {
         shared_data: Arc<SharedData>,
         alpha: bool,
     ) {
-        let mut parameters = shared_data.output_parameters.lock().unwrap();
+        let parameters = &shared_data.output_parameters;
         let mut state = shared_data.output_state.lock().unwrap();
 
         match frame {
             Err(error) => {
-                *shared_data.output_error.lock().unwrap() = Some((
+                state.error = Some((
                     n,
                     err_msg(error.into_inner().to_string_lossy().into_owned()),
                 ))
@@ -355,11 +355,14 @@ mod inner {
                     let (frame, alpha_frame) =
                         state.reorder_map.remove(&next_output_frame).unwrap();
 
-                    if shared_data.output_error.lock().unwrap().is_none() {
-                        if let Err(error) =
-                            print_frames(frame.unwrap(), alpha_frame, &mut *parameters)
-                        {
-                            *shared_data.output_error.lock().unwrap() = Some((n, error));
+                    if state.error.is_none() {
+                        if let Err(error) = print_frames(
+                            &mut state.output_target,
+                            parameters,
+                            frame.unwrap(),
+                            alpha_frame,
+                        ) {
+                            state.error = Some((n, error));
                         }
                     }
 
@@ -368,27 +371,29 @@ mod inner {
             }
         }
 
-        eprintln!("Frame: {}", n);
-
         if state.next_output_frame == parameters.end_frame + 1 {
             *shared_data.output_done_pair.0.lock().unwrap() = true;
             shared_data.output_done_pair.1.notify_one();
         }
     }
 
-    fn output(mut parameters: OutputParameters) -> Result<(), Error> {
+    fn output(
+        mut output_target: OutputTarget,
+        mut timecodes_file: Option<File>,
+        parameters: OutputParameters,
+    ) -> Result<(), Error> {
         // Print the y4m header.
         if parameters.y4m {
             if parameters.alpha_node.is_some() {
                 return Err(err_msg("Can't apply y4m headers to a clip with alpha"));
             }
 
-            print_y4m_header(&mut parameters.output_target, &parameters.node)
+            print_y4m_header(&mut output_target, &parameters.node)
                 .context("Couldn't write the y4m header")?;
         }
 
         // Print the timecodes header.
-        if let Some(ref mut timecodes_file) = parameters.timecodes_file {
+        if let Some(ref mut timecodes_file) = timecodes_file {
             writeln!(timecodes_file, "# timecode format v2")?;
         }
 
@@ -397,24 +402,24 @@ mod inner {
             parameters.end_frame - parameters.start_frame + 1,
         );
 
-        let output_error = Mutex::new(None);
         let output_done_pair = (Mutex::new(false), Condvar::new());
         let output_state = Mutex::new(OutputState {
+            output_target,
+            timecodes_file,
+            error: None,
             reorder_map: HashMap::new(),
             last_requested_frame: parameters.start_frame + initial_requests - 1,
             next_output_frame: 0,
         });
-        let output_parameters = Mutex::new(parameters);
         let shared_data = Arc::new(SharedData {
-            output_error,
             output_done_pair,
-            output_parameters,
+            output_parameters: parameters,
             output_state,
         });
 
         // Start off by requesting some frames.
         {
-            let parameters = shared_data.output_parameters.lock().unwrap();
+            let parameters = &shared_data.output_parameters;
             for n in 0..initial_requests {
                 let shared_data_2 = shared_data.clone();
                 parameters.node.get_frame_async(n, move |frame, n, node| {
@@ -436,7 +441,8 @@ mod inner {
             done = cvar.wait(done).unwrap();
         }
 
-        if let Some((n, ref msg)) = *shared_data.output_error.lock().unwrap() {
+        let mut state = shared_data.output_state.lock().unwrap();
+        if let Some((n, ref msg)) = state.error {
             return Err(err_msg(format!(
                 "Failed to retrieve frame {} with error: {}",
                 n, msg
@@ -444,10 +450,7 @@ mod inner {
         }
 
         // Flush the output file.
-        shared_data
-            .output_parameters
-            .lock()
-            .unwrap()
+        state
             .output_target
             .flush()
             .context("Failed to flush the output file")?;
@@ -730,17 +733,19 @@ mod inner {
             let y4m = matches.is_present("y4m");
             let progress = matches.is_present("progress");
 
-            output(OutputParameters {
+            output(
                 output_target,
                 timecodes_file,
-                node,
-                alpha_node,
-                start_frame: start_frame as usize,
-                end_frame: end_frame as usize,
-                requests,
-                y4m,
-                progress,
-            }).context("Couldn't output the frames")?;
+                OutputParameters {
+                    node,
+                    alpha_node,
+                    start_frame: start_frame as usize,
+                    end_frame: end_frame as usize,
+                    requests,
+                    y4m,
+                    progress,
+                },
+            ).context("Couldn't output the frames")?;
         }
 
         Ok(())
