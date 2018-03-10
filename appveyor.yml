@@ -59,7 +59,7 @@ install:
   - cargo -vV
 
   - appveyor DownloadFile https://github.com/vapoursynth/vapoursynth/releases/download/R43/VapourSynth-R43.exe
-  - VapourSynth-R43 /VERYSILENT
+  - VapourSynth-R43 /SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
   - set VAPOURSYNTH_LIB_DIR=C:\Program Files (x86)\VapourSynth\sdk\lib64
 
 build_script:
