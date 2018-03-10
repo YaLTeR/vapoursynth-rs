@@ -6,7 +6,9 @@ if __name__ == '__main__':
     VAPOURSYNTH_FUNCTIONS = ["vapoursynth-functions"]
     VSSCRIPT_FUNCTIONS = ["vsscript-functions"]
 
-    if os.environ['TRAVIS_OS_NAME'] == 'osx':
+    os_name = os.environ['TRAVIS_OS_NAME']
+    # Allow None for Windows (AppVeyor).
+    if os_name is None or os_name == 'osx':
         VSSCRIPT_API_VERSIONS = ["vsscript-api-" + str(v) for v in range(31, 33)]
     else:
         # Trusty VapourSynth is old and doesn't support VSScript API above 3.0.
