@@ -74,4 +74,4 @@ test_script:
   - cargo test --verbose %cargoflags%
 
   # Test with all possible combinations of all features.
-  - cd vapoursynth && C:\Python36-x64\python3 ..\.travis\run-tests.py
+  - cd vapoursynth && C:\Python36-x64\python ..\.travis\run-tests.py
