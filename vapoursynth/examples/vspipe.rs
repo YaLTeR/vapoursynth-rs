@@ -51,6 +51,8 @@ mod inner {
         next_output_frame: usize,
         completed_frames: usize,
         current_timecode: Ratio<i64>,
+        callbacks_fired: usize,
+        callbacks_fired_alpha: usize,
     }
 
     struct SharedData {
@@ -325,12 +327,23 @@ mod inner {
         let parameters = &shared_data.output_parameters;
         let mut state = shared_data.output_state.lock().unwrap();
 
+        if !alpha {
+            state.callbacks_fired += 1;
+            if parameters.alpha_node.is_none() {
+                state.callbacks_fired_alpha += 1;
+            }
+        } else {
+            state.callbacks_fired_alpha += 1;
+        }
+
         match frame {
             Err(error) => {
-                state.error = Some((
-                    n,
-                    err_msg(error.into_inner().to_string_lossy().into_owned()),
-                ))
+                if state.error.is_none() {
+                    state.error = Some((
+                        n,
+                        err_msg(error.into_inner().to_string_lossy().into_owned()),
+                    ))
+                }
             }
             Ok(frame) => {
                 // Store the frame in the reorder map.
@@ -351,6 +364,7 @@ mod inner {
                 // If we got both a frame and its alpha frame, request one more.
                 if is_completed(&state.reorder_map[&n], parameters.alpha_node.is_some())
                     && state.last_requested_frame < parameters.end_frame
+                    && state.error.is_none()
                 {
                     let shared_data_2 = shared_data.clone();
                     parameters.node.get_frame_async(
@@ -424,7 +438,12 @@ mod inner {
             );
         }
 
-        if state.next_output_frame == parameters.end_frame + 1 {
+        // if state.next_output_frame == parameters.end_frame + 1 {
+        // This condition works with error handling:
+        let frames_requested = state.last_requested_frame - parameters.start_frame + 1;
+        if state.callbacks_fired == frames_requested
+            && state.callbacks_fired_alpha == frames_requested
+        {
             *shared_data.output_done_pair.0.lock().unwrap() = true;
             shared_data.output_done_pair.1.notify_one();
         }
@@ -465,6 +484,8 @@ mod inner {
             next_output_frame: 0,
             completed_frames: 0,
             current_timecode: Ratio::from_integer(0),
+            callbacks_fired: 0,
+            callbacks_fired_alpha: 0,
         });
         let shared_data = Arc::new(SharedData {
             output_done_pair,
