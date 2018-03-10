@@ -29,9 +29,8 @@ if __name__ == '__main__':
         returncode = subprocess.call(['cargo', 'test', '--quiet', '--features', features_string])
         if returncode != 0:
             someone_failed = True
+            print("TEST FAILURE: " + features_string)
 
     if someone_failed:
         print("One of the tests failed, exiting with code 1.")
         sys.exit(1)
-    else:
-        sys.exit(0)
