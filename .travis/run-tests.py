@@ -2,7 +2,8 @@
 import itertools, os, subprocess, sys
 
 if __name__ == '__main__':
-    VS_API_VERSIONS = ["vapoursynth-api-" + str(v) for v in range(31, 36)]
+    #  VS_API_VERSIONS = ["vapoursynth-api-" + str(v) for v in range(31, 36)]
+    VS_API_VERSIONS = ["vapoursynth-api-" + str(v) for v in range(35, 36)]
     VAPOURSYNTH_FUNCTIONS = ["vapoursynth-functions"]
     VSSCRIPT_FUNCTIONS = ["vsscript-functions"]
 
@@ -30,4 +31,7 @@ if __name__ == '__main__':
             someone_failed = True
 
     if someone_failed:
+        print("One of the tests failed, exiting with code 1.")
         sys.exit(1)
+    else:
+        sys.exit(0)
