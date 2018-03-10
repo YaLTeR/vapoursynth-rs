@@ -6,6 +6,7 @@ use failure::{err_msg, Error, ResultExt};
           any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
 mod inner {
     extern crate clap;
+    extern crate num_rational;
     extern crate vapoursynth;
 
     use std::cmp;
@@ -15,9 +16,10 @@ mod inner {
     use std::fs::File;
     use std::io::{self, stdout, Stdout, Write};
     use std::sync::{Arc, Condvar, Mutex};
-    use std::time::{Duration, Instant};
+    use std::time::Instant;
 
     use self::clap::{App, Arg};
+    use self::num_rational::Ratio;
     use self::vapoursynth::vsscript::{Environment, EvalFlags};
     use self::vapoursynth::{Frame, Node, OwnedMap, Property, API};
     use self::vapoursynth::node::GetFrameError;
@@ -48,6 +50,7 @@ mod inner {
         last_requested_frame: usize,
         next_output_frame: usize,
         completed_frames: usize,
+        current_timecode: Ratio<i64>,
     }
 
     struct SharedData {
@@ -279,17 +282,35 @@ mod inner {
     fn print_frames<W: Write>(
         writer: &mut W,
         parameters: &OutputParameters,
-        frame: Frame,
-        alpha_frame: Option<Frame>,
+        frame: &Frame,
+        alpha_frame: Option<&Frame>,
     ) -> Result<(), Error> {
         if parameters.y4m {
             write!(writer, "FRAME\n").context("Couldn't output the frame header")?;
         }
 
-        print_frame(writer, &frame)?;
+        print_frame(writer, &frame).context("Couldn't output the frame")?;
         if let Some(alpha_frame) = alpha_frame {
-            print_frame(writer, &alpha_frame)?;
+            print_frame(writer, alpha_frame).context("Couldn't output the alpha frame")?;
         }
+
+        Ok(())
+    }
+
+    fn update_timecodes(frame: &Frame, state: &mut OutputState) -> Result<(), Error> {
+        let props = frame.props();
+        let duration_num = props
+            .get_int("_DurationNum")
+            .context("Couldn't get the duration numerator")?;
+        let duration_den = props
+            .get_int("_DurationDen")
+            .context("Couldn't get the duration denominator")?;
+
+        if duration_den == 0 {
+            return Err(err_msg("The duration denominator is zero"));
+        }
+
+        state.current_timecode += Ratio::new(duration_num, duration_den);
 
         Ok(())
     }
@@ -363,14 +384,30 @@ mod inner {
                     let (frame, alpha_frame) =
                         state.reorder_map.remove(&next_output_frame).unwrap();
 
+                    let frame = frame.unwrap();
                     if state.error.is_none() {
                         if let Err(error) = print_frames(
                             &mut state.output_target,
                             parameters,
-                            frame.unwrap(),
-                            alpha_frame,
+                            &frame,
+                            alpha_frame.as_ref(),
                         ) {
                             state.error = Some((n, error));
+                        }
+                    }
+
+                    if state.timecodes_file.is_some() && state.error.is_none() {
+                        let timecode = (*state.current_timecode.numer() as f64 * 1000f64)
+                            / *state.current_timecode.denom() as f64;
+                        match writeln!(state.timecodes_file.as_mut().unwrap(), "{:.6}", timecode)
+                            .context("Couldn't output the timecode")
+                        {
+                            Err(error) => state.error = Some((n, error.into())),
+                            Ok(()) => if let Err(error) = update_timecodes(&frame, &mut state)
+                                .context("Couldn't update the timecodes")
+                            {
+                                state.error = Some((n, error.into()));
+                            },
                         }
                     }
 
@@ -427,6 +464,7 @@ mod inner {
             last_requested_frame: parameters.start_frame + initial_requests - 1,
             next_output_frame: 0,
             completed_frames: 0,
+            current_timecode: Ratio::from_integer(0),
         });
         let shared_data = Arc::new(SharedData {
             output_done_pair,
