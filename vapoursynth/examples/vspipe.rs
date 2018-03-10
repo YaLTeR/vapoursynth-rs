@@ -46,6 +46,7 @@ mod inner {
         reorder_map: HashMap<usize, (Option<Frame>, Option<Frame>)>,
         last_requested_frame: usize,
         next_output_frame: usize,
+        completed_frames: usize,
     }
 
     struct SharedData {
@@ -310,6 +311,7 @@ mod inner {
                 ))
             }
             Ok(frame) => {
+                // Store the frame in the reorder map.
                 {
                     let entry = state.reorder_map.entry(n).or_insert((None, None));
                     if alpha {
@@ -319,10 +321,15 @@ mod inner {
                     }
                 }
 
+                // Increase the progress counter.
+                if !alpha {
+                    state.completed_frames += 1;
+                }
+
+                // If we got both a frame and its alpha frame, request one more.
                 if is_completed(&state.reorder_map[&n], parameters.alpha_node.is_some())
                     && state.last_requested_frame < parameters.end_frame
                 {
-                    // Request one more frame.
                     let shared_data_2 = shared_data.clone();
                     parameters.node.get_frame_async(
                         state.last_requested_frame + 1,
@@ -371,6 +378,14 @@ mod inner {
             }
         }
 
+        if parameters.progress {
+            eprint!(
+                "Frame: {}/{}\r",
+                state.completed_frames,
+                parameters.end_frame - parameters.start_frame + 1
+            );
+        }
+
         if state.next_output_frame == parameters.end_frame + 1 {
             *shared_data.output_done_pair.0.lock().unwrap() = true;
             shared_data.output_done_pair.1.notify_one();
@@ -410,6 +425,7 @@ mod inner {
             reorder_map: HashMap::new(),
             last_requested_frame: parameters.start_frame + initial_requests - 1,
             next_output_frame: 0,
+            completed_frames: 0,
         });
         let shared_data = Arc::new(SharedData {
             output_done_pair,
