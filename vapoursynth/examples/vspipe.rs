@@ -9,10 +9,11 @@ mod inner {
     extern crate vapoursynth;
 
     use std::cmp;
+    use std::collections::HashMap;
+    use std::ffi::{CString, OsStr};
     use std::fmt::Debug;
     use std::fs::File;
     use std::io::{self, stdout, Stdout, Write};
-    use std::ffi::{CString, OsStr};
     use std::sync::{Arc, Condvar, Mutex};
 
     use self::clap::{App, Arg};
@@ -40,10 +41,17 @@ mod inner {
         progress: bool,
     }
 
+    struct OutputState {
+        reorder_map: HashMap<usize, (Option<Frame>, Option<Frame>)>,
+        last_requested_frame: usize,
+        next_output_frame: usize,
+    }
+
     struct SharedData {
-        output_error: Mutex<Option<(usize, CString)>>,
+        output_error: Mutex<Option<(usize, Error)>>,
         output_done_pair: (Mutex<bool>, Condvar),
         output_parameters: Mutex<OutputParameters>,
+        output_state: Mutex<OutputState>,
     }
 
     impl Write for OutputTarget {
@@ -230,7 +238,7 @@ mod inner {
                 }
             };
 
-            write!(writer, " Ip A0:0 XLENGTH={}", num_frames)?;
+            write!(writer, " Ip A0:0 XLENGTH={}\n", num_frames)?;
 
             Ok(())
         } else {
@@ -238,19 +246,134 @@ mod inner {
         }
     }
 
+    // Checks if the frame is completed, that is, we have the frame and, if needed, its alpha part.
+    fn is_completed(entry: &(Option<Frame>, Option<Frame>), have_alpha: bool) -> bool {
+        entry.0.is_some() && (!have_alpha || entry.1.is_some())
+    }
+
+    fn print_frame(writer: &mut Write, frame: &Frame) -> Result<(), Error> {
+        const RGB_REMAP: [usize; 3] = [1, 2, 0];
+
+        let format = frame.format();
+        for plane in 0..format.plane_count() {
+            let plane = if format.color_family() == ColorFamily::RGB {
+                RGB_REMAP[plane]
+            } else {
+                plane
+            };
+
+            if let Ok(data) = frame.data(plane) {
+                writer.write_all(data)?;
+            } else {
+                for row in 0..frame.height(plane) {
+                    writer.write_all(frame.data_row(plane, row))?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn print_frames(
+        frame: Frame,
+        alpha_frame: Option<Frame>,
+        parameters: &mut OutputParameters,
+    ) -> Result<(), Error> {
+        if parameters.y4m {
+            write!(parameters.output_target, "FRAME\n")
+                .context("Couldn't output the frame header")?;
+        }
+
+        print_frame(&mut parameters.output_target, &frame)?;
+        if let Some(alpha_frame) = alpha_frame {
+            print_frame(&mut parameters.output_target, &alpha_frame)?;
+        }
+
+        Ok(())
+    }
+
     fn frame_done_callback(
         frame: Result<Frame, GetFrameError>,
         n: usize,
         _node: Node,
         shared_data: Arc<SharedData>,
+        alpha: bool,
     ) {
-        if let Err(error) = frame {
-            *shared_data.output_error.lock().unwrap() = Some((n, error.into_inner().into_owned()));
-            return;
+        let mut parameters = shared_data.output_parameters.lock().unwrap();
+        let mut state = shared_data.output_state.lock().unwrap();
+
+        match frame {
+            Err(error) => {
+                *shared_data.output_error.lock().unwrap() = Some((
+                    n,
+                    err_msg(error.into_inner().to_string_lossy().into_owned()),
+                ))
+            }
+            Ok(frame) => {
+                {
+                    let entry = state.reorder_map.entry(n).or_insert((None, None));
+                    if alpha {
+                        entry.1 = Some(frame);
+                    } else {
+                        entry.0 = Some(frame);
+                    }
+                }
+
+                if is_completed(&state.reorder_map[&n], parameters.alpha_node.is_some())
+                    && state.last_requested_frame < parameters.end_frame
+                {
+                    // Request one more frame.
+                    let shared_data_2 = shared_data.clone();
+                    parameters.node.get_frame_async(
+                        state.last_requested_frame + 1,
+                        move |frame, n, node| {
+                            frame_done_callback(frame, n, node, shared_data_2, false)
+                        },
+                    );
+
+                    if let Some(ref alpha_node) = parameters.alpha_node {
+                        let shared_data_2 = shared_data.clone();
+                        alpha_node.get_frame_async(
+                            state.last_requested_frame + 1,
+                            move |frame, n, node| {
+                                frame_done_callback(frame, n, node, shared_data_2, true)
+                            },
+                        );
+                    }
+
+                    state.last_requested_frame += 1;
+                }
+
+                // Output all completed frames.
+                while state
+                    .reorder_map
+                    .get(&state.next_output_frame)
+                    .map(|entry| is_completed(entry, parameters.alpha_node.is_some()))
+                    .unwrap_or(false)
+                {
+                    let next_output_frame = state.next_output_frame;
+                    let (frame, alpha_frame) =
+                        state.reorder_map.remove(&next_output_frame).unwrap();
+
+                    if shared_data.output_error.lock().unwrap().is_none() {
+                        if let Err(error) =
+                            print_frames(frame.unwrap(), alpha_frame, &mut *parameters)
+                        {
+                            *shared_data.output_error.lock().unwrap() = Some((n, error));
+                        }
+                    }
+
+                    state.next_output_frame += 1;
+                }
+            }
         }
 
-        // let parameters = shared_data.output_parameters.lock().unwrap();
         eprintln!("Frame: {}", n);
+
+        if state.next_output_frame == parameters.end_frame + 1 {
+            *shared_data.output_done_pair.0.lock().unwrap() = true;
+            shared_data.output_done_pair.1.notify_one();
+        }
     }
 
     fn output(mut parameters: OutputParameters) -> Result<(), Error> {
@@ -276,11 +399,17 @@ mod inner {
 
         let output_error = Mutex::new(None);
         let output_done_pair = (Mutex::new(false), Condvar::new());
+        let output_state = Mutex::new(OutputState {
+            reorder_map: HashMap::new(),
+            last_requested_frame: parameters.start_frame + initial_requests - 1,
+            next_output_frame: 0,
+        });
         let output_parameters = Mutex::new(parameters);
         let shared_data = Arc::new(SharedData {
             output_error,
             output_done_pair,
             output_parameters,
+            output_state,
         });
 
         // Start off by requesting some frames.
@@ -289,13 +418,13 @@ mod inner {
             for n in 0..initial_requests {
                 let shared_data_2 = shared_data.clone();
                 parameters.node.get_frame_async(n, move |frame, n, node| {
-                    frame_done_callback(frame, n, node, shared_data_2)
+                    frame_done_callback(frame, n, node, shared_data_2, false)
                 });
 
                 if let Some(ref alpha_node) = parameters.alpha_node {
                     let shared_data_2 = shared_data.clone();
                     alpha_node.get_frame_async(n, move |frame, n, node| {
-                        frame_done_callback(frame, n, node, shared_data_2)
+                        frame_done_callback(frame, n, node, shared_data_2, true)
                     });
                 }
             }
@@ -310,8 +439,7 @@ mod inner {
         if let Some((n, ref msg)) = *shared_data.output_error.lock().unwrap() {
             return Err(err_msg(format!(
                 "Failed to retrieve frame {} with error: {}",
-                n,
-                msg.to_string_lossy()
+                n, msg
             )));
         }
 
