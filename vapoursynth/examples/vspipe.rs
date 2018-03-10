@@ -15,6 +15,7 @@ mod inner {
     use std::fs::File;
     use std::io::{self, stdout, Stdout, Write};
     use std::sync::{Arc, Condvar, Mutex};
+    use std::time::{Duration, Instant};
 
     use self::clap::{App, Arg};
     use self::vapoursynth::vsscript::{Environment, EvalFlags};
@@ -433,6 +434,9 @@ mod inner {
             output_state,
         });
 
+        // Record the start time.
+        let start_time = Instant::now();
+
         // Start off by requesting some frames.
         {
             let parameters = &shared_data.output_parameters;
@@ -457,7 +461,17 @@ mod inner {
             done = cvar.wait(done).unwrap();
         }
 
+        let elapsed = start_time.elapsed();
+        let elapsed_seconds = elapsed.as_secs() as f64 + elapsed.subsec_nanos() as f64 * 1e-9;
+
         let mut state = shared_data.output_state.lock().unwrap();
+        eprintln!(
+            "Output {} frames in {:.2} seconds ({:.2} fps)",
+            state.next_output_frame,
+            elapsed_seconds,
+            state.next_output_frame as f64 / elapsed_seconds
+        );
+
         if let Some((n, ref msg)) = state.error {
             return Err(err_msg(format!(
                 "Failed to retrieve frame {} with error: {}",
