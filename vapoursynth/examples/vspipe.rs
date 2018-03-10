@@ -649,6 +649,9 @@ mod inner {
                 .context("Couldn't set arguments")?;
         }
 
+        // Start time more similar to vspipe's.
+        let start_time = Instant::now();
+
         // Evaluate the script.
         environment
             .eval_file(
@@ -776,6 +779,12 @@ mod inner {
                     progress,
                 },
             ).context("Couldn't output the frames")?;
+
+            // This is still not a very valid comparison since vspipe does all argument validation
+            // before it starts the time.
+            let elapsed = start_time.elapsed();
+            let elapsed_seconds = elapsed.as_secs() as f64 + elapsed.subsec_nanos() as f64 * 1e-9;
+            eprintln!("vspipe time: {:.2} seconds", elapsed_seconds);
         }
 
         Ok(())
