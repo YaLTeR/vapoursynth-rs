@@ -8,14 +8,17 @@ mod inner {
     extern crate clap;
     extern crate vapoursynth;
 
+    use std::cmp;
     use std::fmt::Debug;
     use std::fs::File;
     use std::io::{self, stdout, Stdout, Write};
-    use std::ffi::OsStr;
+    use std::ffi::{CString, OsStr};
+    use std::sync::{Arc, Condvar, Mutex};
 
     use self::clap::{App, Arg};
     use self::vapoursynth::vsscript::{Environment, EvalFlags};
-    use self::vapoursynth::{Node, OwnedMap, Property, API};
+    use self::vapoursynth::{Frame, Node, OwnedMap, Property, API};
+    use self::vapoursynth::node::GetFrameError;
     use self::vapoursynth::format::{ColorFamily, SampleType};
     use super::*;
 
@@ -35,6 +38,12 @@ mod inner {
         requests: usize,
         y4m: bool,
         progress: bool,
+    }
+
+    struct SharedData {
+        output_error: Mutex<Option<(usize, CString)>>,
+        output_done_pair: (Mutex<bool>, Condvar),
+        output_parameters: Mutex<OutputParameters>,
     }
 
     impl Write for OutputTarget {
@@ -229,7 +238,23 @@ mod inner {
         }
     }
 
+    fn frame_done_callback(
+        frame: Result<Frame, GetFrameError>,
+        n: usize,
+        _node: Node,
+        shared_data: Arc<SharedData>,
+    ) {
+        if let Err(error) = frame {
+            *shared_data.output_error.lock().unwrap() = Some((n, error.into_inner().into_owned()));
+            return;
+        }
+
+        // let parameters = shared_data.output_parameters.lock().unwrap();
+        eprintln!("Frame: {}", n);
+    }
+
     fn output(mut parameters: OutputParameters) -> Result<(), Error> {
+        // Print the y4m header.
         if parameters.y4m {
             if parameters.alpha_node.is_some() {
                 return Err(err_msg("Can't apply y4m headers to a clip with alpha"));
@@ -239,8 +264,55 @@ mod inner {
                 .context("Couldn't write the y4m header")?;
         }
 
+        // Print the timecodes header.
         if let Some(ref mut timecodes_file) = parameters.timecodes_file {
             writeln!(timecodes_file, "# timecode format v2")?;
+        }
+
+        let initial_requests = cmp::min(
+            parameters.requests,
+            parameters.end_frame - parameters.start_frame + 1,
+        );
+
+        let output_error = Mutex::new(None);
+        let output_done_pair = (Mutex::new(false), Condvar::new());
+        let output_parameters = Mutex::new(parameters);
+        let shared_data = Arc::new(SharedData {
+            output_error,
+            output_done_pair,
+            output_parameters,
+        });
+
+        // Start off by requesting some frames.
+        {
+            let parameters = shared_data.output_parameters.lock().unwrap();
+            for n in 0..initial_requests {
+                let shared_data_2 = shared_data.clone();
+                parameters.node.get_frame_async(n, move |frame, n, node| {
+                    frame_done_callback(frame, n, node, shared_data_2)
+                });
+
+                if let Some(ref alpha_node) = parameters.alpha_node {
+                    let shared_data_2 = shared_data.clone();
+                    alpha_node.get_frame_async(n, move |frame, n, node| {
+                        frame_done_callback(frame, n, node, shared_data_2)
+                    });
+                }
+            }
+        }
+
+        let &(ref lock, ref cvar) = &shared_data.output_done_pair;
+        let mut done = lock.lock().unwrap();
+        while !*done {
+            done = cvar.wait(done).unwrap();
+        }
+
+        if let Some((n, ref msg)) = *shared_data.output_error.lock().unwrap() {
+            return Err(err_msg(format!(
+                "Failed to retrieve frame {} with error: {}",
+                n,
+                msg.to_string_lossy()
+            )));
         }
 
         Ok(())
