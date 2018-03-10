@@ -26,7 +26,7 @@ if __name__ == '__main__':
         print("Starting tests with features: " + features_string)
         sys.stdout.flush()
 
-        returncode = subprocess.call(['cargo', 'test', '--quiet', '--features', features_string])
+        returncode = subprocess.call(['cargo', 'test', '--verbose', '--features', features_string])
         if returncode != 0:
             someone_failed = True
             print("TEST FAILURE: " + features_string)
