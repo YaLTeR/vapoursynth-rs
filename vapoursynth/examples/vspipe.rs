@@ -49,10 +49,12 @@ mod inner {
         reorder_map: HashMap<usize, (Option<Frame>, Option<Frame>)>,
         last_requested_frame: usize,
         next_output_frame: usize,
-        completed_frames: usize,
         current_timecode: Ratio<i64>,
         callbacks_fired: usize,
         callbacks_fired_alpha: usize,
+        last_fps_report_time: Instant,
+        last_fps_report_frames: usize,
+        fps: Option<f64>,
     }
 
     struct SharedData {
@@ -327,6 +329,7 @@ mod inner {
         let parameters = &shared_data.output_parameters;
         let mut state = shared_data.output_state.lock().unwrap();
 
+        // Increase the progress counter.
         if !alpha {
             state.callbacks_fired += 1;
             if parameters.alpha_node.is_none() {
@@ -334,6 +337,21 @@ mod inner {
             }
         } else {
             state.callbacks_fired_alpha += 1;
+        }
+
+        // Figure out the FPS.
+        if parameters.progress {
+            let current = Instant::now();
+            let elapsed = current.duration_since(state.last_fps_report_time);
+            let elapsed_seconds = elapsed.as_secs() as f64 + elapsed.subsec_nanos() as f64 * 1e-9;
+
+            if elapsed.as_secs() > 10 {
+                state.fps = Some(
+                    (state.callbacks_fired - state.last_fps_report_frames) as f64 / elapsed_seconds,
+                );
+                state.last_fps_report_time = current;
+                state.last_fps_report_frames = state.callbacks_fired;
+            }
         }
 
         match frame {
@@ -354,11 +372,6 @@ mod inner {
                     } else {
                         entry.0 = Some(frame);
                     }
-                }
-
-                // Increase the progress counter.
-                if !alpha {
-                    state.completed_frames += 1;
                 }
 
                 // If we got both a frame and its alpha frame, request one more.
@@ -430,12 +443,19 @@ mod inner {
             }
         }
 
+        // Output the progress info.
         if parameters.progress {
             eprint!(
-                "Frame: {}/{}\r",
-                state.completed_frames,
+                "Frame: {}/{}",
+                state.callbacks_fired,
                 parameters.end_frame - parameters.start_frame + 1
             );
+
+            if let Some(fps) = state.fps {
+                eprint!(" ({:.2} fps)", fps);
+            }
+
+            eprint!("\r");
         }
 
         // if state.next_output_frame == parameters.end_frame + 1 {
@@ -482,10 +502,12 @@ mod inner {
             reorder_map: HashMap::new(),
             last_requested_frame: parameters.start_frame + initial_requests - 1,
             next_output_frame: 0,
-            completed_frames: 0,
             current_timecode: Ratio::from_integer(0),
             callbacks_fired: 0,
             callbacks_fired_alpha: 0,
+            last_fps_report_time: Instant::now(),
+            last_fps_report_frames: 0,
+            fps: None,
         });
         let shared_data = Arc::new(SharedData {
             output_done_pair,
