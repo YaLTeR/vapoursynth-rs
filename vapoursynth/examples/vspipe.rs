@@ -96,7 +96,7 @@ mod inner {
         arg.find('=')
             .map(|index| arg.split_at(index))
             .map(|(k, v)| (k, &v[1..]))
-            .ok_or(err_msg(format!("No value specified for argument: {}", arg)))
+            .ok_or_else(|| err_msg(format!("No value specified for argument: {}", arg)))
     }
 
     // Returns "Variable" or the value of the property passed through a function.
@@ -293,7 +293,7 @@ mod inner {
             write!(writer, "FRAME\n").context("Couldn't output the frame header")?;
         }
 
-        print_frame(writer, &frame).context("Couldn't output the frame")?;
+        print_frame(writer, frame).context("Couldn't output the frame")?;
         if let Some(alpha_frame) = alpha_frame {
             print_frame(writer, alpha_frame).context("Couldn't output the alpha frame")?;
         }
@@ -322,8 +322,8 @@ mod inner {
     fn frame_done_callback(
         frame: Result<Frame, GetFrameError>,
         n: usize,
-        _node: Node,
-        shared_data: Arc<SharedData>,
+        _node: &Node,
+        shared_data: &Arc<SharedData>,
         alpha: bool,
     ) {
         let parameters = &shared_data.output_parameters;
@@ -383,7 +383,7 @@ mod inner {
                     parameters.node.get_frame_async(
                         state.last_requested_frame + 1,
                         move |frame, n, node| {
-                            frame_done_callback(frame, n, node, shared_data_2, false)
+                            frame_done_callback(frame, n, &node, &shared_data_2, false)
                         },
                     );
 
@@ -392,7 +392,7 @@ mod inner {
                         alpha_node.get_frame_async(
                             state.last_requested_frame + 1,
                             move |frame, n, node| {
-                                frame_done_callback(frame, n, node, shared_data_2, true)
+                                frame_done_callback(frame, n, &node, &shared_data_2, true)
                             },
                         );
                     }
@@ -524,13 +524,13 @@ mod inner {
             for n in 0..initial_requests {
                 let shared_data_2 = shared_data.clone();
                 parameters.node.get_frame_async(n, move |frame, n, node| {
-                    frame_done_callback(frame, n, node, shared_data_2, false)
+                    frame_done_callback(frame, n, &node, &shared_data_2, false)
                 });
 
                 if let Some(ref alpha_node) = parameters.alpha_node {
                     let shared_data_2 = shared_data.clone();
                     alpha_node.get_frame_async(n, move |frame, n, node| {
-                        frame_done_callback(frame, n, node, shared_data_2, true)
+                        frame_done_callback(frame, n, &node, &shared_data_2, true)
                     });
                 }
             }
