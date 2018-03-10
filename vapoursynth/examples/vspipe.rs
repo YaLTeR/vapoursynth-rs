@@ -443,6 +443,15 @@ mod inner {
             )));
         }
 
+        // Flush the output file.
+        shared_data
+            .output_parameters
+            .lock()
+            .unwrap()
+            .output_target
+            .flush()
+            .context("Failed to flush the output file")?;
+
         Ok(())
     }
 
