@@ -1,3 +1,5 @@
+// This is a mostly drop-in reimplementation of vspipe.
+// The main difference is what the errors look like.
 #[macro_use]
 extern crate failure;
 
