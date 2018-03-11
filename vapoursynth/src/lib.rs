@@ -37,6 +37,29 @@
 //! # fn main() {
 //! # }
 //! ```
+//!
+//! ## Supported Versions
+//!
+//! Right now the x86_64 and i686 Unix and x86_64 Windows targets are supported.
+//!
+//! All VapourSynth and VSScript API versions starting with 3.0 are supported. By default the
+//! crates use the 3.0 feature set. To enable higher API version support, enable one of the
+//! following Cargo features:
+//!
+//! * `vapoursynth-api-31` for VapourSynth API 3.1
+//! * `vapoursynth-api-32` for VapourSynth API 3.2
+//! * `vapoursynth-api-33` for VapourSynth API 3.3
+//! * `vapoursynth-api-34` for VapourSynth API 3.4
+//! * `vapoursynth-api-35` for VapourSynth API 3.5
+//! * `vsscript-api-31` for VSScript API 3.1
+//! * `vsscript-api-32` for VSScript API 3.2
+//!
+//! To enable linking to VapourSynth or VSScript functions (currently required to do anything
+//! useful), enable the following Cargo features:
+//!
+//! * `vapoursynth-functions` for VapourSynth functions (`getVapourSynthAPI()`)
+//! * `vsscript-functions` for VSScript functions (`vsscript_*()`)
+
 #![doc(html_root_url = "https://docs.rs/vapoursynth/0.1.0")]
 
 #[macro_use]
