@@ -1,3 +1,4 @@
+#![allow(unused)]
 #[macro_use]
 extern crate failure;
 extern crate vapoursynth;
