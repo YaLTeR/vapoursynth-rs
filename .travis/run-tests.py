@@ -6,7 +6,8 @@ if __name__ == '__main__':
     VAPOURSYNTH_FUNCTIONS = ["vapoursynth-functions"]
     VSSCRIPT_FUNCTIONS = ["vsscript-functions"]
 
-    if os.environ['TRAVIS_OS_NAME'] == 'osx':
+    # The environment variable isn't there on AppVeyor.
+    if not 'TRAVIS_OS_NAME' in os.environ or os.environ['TRAVIS_OS_NAME'] == 'osx':
         VSSCRIPT_API_VERSIONS = ["vsscript-api-" + str(v) for v in range(31, 33)]
     else:
         # Trusty VapourSynth is old and doesn't support VSScript API above 3.0.
@@ -24,9 +25,11 @@ if __name__ == '__main__':
         print("Starting tests with features: " + features_string)
         sys.stdout.flush()
 
-        returncode = subprocess.call(['cargo', 'test', '--quiet', '--features', features_string])
+        returncode = subprocess.call(['cargo', 'test', '--verbose', '--features', features_string])
         if returncode != 0:
             someone_failed = True
+            print("TEST FAILURE: " + features_string)
 
     if someone_failed:
+        print("One of the tests failed, exiting with code 1.")
         sys.exit(1)
