@@ -1,3 +1,7 @@
+## v0.1.4 (11th Mar 2018)
+- Added an AppVeyor badge
+- Added a link to vapoursynth-rs in the README
+
 ## v0.1.3 (18th Feb 2018)
 - Added a docs.rs badge to the README
 - Added CHANGELOG.md

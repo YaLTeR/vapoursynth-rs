@@ -5,6 +5,8 @@
 
 Raw bindings to [VapourSynth](https://github.com/vapoursynth/vapoursynth).
 
+Check out [vapoursynth-rs](https://crates.io/crates/vapoursynth) for a safe Rust wrapper.
+
 ## Supported Versions
 
 Right now the x86_64 and i686 Unix and x86_64 Windows targets are supported.
