@@ -47,6 +47,8 @@ To enable linking to VapourSynth or VSScript functions (currently required to do
 
 Make sure you have the corresponding libraries available if you enable the linking features. You can use the `VAPOURSYNTH_LIB_DIR` environment variable to specify a custom directory with the library files.
 
+On Windows the easiest way is to install 64-bit Python, then use the VapourSynth installer (make sure the VapourSynth SDK is checked) and set `VAPOURSYNTH_LIB_DIR` to `C:\Program Files (x86)\VapourSynth\sdk\lib64`.
+
 ## License
 
 Licensed under either of

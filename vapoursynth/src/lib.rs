@@ -59,6 +59,16 @@
 //!
 //! * `vapoursynth-functions` for VapourSynth functions (`getVapourSynthAPI()`)
 //! * `vsscript-functions` for VSScript functions (`vsscript_*()`)
+//!
+//! ## Building
+//!
+//! Make sure you have the corresponding libraries available if you enable the linking features.
+//! You can use the `VAPOURSYNTH_LIB_DIR` environment variable to specify a custom directory with
+//! the library files.
+//!
+//! On Windows the easiest way is to install 64-bit Python, then use the VapourSynth installer
+//! (make sure the VapourSynth SDK is checked) and set `VAPOURSYNTH_LIB_DIR` to
+//! `C:\Program Files (x86)\VapourSynth\sdk\lib64`.
 
 #![doc(html_root_url = "https://docs.rs/vapoursynth/0.1.0")]
 // Preventing all those warnings with #[cfg] directives would be really diffucult.
