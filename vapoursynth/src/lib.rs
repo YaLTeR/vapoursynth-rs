@@ -61,6 +61,8 @@
 //! * `vsscript-functions` for VSScript functions (`vsscript_*()`)
 
 #![doc(html_root_url = "https://docs.rs/vapoursynth/0.1.0")]
+// Preventing all those warnings with #[cfg] directives would be really diffucult.
+#![allow(unused, dead_code)]
 
 #[macro_use]
 extern crate bitflags;
