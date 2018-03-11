@@ -8,7 +8,7 @@ mod need_api_and_vsscript {
     use std::sync::mpsc::channel;
 
     use super::*;
-    use format::{ColorFamily, PresetFormat, SampleType};
+    use prelude::*;
     use video_info::{Framerate, Resolution};
 
     fn props_test(frame: &Frame, fps_num: i64) {
@@ -269,7 +269,7 @@ mod need_api_and_vsscript {
         assert!(
             env.clear_output(1)
                 .err()
-                .map(|e| if let vsscript::errors::Error::NoOutput = e {
+                .map(|e| if let vsscript::Error::NoOutput = e {
                     true
                 } else {
                     false
@@ -280,7 +280,7 @@ mod need_api_and_vsscript {
         assert!(
             env.clear_output(0)
                 .err()
-                .map(|e| if let vsscript::errors::Error::NoOutput = e {
+                .map(|e| if let vsscript::Error::NoOutput = e {
                     true
                 } else {
                     false
@@ -449,6 +449,7 @@ mod need_api {
     use std::sync::Mutex;
 
     use super::*;
+    use prelude::*;
 
     #[test]
     fn maps() {

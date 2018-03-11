@@ -1,3 +1,5 @@
+//! VapourSynth frame formats.
+
 use std::ffi::CStr;
 use std::fmt::{self, Display};
 use std::marker::PhantomData;

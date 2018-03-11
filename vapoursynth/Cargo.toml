@@ -1,7 +1,19 @@
 [package]
 name = "vapoursynth"
-version = "0.1.0"
+version = "0.1.0" # remember to update html_root_url
 authors = ["Ivan Molodetskikh <yalterz@gmail.com>"]
+description = "Safe Rust wrapper for VapourSynth and VSScript."
+license = "MIT/Apache-2.0"
+
+readme = "README.md"
+documentation = "https://docs.rs/vapoursynth"
+repository = "https://github.com/YaLTeR/vapoursynth-rs"
+keywords = ["vapoursynth", "vsscript", "video", "bindings"]
+categories = ["api-bindings", "external-ffi-bindings", "multimedia::video"]
+
+[badges]
+travis-ci = { repository = "YaLTeR/vapoursynth-rs" }
+appveyor = { repository = "YaLTeR/vapoursynth-rs" }
 
 [dependencies]
 bitflags = "1"

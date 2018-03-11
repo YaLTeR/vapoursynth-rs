@@ -1,3 +1,5 @@
+//! VapourSynth cores.
+
 use std::ffi::CStr;
 use std::fmt;
 use std::marker::PhantomData;

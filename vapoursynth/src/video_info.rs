@@ -1,3 +1,5 @@
+//! Video clip formats.
+
 use std::fmt::Debug;
 use vapoursynth_sys as ffi;
 

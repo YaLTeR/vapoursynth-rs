@@ -1,3 +1,5 @@
+//! VapourSynth script-related things.
+
 use std::sync::{Once, ONCE_INIT};
 #[cfg(not(feature = "gte-vsscript-api-32"))]
 use std::sync::Mutex;
@@ -60,8 +62,8 @@ pub(crate) fn maybe_initialize() {
     });
 }
 
-pub mod errors;
+mod errors;
 pub use self::errors::{Error, VSScriptError};
 
-pub mod environment;
-pub use self::environment::*;
+mod environment;
+pub use self::environment::{Environment, EvalFlags};

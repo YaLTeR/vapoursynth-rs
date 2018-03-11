@@ -1,3 +1,5 @@
+//! VapourSynth callable functions.
+
 use vapoursynth_sys as ffi;
 
 use api::API;

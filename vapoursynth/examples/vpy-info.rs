@@ -1,8 +1,10 @@
+#[macro_use]
 extern crate failure;
 extern crate vapoursynth;
 
 use failure::{err_msg, Error, ResultExt};
 use std::env;
+use vapoursynth::prelude::*;
 
 fn usage() {
     println!(
@@ -16,9 +18,8 @@ fn usage() {
 
 #[cfg(all(feature = "vsscript-functions",
           any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
-fn print_node_info(node: &vapoursynth::Node) {
+fn print_node_info(node: &Node) {
     use std::fmt::Debug;
-    use vapoursynth::Property;
 
     // Helper function for printing properties.
     fn map_or_variable<T, F>(x: &Property<T>, f: F) -> String
@@ -65,10 +66,6 @@ fn print_node_info(node: &vapoursynth::Node) {
 #[cfg(all(feature = "vsscript-functions",
           any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
 fn run() -> Result<(), Error> {
-    use vapoursynth::vsscript;
-    use vapoursynth::map::ValueType;
-    use vapoursynth::node::Node;
-
     let filename = env::args()
         .nth(1)
         .ok_or_else(|| err_msg("The filename argument is missing"))?;
@@ -107,7 +104,7 @@ fn run() -> Result<(), Error> {
         let n = n.parse::<usize>()
             .context("Couldn't parse the frame number")?;
         if n > i32::max_value() as usize {
-            return Err(err_msg("Frame number is too big"));
+            bail!("Frame number is too big");
         }
 
         let frame = node.get_frame(n).context("Couldn't get the frame")?;
@@ -165,10 +162,10 @@ fn run() -> Result<(), Error> {
 #[cfg(not(all(feature = "vsscript-functions",
               any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32"))))]
 fn run() -> Result<(), Error> {
-    Err(err_msg(
+    bail!(
         "This example requires the `vsscript-functions` and either `vapoursynth-functions` or \
-         `vsscript-api-32` features.",
-    ))
+         `vsscript-api-32` features."
+    )
 }
 
 fn main() {

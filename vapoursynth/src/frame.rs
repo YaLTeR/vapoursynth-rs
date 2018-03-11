@@ -1,3 +1,5 @@
+//! VapourSynth frames.
+
 use std::{mem, slice};
 use vapoursynth_sys as ffi;
 
@@ -180,6 +182,7 @@ impl Frame {
     /// Returns a map of frame's properties.
     #[inline]
     pub fn props(&self) -> &Map {
+        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
         unsafe { mem::transmute(API::get_cached().get_frame_props_ro(self.handle)) }
     }
 }

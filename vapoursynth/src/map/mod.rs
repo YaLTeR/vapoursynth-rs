@@ -1,3 +1,5 @@
+//! VapourSynth maps.
+
 use std::borrow::Cow;
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
@@ -70,6 +72,7 @@ impl Deref for OwnedMap {
 
     #[inline]
     fn deref(&self) -> &Self::Target {
+        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
         unsafe { mem::transmute(self.handle) }
     }
 }
@@ -77,6 +80,7 @@ impl Deref for OwnedMap {
 impl DerefMut for OwnedMap {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
+        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
         unsafe { mem::transmute(self.handle) }
     }
 }

@@ -1,3 +1,5 @@
+//! VapourSynth nodes.
+
 use std::borrow::Cow;
 use std::ffi::CStr;
 use std::{mem, panic};
@@ -9,7 +11,7 @@ use api::API;
 use frame::Frame;
 use video_info::VideoInfo;
 
-pub mod errors;
+mod errors;
 pub use self::errors::GetFrameError;
 
 bitflags! {
@@ -147,6 +149,7 @@ impl Node {
         where
             F: FnOnce(Result<Frame, GetFrameError>, usize, Node),
         {
+            #[cfg_attr(feature = "cargo-clippy", allow(boxed_local))]
             fn call(self: Box<Self>, frame: Result<Frame, GetFrameError>, n: usize, node: Node) {
                 (self)(frame, n, node)
             }

@@ -1,3 +1,5 @@
+//! Most general VapourSynth API functions.
+
 use std::ffi::{CStr, CString, NulError};
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::{mem, panic, process, ptr};

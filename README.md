@@ -1,16 +1,26 @@
 # vapoursynth-rs
 
-[![Build Status](https://api.travis-ci.org/YaLTeR/vapoursynth-rs.svg?branch=master)](https://travis-ci.org/YaLTeR/vapoursynth-rs)
+[![crates.io](https://img.shields.io/crates/v/vapoursynth.svg)](https://crates.io/crates/vapoursynth)
+[![Documentation](https://docs.rs/vapoursynth/badge.svg)](https://docs.rs/vapoursynth)
+[![Travis Build Status](https://api.travis-ci.org/YaLTeR/vapoursynth-rs.svg?branch=master)](https://travis-ci.org/YaLTeR/vapoursynth-rs)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/kwyhlamoqje8tsqc?svg=true)](https://ci.appveyor.com/project/YaLTeR/vapoursynth-rs)
 
-[Documentation with all features enabled](https://yalter.github.io/vapoursynth-rs)
+[Documentation for the master branch with all features enabled](https://yalter.github.io/vapoursynth-rs)
 
-A (very WIP) safe wrapper for [VapourSynth](https://github.com/vapoursynth/vapoursynth), written in Rust.
+A safe wrapper for [VapourSynth](https://github.com/vapoursynth/vapoursynth), written in Rust.
 
 The primary goal is safety (that is, safe Rust code should not trigger undefined behavior), and secondary goals include performance and ease of use.
+
+## Functionality
+
+Most of the VapourSynth API is covered. It's possible to evaluate `.vpy` scripts, access their properties and output, retrieve frames. A notable exception is API for creating VapourSynth filters, which will come out next.
+
+For an example usage see [examples/vspipe.rs](https://github.com/YaLTeR/vapoursynth-rs/blob/master/vapoursynth/examples/vspipe.rs), a complete reimplementation of VapourSynth's [vspipe](https://github.com/vapoursynth/vapoursynth/blob/master/src/vspipe/vspipe.cpp) in safe Rust utilizing this crate.
 
 ## vapoursynth-sys
 
 [![crates.io](https://img.shields.io/crates/v/vapoursynth-sys.svg)](https://crates.io/crates/vapoursynth-sys)
+[![Documentation](https://docs.rs/vapoursynth-sys/badge.svg)](https://docs.rs/vapoursynth-sys)
 
 Raw bindings to [VapourSynth](https://github.com/vapoursynth/vapoursynth).
 

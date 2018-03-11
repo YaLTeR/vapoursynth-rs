@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate failure;
 
 use failure::{err_msg, Error, ResultExt};
@@ -5,6 +6,8 @@ use failure::{err_msg, Error, ResultExt};
 #[cfg(all(feature = "vsscript-functions",
           any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
 mod inner {
+    #![cfg_attr(feature = "cargo-clippy", allow(cast_lossless))]
+    #![cfg_attr(feature = "cargo-clippy", allow(mutex_atomic))]
     extern crate clap;
     extern crate num_rational;
     extern crate vapoursynth;
@@ -20,10 +23,7 @@ mod inner {
 
     use self::clap::{App, Arg};
     use self::num_rational::Ratio;
-    use self::vapoursynth::vsscript::{Environment, EvalFlags};
-    use self::vapoursynth::{Frame, Node, OwnedMap, Property, API};
-    use self::vapoursynth::node::GetFrameError;
-    use self::vapoursynth::format::{ColorFamily, SampleType};
+    use self::vapoursynth::prelude::*;
     use super::*;
 
     enum OutputTarget {
@@ -96,7 +96,7 @@ mod inner {
         arg.find('=')
             .map(|index| arg.split_at(index))
             .map(|(k, v)| (k, &v[1..]))
-            .ok_or_else(|| err_msg(format!("No value specified for argument: {}", arg)))
+            .ok_or_else(|| format_err!("No value specified for argument: {}", arg))
     }
 
     // Returns "Variable" or the value of the property passed through a function.
@@ -193,11 +193,7 @@ mod inner {
                             (2, 2) => "410",
                             (2, 0) => "411",
                             (0, 1) => "440",
-                            _ => {
-                                return Err(err_msg(
-                                    "No y4m identifier exists for the current format"
-                                ))
-                            }
+                            _ => bail!("No y4m identifier exists for the current format"),
                         }
                     )?;
 
@@ -216,7 +212,7 @@ mod inner {
                         )?;
                     }
                 }
-                _ => return Err(err_msg("No y4m identifier exists for the current format")),
+                _ => bail!("No y4m identifier exists for the current format"),
             }
 
             if let Property::Constant(resolution) = info.resolution {
@@ -264,6 +260,7 @@ mod inner {
         const RGB_REMAP: [usize; 3] = [1, 2, 0];
 
         let format = frame.format();
+        #[cfg_attr(feature = "cargo-clippy", allow(needless_range_loop))]
         for plane in 0..format.plane_count() {
             let plane = if format.color_family() == ColorFamily::RGB {
                 RGB_REMAP[plane]
@@ -311,7 +308,7 @@ mod inner {
             .context("Couldn't get the duration denominator")?;
 
         if duration_den == 0 {
-            return Err(err_msg("The duration denominator is zero"));
+            bail!("The duration denominator is zero");
         }
 
         state.current_timecode += Ratio::new(duration_num, duration_den);
@@ -477,7 +474,7 @@ mod inner {
         // Print the y4m header.
         if parameters.y4m {
             if parameters.alpha_node.is_some() {
-                return Err(err_msg("Can't apply y4m headers to a clip with alpha"));
+                bail!("Can't apply y4m headers to a clip with alpha");
             }
 
             print_y4m_header(&mut output_target, &parameters.node)
@@ -554,10 +551,7 @@ mod inner {
         );
 
         if let Some((n, ref msg)) = state.error {
-            return Err(err_msg(format!(
-                "Failed to retrieve frame {} with error: {}",
-                n, msg
-            )));
+            bail!("Failed to retrieve frame {} with error: {}", n, msg);
         }
 
         // Flush the output file.
@@ -774,13 +768,13 @@ mod inner {
                 let info = node.info();
 
                 if let Property::Variable = info.format {
-                    return Err(err_msg("Cannot output clips with varying format"));
+                    bail!("Cannot output clips with varying format");
                 }
                 if let Property::Variable = info.resolution {
-                    return Err(err_msg("Cannot output clips with varying dimensions"));
+                    bail!("Cannot output clips with varying dimensions");
                 }
                 if let Property::Variable = info.framerate {
-                    return Err(err_msg("Cannot output clips with varying framerate"));
+                    bail!("Cannot output clips with varying framerate");
                 }
 
                 #[cfg(feature = "gte-vapoursynth-api-32")]
@@ -791,7 +785,7 @@ mod inner {
                     match info.num_frames {
                         Property::Variable => {
                             // TODO: make it possible?
-                            return Err(err_msg("Cannot output clips with unknown length"));
+                            bail!("Cannot output clips with unknown length");
                         }
                         Property::Constant(x) => x,
                     }
@@ -808,12 +802,12 @@ mod inner {
             let end_frame = matches
                 .value_of("end")
                 .map(str::parse::<i32>)
-                .unwrap_or(Ok(num_frames as i32 - 1))
+                .unwrap_or_else(|| Ok(num_frames as i32 - 1))
                 .context("Couldn't convert the end frame to an integer")?;
 
             // Check if the input start and end frames make sense.
             if start_frame < 0 || end_frame < start_frame || end_frame as usize >= num_frames {
-                return Err(err_msg(format!(
+                bail!(
                     "Invalid range of frames to output specified:\n\
                      first: {}\n\
                      last: {}\n\
@@ -827,7 +821,7 @@ mod inner {
                         .and_then(|x| x.checked_add(1))
                         .map(|x| format!("{}", x))
                         .unwrap_or_else(|| "<overflow>".to_owned())
-                )));
+                );
             }
 
             let requests = {
@@ -878,10 +872,10 @@ mod inner {
     use super::*;
 
     pub fn run() -> Result<(), Error> {
-        Err(err_msg(
+        bail!(
             "This example requires the `vsscript-functions` and either `vapoursynth-functions` or \
-             `vsscript-api-32` features.",
-        ))
+             `vsscript-api-32` features."
+        )
     }
 }
 
