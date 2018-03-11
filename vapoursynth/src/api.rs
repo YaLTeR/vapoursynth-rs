@@ -63,7 +63,8 @@ macro_rules! prop_set_something {
 impl API {
     /// Retrieves the VapourSynth API.
     ///
-    /// Returns `None` on error, for example if the requested API version is not supported.
+    /// Returns `None` on error, for example if the requested API version (selected with features,
+    /// see the crate-level docs) is not supported.
     // If we're linking to VSScript anyway, use the VSScript function.
     #[cfg(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))]
     #[inline]
@@ -96,7 +97,8 @@ impl API {
 
     /// Retrieves the VapourSynth API.
     ///
-    /// Returns `None` on error, for example if the requested API version is not supported.
+    /// Returns `None` on error, for example if the requested API version (selected with features,
+    /// see the crate-level docs) is not supported.
     #[cfg(all(feature = "vapoursynth-functions",
               not(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))))]
     #[inline]
