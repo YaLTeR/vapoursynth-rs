@@ -1,4 +1,5 @@
 use std::env;
+use std::path::PathBuf;
 
 const LIBRARY_DIR_VARIABLE: &str = "VAPOURSYNTH_LIB_DIR";
 
@@ -8,8 +9,15 @@ fn main() {
 
     let windows = env::var("TARGET").unwrap().contains("windows");
 
-    // Library directory override.
-    if let Ok(dir) = env::var(LIBRARY_DIR_VARIABLE) {
+    // Get the default library dir on Windows.
+    let default_library_dir = if windows {
+        get_default_library_dir()
+    } else {
+        None
+    };
+
+    // Library directory override or the default dir on windows.
+    if let Some(dir) = env::var(LIBRARY_DIR_VARIABLE).ok().or(default_library_dir) {
         println!("cargo:rustc-link-search=native={}", dir);
     }
 
@@ -27,4 +35,33 @@ fn main() {
 
         println!("cargo:rustc-link-lib={}", vsscript_lib_name);
     }
+}
+
+// Returns the default library dir on Windows.
+// The default dir is where the VapourSynth installer puts the libraries.
+fn get_default_library_dir() -> Option<String> {
+    let host = env::var("HOST").ok()?;
+
+    // If the host isn't Windows we don't have %programfiles%.
+    if !host.contains("windows") {
+        return None;
+    }
+
+    let programfiles = if host.starts_with("i686") {
+        env::var("programfiles")
+    } else {
+        env::var("programfiles(x86)")
+    };
+
+    let suffix = if env::var("TARGET").ok()?.starts_with("i686") {
+        "lib32"
+    } else {
+        "lib64"
+    };
+
+    let mut path = PathBuf::from(programfiles.ok()?);
+    path.push("VapourSynth");
+    path.push("sdk");
+    path.push(suffix);
+    path.to_str().map(|s| s.to_owned())
 }
