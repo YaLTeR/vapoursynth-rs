@@ -69,7 +69,6 @@ install:
   # Important: suffix ends up with a space in the end and that breaks everything.
   # Cut it out using a substring.
   - set suffix=%suffix:~0,2%
-  - set VAPOURSYNTH_LIB_DIR=C:\Program Files (x86)\VapourSynth\sdk\lib%suffix%
   - set PATH=%PATH%;C:\Program Files (x86)\VapourSynth\core%suffix%
 
 build_script:
