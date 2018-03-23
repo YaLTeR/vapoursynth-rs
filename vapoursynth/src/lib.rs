@@ -65,7 +65,10 @@
 //! the library files.
 //!
 //! On Windows the easiest way is to use the VapourSynth installer (make sure the VapourSynth SDK
-//! is checked). The crate should pick up the library directory automatically.
+//! is checked). The crate should pick up the library directory automatically. If it doesn't or if
+//! you're cross-compiling, set `VAPOURSYNTH_LIB_DIR` to
+//! `<path to the VapourSynth installation>\sdk\lib64` or `<...>\lib32`, depending on the target
+//! bitness.
 
 #![doc(html_root_url = "https://docs.rs/vapoursynth/0.1.1")]
 // Preventing all those warnings with #[cfg] directives would be really diffucult.
