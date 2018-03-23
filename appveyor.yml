@@ -8,21 +8,21 @@ environment:
     - channel: stable
       target: x86_64-pc-windows-msvc
   # Stable 32-bit MSVC
-    # - channel: stable
-    #   target: i686-pc-windows-msvc
+    - channel: stable
+      target: i686-pc-windows-msvc
   # Beta 64-bit MSVC
     - channel: beta
       target: x86_64-pc-windows-msvc
   # Beta 32-bit MSVC
-    # - channel: beta
-    #   target: i686-pc-windows-msvc
+    - channel: beta
+      target: i686-pc-windows-msvc
   # Nightly 64-bit MSVC
     - channel: nightly
       target: x86_64-pc-windows-msvc
       #cargoflags: --features "unstable"
   # Nightly 32-bit MSVC
-    # - channel: nightly
-    #   target: i686-pc-windows-msvc
+    - channel: nightly
+      target: i686-pc-windows-msvc
       #cargoflags: --features "unstable"
 
 ### GNU Toolchains ###
@@ -30,21 +30,21 @@ environment:
     - channel: stable
       target: x86_64-pc-windows-gnu
   # Stable 32-bit GNU
-    # - channel: stable
-    #   target: i686-pc-windows-gnu
+    - channel: stable
+      target: i686-pc-windows-gnu
   # Beta 64-bit GNU
     - channel: beta
       target: x86_64-pc-windows-gnu
   # Beta 32-bit GNU
-    # - channel: beta
-    #   target: i686-pc-windows-gnu
+    - channel: beta
+      target: i686-pc-windows-gnu
   # Nightly 64-bit GNU
     - channel: nightly
       target: x86_64-pc-windows-gnu
       #cargoflags: --features "unstable"
   # Nightly 32-bit GNU
-    # - channel: nightly
-    #   target: i686-pc-windows-gnu
+    - channel: nightly
+      target: i686-pc-windows-gnu
       #cargoflags: --features "unstable"
 
 matrix:
@@ -60,8 +60,17 @@ install:
 
   - appveyor DownloadFile https://github.com/vapoursynth/vapoursynth/releases/download/R43/VapourSynth-R43.exe
   - VapourSynth-R43 /SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
-  - set VAPOURSYNTH_LIB_DIR=C:\Program Files (x86)\VapourSynth\sdk\lib64
-  - set PATH=%PATH%;C:\Program Files (x86)\VapourSynth\core64
+
+  - if "%target:~0,4%" == "i686" (
+      set suffix=32
+    ) else (
+      set suffix=64
+    )
+  # Important: suffix ends up with a space in the end and that breaks everything.
+  # Cut it out using a substring.
+  - set suffix=%suffix:~0,2%
+  - set VAPOURSYNTH_LIB_DIR=C:\Program Files (x86)\VapourSynth\sdk\lib%suffix%
+  - set PATH=%PATH%;C:\Program Files (x86)\VapourSynth\core%suffix%
 
 build_script:
   # Build with no features.
