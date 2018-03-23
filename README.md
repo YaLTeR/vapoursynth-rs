@@ -26,8 +26,6 @@ Raw bindings to [VapourSynth](https://github.com/vapoursynth/vapoursynth).
 
 ## Supported Versions
 
-Right now the x86_64 and i686 Unix and x86_64 Windows targets are supported.
-
 All VapourSynth and VSScript API versions starting with 3.0 are supported. By default the crates use the 3.0 feature set. To enable higher API version support, enable one of the following Cargo features:
 
 * `vapoursynth-api-31` for VapourSynth API 3.1

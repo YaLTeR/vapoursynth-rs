@@ -40,8 +40,6 @@
 //!
 //! ## Supported Versions
 //!
-//! Right now the x86_64 and i686 Unix and x86_64 Windows targets are supported.
-//!
 //! All VapourSynth and VSScript API versions starting with 3.0 are supported. By default the
 //! crates use the 3.0 feature set. To enable higher API version support, enable one of the
 //! following Cargo features:
