@@ -155,7 +155,7 @@ impl Node {
             }
         }
 
-        unsafe extern "C" fn c_callback(
+        unsafe extern "system" fn c_callback(
             user_data: *mut c_void,
             frame: *const ffi::VSFrameRef,
             n: i32,

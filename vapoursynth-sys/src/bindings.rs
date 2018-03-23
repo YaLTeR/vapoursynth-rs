@@ -212,7 +212,7 @@ pub enum VSMessageType {
     mtFatal = 3,
 }
 pub type VSPublicFunction = Option<
-    unsafe extern "C" fn(
+    unsafe extern "system" fn(
         in_: *const VSMap,
         out: *mut VSMap,
         userData: *mut c_void,
@@ -220,9 +220,9 @@ pub type VSPublicFunction = Option<
         vsapi: *const VSAPI,
     ),
 >;
-pub type VSFreeFuncData = Option<unsafe extern "C" fn(userData: *mut c_void)>;
+pub type VSFreeFuncData = Option<unsafe extern "system" fn(userData: *mut c_void)>;
 pub type VSFilterInit = Option<
-    unsafe extern "C" fn(
+    unsafe extern "system" fn(
         in_: *mut VSMap,
         out: *mut VSMap,
         instanceData: *mut *mut c_void,
@@ -232,7 +232,7 @@ pub type VSFilterInit = Option<
     ),
 >;
 pub type VSFilterGetFrame = Option<
-    unsafe extern "C" fn(
+    unsafe extern "system" fn(
         n: c_int,
         activationReason: c_int,
         instanceData: *mut *mut c_void,
@@ -242,10 +242,11 @@ pub type VSFilterGetFrame = Option<
         vsapi: *const VSAPI,
     ) -> *const VSFrameRef,
 >;
-pub type VSFilterFree =
-    Option<unsafe extern "C" fn(instanceData: *mut c_void, core: *mut VSCore, vsapi: *const VSAPI)>;
+pub type VSFilterFree = Option<
+    unsafe extern "system" fn(instanceData: *mut c_void, core: *mut VSCore, vsapi: *const VSAPI),
+>;
 pub type VSFrameDoneCallback = Option<
-    unsafe extern "C" fn(
+    unsafe extern "system" fn(
         userData: *mut c_void,
         f: *const VSFrameRef,
         n: c_int,
@@ -254,30 +255,31 @@ pub type VSFrameDoneCallback = Option<
     ),
 >;
 pub type VSMessageHandler =
-    Option<unsafe extern "C" fn(msgType: c_int, msg: *const c_char, userData: *mut c_void)>;
+    Option<unsafe extern "system" fn(msgType: c_int, msg: *const c_char, userData: *mut c_void)>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct VSAPI {
-    pub createCore: unsafe extern "C" fn(threads: c_int) -> *mut VSCore,
-    pub freeCore: unsafe extern "C" fn(core: *mut VSCore),
-    pub getCoreInfo: unsafe extern "C" fn(core: *mut VSCore) -> *const VSCoreInfo,
-    pub cloneFrameRef: unsafe extern "C" fn(f: *const VSFrameRef) -> *const VSFrameRef,
-    pub cloneNodeRef: unsafe extern "C" fn(node: *mut VSNodeRef) -> *mut VSNodeRef,
-    pub cloneFuncRef: unsafe extern "C" fn(f: *mut VSFuncRef) -> *mut VSFuncRef,
-    pub freeFrame: unsafe extern "C" fn(f: *const VSFrameRef),
-    pub freeNode: unsafe extern "C" fn(node: *mut VSNodeRef),
-    pub freeFunc: unsafe extern "C" fn(f: *mut VSFuncRef),
-    pub newVideoFrame: unsafe extern "C" fn(
+    pub createCore: unsafe extern "system" fn(threads: c_int) -> *mut VSCore,
+    pub freeCore: unsafe extern "system" fn(core: *mut VSCore),
+    pub getCoreInfo: unsafe extern "system" fn(core: *mut VSCore) -> *const VSCoreInfo,
+    pub cloneFrameRef: unsafe extern "system" fn(f: *const VSFrameRef) -> *const VSFrameRef,
+    pub cloneNodeRef: unsafe extern "system" fn(node: *mut VSNodeRef) -> *mut VSNodeRef,
+    pub cloneFuncRef: unsafe extern "system" fn(f: *mut VSFuncRef) -> *mut VSFuncRef,
+    pub freeFrame: unsafe extern "system" fn(f: *const VSFrameRef),
+    pub freeNode: unsafe extern "system" fn(node: *mut VSNodeRef),
+    pub freeFunc: unsafe extern "system" fn(f: *mut VSFuncRef),
+    pub newVideoFrame: unsafe extern "system" fn(
         format: *const VSFormat,
         width: c_int,
         height: c_int,
         propSrc: *const VSFrameRef,
         core: *mut VSCore,
     ) -> *mut VSFrameRef,
-    pub copyFrame: unsafe extern "C" fn(f: *const VSFrameRef, core: *mut VSCore) -> *mut VSFrameRef,
+    pub copyFrame:
+        unsafe extern "system" fn(f: *const VSFrameRef, core: *mut VSCore) -> *mut VSFrameRef,
     pub copyFrameProps:
-        unsafe extern "C" fn(src: *const VSFrameRef, dst: *mut VSFrameRef, core: *mut VSCore),
-    pub registerFunction: unsafe extern "C" fn(
+        unsafe extern "system" fn(src: *const VSFrameRef, dst: *mut VSFrameRef, core: *mut VSCore),
+    pub registerFunction: unsafe extern "system" fn(
         name: *const c_char,
         args: *const c_char,
         argsFunc: VSPublicFunction,
@@ -285,11 +287,12 @@ pub struct VSAPI {
         plugin: *mut VSPlugin,
     ),
     pub getPluginById:
-        unsafe extern "C" fn(identifier: *const c_char, core: *mut VSCore) -> *mut VSPlugin,
-    pub getPluginByNs: unsafe extern "C" fn(ns: *const c_char, core: *mut VSCore) -> *mut VSPlugin,
-    pub getPlugins: unsafe extern "C" fn(core: *mut VSCore) -> *mut VSMap,
-    pub getFunctions: unsafe extern "C" fn(plugin: *mut VSPlugin) -> *mut VSMap,
-    pub createFilter: unsafe extern "C" fn(
+        unsafe extern "system" fn(identifier: *const c_char, core: *mut VSCore) -> *mut VSPlugin,
+    pub getPluginByNs:
+        unsafe extern "system" fn(ns: *const c_char, core: *mut VSCore) -> *mut VSPlugin,
+    pub getPlugins: unsafe extern "system" fn(core: *mut VSCore) -> *mut VSMap,
+    pub getFunctions: unsafe extern "system" fn(plugin: *mut VSPlugin) -> *mut VSMap,
+    pub createFilter: unsafe extern "system" fn(
         in_: *const VSMap,
         out: *mut VSMap,
         name: *const c_char,
@@ -301,15 +304,15 @@ pub struct VSAPI {
         instanceData: *mut c_void,
         core: *mut VSCore,
     ),
-    pub setError: unsafe extern "C" fn(map: *mut VSMap, errorMessage: *const c_char),
-    pub getError: unsafe extern "C" fn(map: *const VSMap) -> *const c_char,
+    pub setError: unsafe extern "system" fn(map: *mut VSMap, errorMessage: *const c_char),
+    pub getError: unsafe extern "system" fn(map: *const VSMap) -> *const c_char,
     pub setFilterError:
-        unsafe extern "C" fn(errorMessage: *const c_char, frameCtx: *mut VSFrameContext),
+        unsafe extern "system" fn(errorMessage: *const c_char, frameCtx: *mut VSFrameContext),
     pub invoke:
-        unsafe extern "C" fn(plugin: *mut VSPlugin, name: *const c_char, args: *const VSMap)
+        unsafe extern "system" fn(plugin: *mut VSPlugin, name: *const c_char, args: *const VSMap)
             -> *mut VSMap,
-    pub getFormatPreset: unsafe extern "C" fn(id: c_int, core: *mut VSCore) -> *const VSFormat,
-    pub registerFormat: unsafe extern "C" fn(
+    pub getFormatPreset: unsafe extern "system" fn(id: c_int, core: *mut VSCore) -> *const VSFormat,
+    pub registerFormat: unsafe extern "system" fn(
         colorFamily: c_int,
         sampleType: c_int,
         bitsPerSample: c_int,
@@ -317,134 +320,139 @@ pub struct VSAPI {
         subSamplingH: c_int,
         core: *mut VSCore,
     ) -> *const VSFormat,
-    pub getFrame:
-        unsafe extern "C" fn(n: c_int, node: *mut VSNodeRef, errorMsg: *mut c_char, bufSize: c_int)
-            -> *const VSFrameRef,
-    pub getFrameAsync: unsafe extern "C" fn(
+    pub getFrame: unsafe extern "system" fn(
+        n: c_int,
+        node: *mut VSNodeRef,
+        errorMsg: *mut c_char,
+        bufSize: c_int,
+    ) -> *const VSFrameRef,
+    pub getFrameAsync: unsafe extern "system" fn(
         n: c_int,
         node: *mut VSNodeRef,
         callback: VSFrameDoneCallback,
         userData: *mut c_void,
     ),
     pub getFrameFilter:
-        unsafe extern "C" fn(n: c_int, node: *mut VSNodeRef, frameCtx: *mut VSFrameContext)
+        unsafe extern "system" fn(n: c_int, node: *mut VSNodeRef, frameCtx: *mut VSFrameContext)
             -> *const VSFrameRef,
     pub requestFrameFilter:
-        unsafe extern "C" fn(n: c_int, node: *mut VSNodeRef, frameCtx: *mut VSFrameContext),
-    pub queryCompletedFrame: unsafe extern "C" fn(
+        unsafe extern "system" fn(n: c_int, node: *mut VSNodeRef, frameCtx: *mut VSFrameContext),
+    pub queryCompletedFrame: unsafe extern "system" fn(
         node: *mut *mut VSNodeRef,
         n: *mut c_int,
         frameCtx: *mut VSFrameContext,
     ),
     pub releaseFrameEarly:
-        unsafe extern "C" fn(node: *mut VSNodeRef, n: c_int, frameCtx: *mut VSFrameContext),
-    pub getStride: unsafe extern "C" fn(f: *const VSFrameRef, plane: c_int) -> c_int,
-    pub getReadPtr: unsafe extern "C" fn(f: *const VSFrameRef, plane: c_int) -> *const u8,
-    pub getWritePtr: unsafe extern "C" fn(f: *mut VSFrameRef, plane: c_int) -> *mut u8,
-    pub createFunc: unsafe extern "C" fn(
+        unsafe extern "system" fn(node: *mut VSNodeRef, n: c_int, frameCtx: *mut VSFrameContext),
+    pub getStride: unsafe extern "system" fn(f: *const VSFrameRef, plane: c_int) -> c_int,
+    pub getReadPtr: unsafe extern "system" fn(f: *const VSFrameRef, plane: c_int) -> *const u8,
+    pub getWritePtr: unsafe extern "system" fn(f: *mut VSFrameRef, plane: c_int) -> *mut u8,
+    pub createFunc: unsafe extern "system" fn(
         func: VSPublicFunction,
         userData: *mut c_void,
         free: VSFreeFuncData,
         core: *mut VSCore,
         vsapi: *const VSAPI,
     ) -> *mut VSFuncRef,
-    pub callFunc: unsafe extern "C" fn(
+    pub callFunc: unsafe extern "system" fn(
         func: *mut VSFuncRef,
         in_: *const VSMap,
         out: *mut VSMap,
         core: *mut VSCore,
         vsapi: *const VSAPI,
     ),
-    pub createMap: unsafe extern "C" fn() -> *mut VSMap,
-    pub freeMap: unsafe extern "C" fn(map: *mut VSMap),
-    pub clearMap: unsafe extern "C" fn(map: *mut VSMap),
-    pub getVideoInfo: unsafe extern "C" fn(node: *mut VSNodeRef) -> *const VSVideoInfo,
+    pub createMap: unsafe extern "system" fn() -> *mut VSMap,
+    pub freeMap: unsafe extern "system" fn(map: *mut VSMap),
+    pub clearMap: unsafe extern "system" fn(map: *mut VSMap),
+    pub getVideoInfo: unsafe extern "system" fn(node: *mut VSNodeRef) -> *const VSVideoInfo,
     pub setVideoInfo:
-        unsafe extern "C" fn(vi: *const VSVideoInfo, numOutputs: c_int, node: *mut VSNode),
-    pub getFrameFormat: unsafe extern "C" fn(f: *const VSFrameRef) -> *const VSFormat,
-    pub getFrameWidth: unsafe extern "C" fn(f: *const VSFrameRef, plane: c_int) -> c_int,
-    pub getFrameHeight: unsafe extern "C" fn(f: *const VSFrameRef, plane: c_int) -> c_int,
-    pub getFramePropsRO: unsafe extern "C" fn(f: *const VSFrameRef) -> *const VSMap,
-    pub getFramePropsRW: unsafe extern "C" fn(f: *mut VSFrameRef) -> *mut VSMap,
-    pub propNumKeys: unsafe extern "C" fn(map: *const VSMap) -> c_int,
-    pub propGetKey: unsafe extern "C" fn(map: *const VSMap, index: c_int) -> *const c_char,
-    pub propNumElements: unsafe extern "C" fn(map: *const VSMap, key: *const c_char) -> c_int,
-    pub propGetType: unsafe extern "C" fn(map: *const VSMap, key: *const c_char) -> c_char,
-    pub propGetInt: unsafe extern "C" fn(
+        unsafe extern "system" fn(vi: *const VSVideoInfo, numOutputs: c_int, node: *mut VSNode),
+    pub getFrameFormat: unsafe extern "system" fn(f: *const VSFrameRef) -> *const VSFormat,
+    pub getFrameWidth: unsafe extern "system" fn(f: *const VSFrameRef, plane: c_int) -> c_int,
+    pub getFrameHeight: unsafe extern "system" fn(f: *const VSFrameRef, plane: c_int) -> c_int,
+    pub getFramePropsRO: unsafe extern "system" fn(f: *const VSFrameRef) -> *const VSMap,
+    pub getFramePropsRW: unsafe extern "system" fn(f: *mut VSFrameRef) -> *mut VSMap,
+    pub propNumKeys: unsafe extern "system" fn(map: *const VSMap) -> c_int,
+    pub propGetKey: unsafe extern "system" fn(map: *const VSMap, index: c_int) -> *const c_char,
+    pub propNumElements: unsafe extern "system" fn(map: *const VSMap, key: *const c_char) -> c_int,
+    pub propGetType: unsafe extern "system" fn(map: *const VSMap, key: *const c_char) -> c_char,
+    pub propGetInt: unsafe extern "system" fn(
         map: *const VSMap,
         key: *const c_char,
         index: c_int,
         error: *mut c_int,
     ) -> i64,
-    pub propGetFloat: unsafe extern "C" fn(
+    pub propGetFloat: unsafe extern "system" fn(
         map: *const VSMap,
         key: *const c_char,
         index: c_int,
         error: *mut c_int,
     ) -> f64,
-    pub propGetData: unsafe extern "C" fn(
+    pub propGetData: unsafe extern "system" fn(
         map: *const VSMap,
         key: *const c_char,
         index: c_int,
         error: *mut c_int,
     ) -> *const c_char,
-    pub propGetDataSize: unsafe extern "C" fn(
+    pub propGetDataSize: unsafe extern "system" fn(
         map: *const VSMap,
         key: *const c_char,
         index: c_int,
         error: *mut c_int,
     ) -> c_int,
-    pub propGetNode: unsafe extern "C" fn(
+    pub propGetNode: unsafe extern "system" fn(
         map: *const VSMap,
         key: *const c_char,
         index: c_int,
         error: *mut c_int,
     ) -> *mut VSNodeRef,
-    pub propGetFrame: unsafe extern "C" fn(
+    pub propGetFrame: unsafe extern "system" fn(
         map: *const VSMap,
         key: *const c_char,
         index: c_int,
         error: *mut c_int,
     ) -> *const VSFrameRef,
-    pub propGetFunc: unsafe extern "C" fn(
+    pub propGetFunc: unsafe extern "system" fn(
         map: *const VSMap,
         key: *const c_char,
         index: c_int,
         error: *mut c_int,
     ) -> *mut VSFuncRef,
-    pub propDeleteKey: unsafe extern "C" fn(map: *mut VSMap, key: *const c_char) -> c_int,
+    pub propDeleteKey: unsafe extern "system" fn(map: *mut VSMap, key: *const c_char) -> c_int,
     pub propSetInt:
-        unsafe extern "C" fn(map: *mut VSMap, key: *const c_char, i: i64, append: c_int) -> c_int,
+        unsafe extern "system" fn(map: *mut VSMap, key: *const c_char, i: i64, append: c_int)
+            -> c_int,
     pub propSetFloat:
-        unsafe extern "C" fn(map: *mut VSMap, key: *const c_char, d: f64, append: c_int) -> c_int,
-    pub propSetData: unsafe extern "C" fn(
+        unsafe extern "system" fn(map: *mut VSMap, key: *const c_char, d: f64, append: c_int)
+            -> c_int,
+    pub propSetData: unsafe extern "system" fn(
         map: *mut VSMap,
         key: *const c_char,
         data: *const c_char,
         size: c_int,
         append: c_int,
     ) -> c_int,
-    pub propSetNode: unsafe extern "C" fn(
+    pub propSetNode: unsafe extern "system" fn(
         map: *mut VSMap,
         key: *const c_char,
         node: *mut VSNodeRef,
         append: c_int,
     ) -> c_int,
-    pub propSetFrame: unsafe extern "C" fn(
+    pub propSetFrame: unsafe extern "system" fn(
         map: *mut VSMap,
         key: *const c_char,
         f: *const VSFrameRef,
         append: c_int,
     ) -> c_int,
-    pub propSetFunc: unsafe extern "C" fn(
+    pub propSetFunc: unsafe extern "system" fn(
         map: *mut VSMap,
         key: *const c_char,
         func: *mut VSFuncRef,
         append: c_int,
     ) -> c_int,
-    pub setMaxCacheSize: unsafe extern "C" fn(bytes: i64, core: *mut VSCore) -> i64,
-    pub getOutputIndex: unsafe extern "C" fn(frameCtx: *mut VSFrameContext) -> c_int,
-    pub newVideoFrame2: unsafe extern "C" fn(
+    pub setMaxCacheSize: unsafe extern "system" fn(bytes: i64, core: *mut VSCore) -> i64,
+    pub getOutputIndex: unsafe extern "system" fn(frameCtx: *mut VSFrameContext) -> c_int,
+    pub newVideoFrame2: unsafe extern "system" fn(
         format: *const VSFormat,
         width: c_int,
         height: c_int,
@@ -453,32 +461,33 @@ pub struct VSAPI {
         propSrc: *const VSFrameRef,
         core: *mut VSCore,
     ) -> *mut VSFrameRef,
-    pub setMessageHandler: unsafe extern "C" fn(handler: VSMessageHandler, userData: *mut c_void),
-    pub setThreadCount: unsafe extern "C" fn(threads: c_int, core: *mut VSCore) -> c_int,
-    pub getPluginPath: unsafe extern "C" fn(plugin: *const VSPlugin) -> *const c_char,
+    pub setMessageHandler:
+        unsafe extern "system" fn(handler: VSMessageHandler, userData: *mut c_void),
+    pub setThreadCount: unsafe extern "system" fn(threads: c_int, core: *mut VSCore) -> c_int,
+    pub getPluginPath: unsafe extern "system" fn(plugin: *const VSPlugin) -> *const c_char,
 
     #[cfg(feature = "gte-vapoursynth-api-31")]
     pub propGetIntArray:
-        unsafe extern "C" fn(map: *const VSMap, key: *const c_char, error: *mut c_int)
+        unsafe extern "system" fn(map: *const VSMap, key: *const c_char, error: *mut c_int)
             -> *const i64,
     #[cfg(feature = "gte-vapoursynth-api-31")]
     pub propGetFloatArray:
-        unsafe extern "C" fn(map: *const VSMap, key: *const c_char, error: *mut c_int)
+        unsafe extern "system" fn(map: *const VSMap, key: *const c_char, error: *mut c_int)
             -> *const f64,
     #[cfg(feature = "gte-vapoursynth-api-31")]
     pub propSetIntArray:
-        unsafe extern "C" fn(map: *mut VSMap, key: *const c_char, i: *const i64, size: c_int)
+        unsafe extern "system" fn(map: *mut VSMap, key: *const c_char, i: *const i64, size: c_int)
             -> c_int,
     #[cfg(feature = "gte-vapoursynth-api-31")]
     pub propSetFloatArray:
-        unsafe extern "C" fn(map: *mut VSMap, key: *const c_char, d: *const f64, size: c_int)
+        unsafe extern "system" fn(map: *mut VSMap, key: *const c_char, d: *const f64, size: c_int)
             -> c_int,
     #[cfg(feature = "gte-vapoursynth-api-34")]
-    pub logMessage: unsafe extern "C" fn(msgType: c_int, msg: *const c_char),
+    pub logMessage: unsafe extern "system" fn(msgType: c_int, msg: *const c_char),
 }
 
 #[cfg(feature = "vapoursynth-functions")]
-extern "C" {
+extern "system" {
     pub fn getVapourSynthAPI(version: c_int) -> *const VSAPI;
 }
 
@@ -494,7 +503,7 @@ pub enum VSEvalFlags {
 }
 
 #[cfg(feature = "vsscript-functions")]
-extern "C" {
+extern "system" {
     #[cfg(feature = "gte-vsscript-api-31")]
     pub fn vsscript_getApiVersion() -> c_int;
     pub fn vsscript_init() -> c_int;

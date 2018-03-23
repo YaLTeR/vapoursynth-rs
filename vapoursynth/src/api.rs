@@ -164,7 +164,7 @@ impl API {
             callback: Box<FnMut(MessageType, &CStr) + Send + 'static>,
         }
 
-        unsafe extern "C" fn c_callback(
+        unsafe extern "system" fn c_callback(
             msg_type: c_int,
             msg: *const c_char,
             user_data: *mut c_void,
@@ -212,7 +212,7 @@ impl API {
     /// This version does not allocate at the cost of accepting a function pointer rather than an
     /// arbitrary closure. It can, however, be used with simple closures.
     pub fn set_message_handler_trivial(self, callback: fn(MessageType, &CStr)) {
-        unsafe extern "C" fn c_callback(
+        unsafe extern "system" fn c_callback(
             msg_type: c_int,
             msg: *const c_char,
             user_data: *mut c_void,
