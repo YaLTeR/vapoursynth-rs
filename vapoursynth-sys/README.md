@@ -28,6 +28,8 @@ To enable linking to VapourSynth or VSScript functions (currently required to do
 
 Make sure you have the corresponding libraries available if you enable the linking features. You can use the `VAPOURSYNTH_LIB_DIR` environment variable to specify a custom directory with the library files.
 
+On Windows the easiest way is to use the VapourSynth installer (make sure the VapourSynth SDK is checked). The crate should pick up the library directory automatically.
+
 ## License
 
 Licensed under either of
