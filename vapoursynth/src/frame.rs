@@ -132,11 +132,10 @@ impl Frame {
 
     /// Returns a slice of a plane's pixel row.
     ///
-    /// The length of the returned slice is equal to `width()`.
+    /// The length of the returned slice is equal to `width() * format().bytes_per_sample()`.
     ///
     /// # Panics
-    /// Panics if `plane >= format().plane_count()`, if `row >= height()` or if the computed row
-    /// offset overflows an `isize`.
+    /// Panics if `plane >= format().plane_count()` or if `row >= height()`.
     pub fn data_row(&self, plane: usize, row: usize) -> &[u8] {
         assert!(plane < self.format().plane_count());
         assert!(row < self.height(plane));
@@ -144,36 +143,35 @@ impl Frame {
         let stride = self.stride(plane);
         let ptr = self.data_ptr(plane);
 
-        let offset = stride.checked_mul(plane).unwrap();
+        let offset = stride * plane;
         assert!(offset <= isize::max_value() as usize);
         let offset = offset as isize;
 
         let row_ptr = unsafe { ptr.offset(offset) };
-        let width = self.width(plane);
+        let width = self.width(plane) * usize::from(self.format().bytes_per_sample());
 
         unsafe { slice::from_raw_parts(row_ptr, width) }
     }
 
     /// Returns a slice of the plane's pixels.
     ///
-    /// The length of the returned slice is `height() * width()`. If the pixel data has non-zero
-    /// padding (that is, `stride()` is larger than `width()`), and error is returned, since
-    /// returning the data slice would open access to uninitialized bytes.
+    /// The length of the returned slice is `height() * width() * format().bytes_per_sample()`. If
+    /// the pixel data has non-zero padding (that is, `stride()` is larger than `width()`), and
+    /// error is returned, since returning the data slice would open access to uninitialized bytes.
     ///
     /// # Panics
-    /// Panics if `plane >= format().plane_count()` or if the computed plane size doesn't fit in a
-    /// `usize`.
+    /// Panics if `plane >= format().plane_count()` or if `row >= height()`.
     pub fn data(&self, plane: usize) -> Result<&[u8], NonZeroPadding> {
         assert!(plane < self.format().plane_count());
 
         let stride = self.stride(plane);
-        let width = self.width(plane);
+        let width = self.width(plane) * usize::from(self.format().bytes_per_sample());
         if stride != width {
             return Err(NonZeroPadding(stride - width));
         }
 
         let height = self.height(plane);
-        let length = height.checked_mul(stride).unwrap();
+        let length = height * stride;
         let ptr = self.data_ptr(plane);
 
         Ok(unsafe { slice::from_raw_parts(ptr, length) })

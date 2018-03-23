@@ -5,6 +5,9 @@ use super::*;
 #[cfg(all(feature = "vsscript-functions",
           any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
 mod need_api_and_vsscript {
+    use std::fmt::Debug;
+    use std::mem;
+    use std::slice;
     use std::sync::mpsc::channel;
 
     use super::*;
@@ -260,6 +263,69 @@ mod need_api_and_vsscript {
             let data_row = frame.data_row(0, row);
             assert_eq!(&data_row[..], &[128; 1920][..]);
         }
+    }
+
+    unsafe fn transmute_slice<T: Sized, U: Sized>(x: &[T]) -> &[U] {
+        slice::from_raw_parts(
+            x.as_ptr() as *const U,
+            x.len() / (mem::size_of::<U>() / mem::size_of::<T>()),
+        )
+    }
+
+    fn verify_pixel_format<T: Debug + PartialEq + Copy>(
+        env: &Environment,
+        index: i32,
+        bits_per_sample: u8,
+        color: [T; 3],
+    ) {
+        #[cfg(feature = "gte-vsscript-api-31")]
+        let node = env.get_output(index).unwrap().0;
+        #[cfg(not(feature = "gte-vsscript-api-31"))]
+        let node = env.get_output(index).unwrap();
+
+        let frame = node.get_frame(0).unwrap();
+        let format = frame.format();
+
+        assert_eq!(format.bits_per_sample(), bits_per_sample);
+        let bytes_per_sample = ((bits_per_sample + 7) / 8).next_power_of_two();
+        assert_eq!(format.bytes_per_sample(), bytes_per_sample);
+
+        for plane_num in 0..3 {
+            // Compare the entire row at once for speed.
+            let row_gt = vec![color[plane_num]; frame.width(plane_num)];
+
+            for y in 0..frame.height(plane_num) {
+                let row = frame.data_row(plane_num, y);
+                assert_eq!(
+                    row.len(),
+                    frame.width(plane_num) * usize::from(bytes_per_sample)
+                );
+
+                assert_eq!(&row_gt[..], unsafe { transmute_slice(row) });
+            }
+
+            if let Ok(data) = frame.data(plane_num) {
+                assert_eq!(
+                    data.len(),
+                    frame.height(plane_num) * frame.width(plane_num)
+                        * usize::from(bytes_per_sample)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn pixel_formats() {
+        let env = vsscript::Environment::from_file(
+            "test-vpy/pixel-formats.vpy",
+            vsscript::EvalFlags::Nothing,
+        ).unwrap();
+
+        verify_pixel_format(&env, 0, 10, [789u16, 123u16, 456u16]);
+        verify_pixel_format(&env, 1, 32, [5f32, 42f32, 0.25f32]);
+        verify_pixel_format(&env, 2, 32, [0.125f32, 10f32, 0.5f32]);
+        verify_pixel_format(&env, 3, 17, [77777u32, 88888u32, 99999u32]);
+        verify_pixel_format(&env, 4, 32, [u32::max_value(), 12345u32, 65432u32]);
     }
 
     #[test]
