@@ -70,7 +70,7 @@
 //! (make sure the VapourSynth SDK is checked) and set `VAPOURSYNTH_LIB_DIR` to
 //! `C:\Program Files (x86)\VapourSynth\sdk\lib64`.
 
-#![doc(html_root_url = "https://docs.rs/vapoursynth/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/vapoursynth/0.1.1")]
 // Preventing all those warnings with #[cfg] directives would be really diffucult.
 #![allow(unused, dead_code)]
 
