@@ -2,7 +2,7 @@
 - Added support for targetting 32-bit Windows
 - Added automatic detection of common Windows VapourSynth library dirs
 
-## v0.1.4 (11th Mar 2018)
+### v0.1.4 (11th Mar 2018)
 - Added an AppVeyor badge
 - Added a link to vapoursynth-rs in the README
 
@@ -16,5 +16,5 @@
 ### v0.1.1 (2nd Feb 2018)
 - Added new bindings from VSScript API 3.2
 
-### v0.1.0
+## v0.1.0
 - Initial release
