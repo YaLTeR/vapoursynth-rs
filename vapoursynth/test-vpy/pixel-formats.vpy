@@ -2,8 +2,8 @@ import vapoursynth as vs
 from vapoursynth import core
 
 def make_clip(format, color):
-    return core.std.BlankClip(width = 1920,
-                              height = 1080,
+    return core.std.BlankClip(width = 320,
+                              height = 240,
                               format = format,
                               length = 100,
                               fpsnum = 60,
