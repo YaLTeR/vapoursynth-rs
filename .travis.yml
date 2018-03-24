@@ -50,6 +50,13 @@ script:
   # Test with all possible combinations of all features.
   - cd vapoursynth; python3 ../.travis/run-tests.py
 
+after_success:
+  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$TARGET_ARCH" = "x86_64" ]; then
+      export DEPLOY=1;
+    else
+      export DEPLOY=0;
+    fi
+
 deploy:
   provider: pages
   skip_cleanup: true
@@ -60,5 +67,4 @@ deploy:
   on:
     branch: master
     rust: stable
-    condition: $TRAVIS_OS_NAME = linux
-    condition: $TARGET_ARCH = x86_64
+    condition: "$DEPLOY = 1"
