@@ -1,37 +1,54 @@
 sudo: required
 language: rust
+
 os:
   - linux
   - osx
+
 rust:
-- stable
-- beta
-- nightly
-matrix:
-  allow_failures:
-  - rust: nightly
+  - stable
+  - beta
+  - nightly
+
 env:
   global:
-  - RUST_BACKTRACE=1
+    - RUST_BACKTRACE=1
+  matrix:
+    - TARGET_ARCH=x86_64
+    - TARGET_ARCH=i686
+
+matrix:
+  exclude:
+    - os: osx
+      env: TARGET_ARCH=i686
+  allow_failures:
+    - rust: nightly
+
 cache: cargo
 
 before_install:
-- bash .travis/install-vapoursynth.sh
+  - sh .travis/install-vapoursynth.sh
+
+install:
+  - if [ "$TARGET_ARCH" = "i686" ]; then
+      rustup target add i686-unknown-linux-gnu;
+      export CARGO_BUILD_TARGET=i686-unknown-linux-gnu;
+    fi
 
 script:
   # Build and test with no features.
-- cargo build --verbose
-- cargo test --verbose
+  - cargo build --verbose
+  - cargo test --verbose
 
   # Build with all features.
-- cargo build --verbose --all-features
+  - cargo build --verbose --all-features
 
   # Doc with all features.
-- cargo doc --verbose --all-features
-- cp .travis/index.html target/doc/
+  - cargo doc --verbose --all-features
+  - cp .travis/index.html target/doc/
 
   # Test with all possible combinations of all features.
-- cd vapoursynth; python3 ../.travis/run-tests.py
+  - cd vapoursynth; python3 ../.travis/run-tests.py
 
 deploy:
   provider: pages
@@ -44,3 +61,4 @@ deploy:
     branch: master
     rust: stable
     condition: $TRAVIS_OS_NAME = linux
+    condition: $TARGET_ARCH = x86_64
