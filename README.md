@@ -6,6 +6,7 @@
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/kwyhlamoqje8tsqc?svg=true)](https://ci.appveyor.com/project/YaLTeR/vapoursynth-rs)
 
 [ChangeLog](https://github.com/YaLTeR/vapoursynth-rs/blob/master/vapoursynth/CHANGELOG.md)
+
 [Documentation for the master branch with all features enabled](https://yalter.github.io/vapoursynth-rs)
 
 A safe wrapper for [VapourSynth](https://github.com/vapoursynth/vapoursynth), written in Rust.
