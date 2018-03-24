@@ -3,6 +3,8 @@
 [![crates.io](https://img.shields.io/crates/v/vapoursynth-sys.svg)](https://crates.io/crates/vapoursynth-sys)
 [![Documentation](https://docs.rs/vapoursynth-sys/badge.svg)](https://docs.rs/vapoursynth-sys)
 
+[ChangeLog](https://github.com/YaLTeR/vapoursynth-rs/blob/master/vapoursynth-sys/CHANGELOG.md)
+
 Raw bindings to [VapourSynth](https://github.com/vapoursynth/vapoursynth).
 
 Check out [vapoursynth-rs](https://crates.io/crates/vapoursynth) for a safe Rust wrapper.
