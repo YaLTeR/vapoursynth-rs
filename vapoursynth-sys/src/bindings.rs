@@ -211,37 +211,53 @@ pub enum VSMessageType {
     mtCritical = 2,
     mtFatal = 3,
 }
-pub type VSPublicFunction = Option<
+pub type VSPublicFunction = unsafe extern "system" fn(
+    in_: *const VSMap,
+    out: *mut VSMap,
+    userData: *mut c_void,
+    core: *mut VSCore,
+    vsapi: *const VSAPI,
+);
+pub type VSRegisterFunction = unsafe extern "system" fn(
+    name: *const c_char,
+    args: *const c_char,
+    argsFunc: VSPublicFunction,
+    functionData: *mut c_void,
+    plugin: *mut VSPlugin,
+);
+pub type VSConfigPlugin = unsafe extern "system" fn(
+    identifier: *const c_char,
+    defaultNamespace: *const c_char,
+    name: *const c_char,
+    apiVersion: c_int,
+    readonly: c_int,
+    plugin: *mut VSPlugin,
+);
+pub type VSInitPlugin = Option<
     unsafe extern "system" fn(
-        in_: *const VSMap,
-        out: *mut VSMap,
-        userData: *mut c_void,
-        core: *mut VSCore,
-        vsapi: *const VSAPI,
+        configFunc: VSConfigPlugin,
+        registerFunc: VSRegisterFunction,
+        plugin: *mut VSPlugin,
     ),
 >;
 pub type VSFreeFuncData = Option<unsafe extern "system" fn(userData: *mut c_void)>;
-pub type VSFilterInit = Option<
-    unsafe extern "system" fn(
-        in_: *mut VSMap,
-        out: *mut VSMap,
-        instanceData: *mut *mut c_void,
-        node: *mut VSNode,
-        core: *mut VSCore,
-        vsapi: *const VSAPI,
-    ),
->;
-pub type VSFilterGetFrame = Option<
-    unsafe extern "system" fn(
-        n: c_int,
-        activationReason: c_int,
-        instanceData: *mut *mut c_void,
-        frameData: *mut *mut c_void,
-        frameCtx: *mut VSFrameContext,
-        core: *mut VSCore,
-        vsapi: *const VSAPI,
-    ) -> *const VSFrameRef,
->;
+pub type VSFilterInit = unsafe extern "system" fn(
+    in_: *mut VSMap,
+    out: *mut VSMap,
+    instanceData: *mut *mut c_void,
+    node: *mut VSNode,
+    core: *mut VSCore,
+    vsapi: *const VSAPI,
+);
+pub type VSFilterGetFrame = unsafe extern "system" fn(
+    n: c_int,
+    activationReason: c_int,
+    instanceData: *mut *mut c_void,
+    frameData: *mut *mut c_void,
+    frameCtx: *mut VSFrameContext,
+    core: *mut VSCore,
+    vsapi: *const VSAPI,
+) -> *const VSFrameRef;
 pub type VSFilterFree = Option<
     unsafe extern "system" fn(instanceData: *mut c_void, core: *mut VSCore, vsapi: *const VSAPI),
 >;

@@ -13,6 +13,7 @@ bindgen --whitelist-function 'getVapourSynthAPI' \
         --whitelist-type 'VSActivationReason' \
         --whitelist-type 'VSMessageType' \
         --whitelist-type 'VSEvalFlags' \
+        --whitelist-type 'VSInitPlugin' \
         --blacklist-type '__int64_t' \
         --blacklist-type '__uint8_t' \
         --bitfield-enum 'VSNodeFlags' \
