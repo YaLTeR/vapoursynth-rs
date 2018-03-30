@@ -158,6 +158,26 @@ fn handle_append_prop_error(error: i32) -> Result<()> {
 }
 
 impl Map {
+    /// Converts a pointer to a map to a reference.
+    ///
+    /// # Safety
+    /// The caller needs to ensure the pointer is valid, the lifetime is valid and there are no
+    /// active mutable references to the map during the lifetime.
+    pub(crate) unsafe fn from_ptr<'a>(handle: *const ffi::VSMap) -> &'a Map {
+        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
+        unsafe { mem::transmute(handle) }
+    }
+
+    /// Converts a mutable pointer to a map to a reference.
+    ///
+    /// # Safety
+    /// The caller needs to ensure the pointer is valid, the lifetime is valid and there are no
+    /// active references to the map during the lifetime.
+    pub(crate) unsafe fn from_mut_ptr<'a>(handle: *mut ffi::VSMap) -> &'a mut Map {
+        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
+        unsafe { mem::transmute(handle) }
+    }
+
     /// Checks if the key is valid. Valid keys start with an alphabetic character or an underscore,
     /// and contain only alphanumeric characters and underscores.
     pub fn is_key_valid(key: &str) -> result::Result<(), InvalidKeyError> {
