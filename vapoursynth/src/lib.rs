@@ -94,6 +94,7 @@ pub mod frame;
 pub mod function;
 pub mod map;
 pub mod node;
+pub mod plugins;
 pub mod video_info;
 
 pub mod prelude {

@@ -9,6 +9,7 @@ use vapoursynth_sys as ffi;
 
 use api::API;
 use frame::Frame;
+use plugins::FrameContext;
 use video_info::VideoInfo;
 
 mod errors;
@@ -208,5 +209,48 @@ impl Node {
 
         // It'll be dropped by the callback.
         mem::forget(new_node);
+    }
+
+    /// Requests a frame from a node and returns immediately.
+    ///
+    /// This is only used in filters' "get frame" functions.
+    ///
+    /// A filter usually calls this function from `get_frame_initial()`. The requested frame can
+    /// then be retrieved using `get_frame_filter()` from within filter's `get_frame()` function.
+    ///
+    /// It is safe to request a frame more than once. An unimportant consequence of requesting a
+    /// frame more than once is that the filter's `get_frame()` function may be called more than
+    /// once for the same frame.
+    ///
+    /// It is best to request frames in ascending order, i.e. `n`, `n+1`, `n+2`, etc.
+    ///
+    /// # Panics
+    /// Panics is `n` is greater than `i32::max_value()`.
+    pub fn request_frame_filter(&self, context: FrameContext, n: usize) {
+        assert!(n <= i32::max_value() as usize);
+        let n = n as i32;
+
+        unsafe {
+            API::get_cached().request_frame_filter(n, self.ptr(), context.ptr());
+        }
+    }
+
+    /// Retrieves a frame that was previously requested with `request_frame_filter()`.
+    ///
+    /// A filter usually calls this function from `get_frame()`. It is safe to retrieve a frame
+    /// more than once.
+    ///
+    /// # Panics
+    /// Panics is `n` is greater than `i32::max_value()`.
+    pub fn get_frame_filter(&self, context: FrameContext, n: usize) -> Option<Frame> {
+        assert!(n <= i32::max_value() as usize);
+        let n = n as i32;
+
+        let ptr = unsafe { API::get_cached().get_frame_filter(n, self.ptr(), context.ptr()) };
+        if ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { Frame::from_ptr(ptr) })
+        }
     }
 }
