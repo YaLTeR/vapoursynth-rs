@@ -1,0 +1,11 @@
+[package]
+name = "sample-filter"
+version = "0.1.0"
+authors = ["Ivan Molodetskikh <yalterz@gmail.com>"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+failure = "0.1"
+vapoursynth = { path = "../vapoursynth" }

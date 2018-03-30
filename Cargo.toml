@@ -2,4 +2,5 @@
 members = [
     "vapoursynth",
     "vapoursynth-sys",
+    "sample-filter",
 ]
