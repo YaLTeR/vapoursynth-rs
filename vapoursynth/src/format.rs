@@ -102,6 +102,12 @@ impl<'a> Format<'a> {
         }
     }
 
+    /// Returns the underlying pointer.
+    #[inline]
+    pub(crate) fn ptr(&self) -> *const ffi::VSFormat {
+        self.handle
+    }
+
     /// Gets the unique identifier of this format.
     #[inline]
     pub fn id(self) -> FormatID {

@@ -54,6 +54,12 @@ impl<'a> CoreRef<'a> {
         }
     }
 
+    /// Returns the underlying pointer.
+    #[inline]
+    pub(crate) fn ptr(&self) -> *mut ffi::VSCore {
+        self.handle
+    }
+
     /// Returns information about the VapourSynth core.
     pub fn info(self) -> Info {
         let raw_info = unsafe {

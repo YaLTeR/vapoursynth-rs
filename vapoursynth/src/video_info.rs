@@ -1,6 +1,7 @@
 //! Video clip formats.
 
 use std::fmt::Debug;
+use std::ptr;
 use vapoursynth_sys as ffi;
 
 use format::Format;
@@ -124,6 +125,49 @@ impl<'a> VideoInfo<'a> {
             resolution,
             num_frames,
             flags: ffi::VSNodeFlags(info.flags).into(),
+        }
+    }
+
+    /// Converts the Rust struct into a C struct.
+    #[inline]
+    pub(crate) fn ffi_type(self) -> ffi::VSVideoInfo {
+        let format = match self.format {
+            Property::Variable => ptr::null(),
+            Property::Constant(x) => x.ptr(),
+        };
+
+        let (fps_num, fps_den) = match self.framerate {
+            Property::Variable => (0, 0),
+            Property::Constant(Framerate {
+                numerator,
+                denominator,
+            }) => (numerator as i64, denominator as i64),
+        };
+
+        let (width, height) = match self.resolution {
+            Property::Variable => (0, 0),
+            Property::Constant(Resolution { width, height }) => (width as i32, height as i32),
+        };
+
+        #[cfg(feature = "gte-vapoursynth-api-32")]
+        let num_frames = self.num_frames as i32;
+
+        #[cfg(not(feature = "gte-vapoursynth-api-32"))]
+        let num_frames = match self.num_frames {
+            Property::Variable => 0,
+            Property::Constant(x) => x as i32,
+        };
+
+        let flags = self.flags.bits();
+
+        ffi::VSVideoInfo {
+            format,
+            fpsNum: fps_num,
+            fpsDen: fps_den,
+            width,
+            height,
+            numFrames: num_frames,
+            flags,
         }
     }
 }

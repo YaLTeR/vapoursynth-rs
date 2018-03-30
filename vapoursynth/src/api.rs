@@ -137,6 +137,15 @@ impl API {
         }
     }
 
+    /// Stores the API in the cache.
+    ///
+    /// # Safety
+    /// The given pointer should be valid.
+    #[inline]
+    pub(crate) unsafe fn set(handle: *const ffi::VSAPI) {
+        RAW_API.store(handle as *mut _, Ordering::Relaxed);
+    }
+
     /// Sends a message through VapourSynth’s logging framework.
     #[cfg(feature = "gte-vapoursynth-api-34")]
     #[inline]
@@ -676,6 +685,104 @@ impl API {
             sub_sampling_h,
             core,
         )
+    }
+
+    /// Creates a new filter node.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn create_filter(
+        self,
+        in_: *const ffi::VSMap,
+        out: *mut ffi::VSMap,
+        name: *const c_char,
+        init: ffi::VSFilterInit,
+        get_frame: ffi::VSFilterGetFrame,
+        free: ffi::VSFilterFree,
+        filter_mode: ffi::VSFilterMode,
+        flags: ffi::VSNodeFlags,
+        instance_data: *mut c_void,
+        core: *mut ffi::VSCore,
+    ) {
+        ((*self.handle).createFilter)(
+            in_,
+            out,
+            name,
+            init,
+            get_frame,
+            free,
+            filter_mode as _,
+            flags.0,
+            instance_data,
+            core,
+        );
+    }
+
+    /// Sets node's video info.
+    ///
+    /// # Safety
+    /// The caller must ensure `node` is valid.
+    ///
+    /// # Panics
+    /// Panics if `vi.len()` can't fit in an `i32`.
+    #[inline]
+    pub(crate) unsafe fn set_video_info(self, vi: &[ffi::VSVideoInfo], node: *mut ffi::VSNode) {
+        let length = vi.len();
+        assert!(length <= i32::max_value() as usize);
+        let length = length as i32;
+
+        ((*self.handle).setVideoInfo)(vi.as_ptr(), length, node);
+    }
+
+    /// Adds an error message to a frame context, replacing the existing message, if any.
+    ///
+    /// This is the way to report errors in a filter's "get frame" function. Such errors are not
+    /// necessarily fatal, i.e. the caller can try to request the same frame again.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn set_filter_error(
+        self,
+        message: *const c_char,
+        frame_ctx: *mut ffi::VSFrameContext,
+    ) {
+        ((*self.handle).setFilterError)(message, frame_ctx);
+    }
+
+    /// Requests a frame from a node and returns immediately.
+    ///
+    /// This is only used in filters' "get frame" functions.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid and this is called from a filter "get frame"
+    /// function.
+    #[inline]
+    pub(crate) unsafe fn request_frame_filter(
+        self,
+        n: i32,
+        node: *mut ffi::VSNodeRef,
+        frame_ctx: *mut ffi::VSFrameContext,
+    ) {
+        ((*self.handle).requestFrameFilter)(n, node, frame_ctx);
+    }
+
+    /// Retrieves a frame that was previously requested with `request_frame_filter()`.
+    ///
+    /// This is only used in filters' "get frame" functions.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid and this is called from a filter "get frame"
+    /// function.
+    #[inline]
+    pub(crate) unsafe fn get_frame_filter(
+        self,
+        n: i32,
+        node: *mut ffi::VSNodeRef,
+        frame_ctx: *mut ffi::VSFrameContext,
+    ) -> *const ffi::VSFrameRef {
+        ((*self.handle).getFrameFilter)(n, node, frame_ctx)
     }
 }
 
