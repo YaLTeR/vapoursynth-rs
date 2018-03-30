@@ -130,6 +130,7 @@ impl API {
     ///
     /// # Safety
     /// This function assumes the cache contains a valid API pointer.
+    #[inline]
     pub(crate) unsafe fn get_cached() -> Self {
         Self {
             handle: RAW_API.load(Ordering::Relaxed),
@@ -138,6 +139,7 @@ impl API {
 
     /// Sends a message through VapourSynth’s logging framework.
     #[cfg(feature = "gte-vapoursynth-api-34")]
+    #[inline]
     pub fn log(self, message_type: MessageType, message: &str) -> Result<(), NulError> {
         let message = CString::new(message)?;
         unsafe {
@@ -156,6 +158,7 @@ impl API {
     ///
     /// This function allocates to store the callback, this memory is leaked if the message handler
     /// is subsequently changed.
+    #[inline]
     pub fn set_message_handler<F>(self, callback: F)
     where
         F: FnMut(MessageType, &CStr) + Send + 'static,
@@ -211,6 +214,7 @@ impl API {
     ///
     /// This version does not allocate at the cost of accepting a function pointer rather than an
     /// arbitrary closure. It can, however, be used with simple closures.
+    #[inline]
     pub fn set_message_handler_trivial(self, callback: fn(MessageType, &CStr)) {
         unsafe extern "system" fn c_callback(
             msg_type: c_int,
