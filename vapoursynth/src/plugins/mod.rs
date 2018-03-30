@@ -132,6 +132,7 @@ fn push_backtrace(buf: &mut String, err: &Error) {
     buf.push_str(&format!("{}", err.backtrace()));
 }
 
+/// Sets the video info of the output node of this filter.
 unsafe extern "system" fn init<F: Filter>(
     _in_: *mut ffi::VSMap,
     out: *mut ffi::VSMap,
@@ -170,6 +171,7 @@ unsafe extern "system" fn init<F: Filter>(
     }
 }
 
+/// Drops the filter.
 unsafe extern "system" fn free<F: Filter>(
     instance_data: *mut c_void,
     core: *mut ffi::VSCore,
@@ -185,6 +187,7 @@ unsafe extern "system" fn free<F: Filter>(
     }
 }
 
+/// Calls `Filter::get_frame_initial()` and `Filter::get_frame()`.
 unsafe extern "system" fn get_frame<F: Filter>(
     n: i32,
     activation_reason: i32,
@@ -258,6 +261,7 @@ unsafe extern "system" fn get_frame<F: Filter>(
     }
 }
 
+/// Creates a new instance of the filter.
 unsafe extern "system" fn create<F: Filter>(
     in_: *const ffi::VSMap,
     out: *mut ffi::VSMap,
