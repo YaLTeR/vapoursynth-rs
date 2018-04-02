@@ -813,6 +813,24 @@ impl API {
     ) -> *mut ffi::VSFrameRef {
         ((*self.handle).copyFrame)(f, core)
     }
+
+    /// Creates a new frame, optionally copying the properties attached to another frame. The new
+    /// frame contains uninitialised memory.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid and that the uninitialized plane data of the
+    /// returned frame is handled carefully.
+    #[inline]
+    pub(crate) unsafe fn new_video_frame(
+        self,
+        format: *const ffi::VSFormat,
+        width: i32,
+        height: i32,
+        prop_src: *const ffi::VSFrameRef,
+        core: *mut ffi::VSCore,
+    ) -> *mut ffi::VSFrameRef {
+        ((*self.handle).newVideoFrame)(format, width, height, prop_src, core)
+    }
 }
 
 impl MessageType {

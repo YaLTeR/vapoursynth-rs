@@ -1,6 +1,6 @@
 //! VapourSynth frames.
 
-use std::{mem, slice};
+use std::{mem, ptr, slice};
 use std::ops::{Deref, DerefMut};
 use vapoursynth_sys as ffi;
 
@@ -151,6 +151,39 @@ impl FrameRefMut {
     pub fn copy_of(core: CoreRef, frame: &Frame) -> Self {
         Self {
             handle: unsafe { API::get_cached().copy_frame(frame, core.ptr()) },
+        }
+    }
+
+    /// Creates a new frame with uninitialized plane data.
+    ///
+    /// Optionally copies the frame properties from the provided `prop_src` frame.
+    ///
+    /// # Safety
+    /// The returned frame contains uninitialized plane data. This should be handled carefully. See
+    /// the docs for `std::mem::uninitialized()` for more information.
+    ///
+    /// # Panics
+    /// Panics if the given resolution has components that don't fit into an `i32`.
+    #[inline]
+    pub unsafe fn new_uninitialized(
+        core: CoreRef,
+        prop_src: Option<&Frame>,
+        format: Format,
+        resolution: Resolution,
+    ) -> Self {
+        assert!(resolution.width <= i32::max_value() as usize);
+        assert!(resolution.height <= i32::max_value() as usize);
+
+        Self {
+            handle: unsafe {
+                API::get_cached().new_video_frame(
+                    format.ptr(),
+                    resolution.width as i32,
+                    resolution.height as i32,
+                    prop_src.map(Frame::ptr).unwrap_or(ptr::null()),
+                    core.ptr(),
+                )
+            },
         }
     }
 }
