@@ -89,35 +89,38 @@ pub trait Filter: Sized + Send + Sync {
     /// Returns the parameters of this filter's output node.
     ///
     /// The returned vector should contain one entry for each node output index.
-    fn video_info(&self, api: API, core: CoreRef) -> Vec<VideoInfo>;
+    fn video_info<'a>(&'a self, api: API, core: CoreRef<'a>) -> Vec<VideoInfo>;
 
     /// Requests the necessary frames from downstream nodes.
     ///
     /// This is always the first function to get called for a given frame `n`.
     ///
-    /// In this function you should call `request_frame_filter()` on any input nodes that you need.
+    /// In this function you should call `request_frame_filter()` on any input nodes that you need
+    /// and return `None`. If you do not need any input frames, you should generate the output
+    /// frame and return it here.
     ///
     /// Do not call `Node::get_frame()` from within this function.
-    fn get_frame_initial(
-        &self,
+    fn get_frame_initial<'a>(
+        &'a self,
         api: API,
-        core: CoreRef,
+        core: CoreRef<'a>,
         context: FrameContext,
         n: usize,
-    ) -> Result<(), Error>;
+    ) -> Result<Option<FrameRef>, Error>;
 
     /// Returns the requested frame.
     ///
-    /// This is always the second function to get called for a given frame `n`.
+    /// This is always the second function to get called for a given frame `n`. If the frame was
+    /// retrned from `get_frame_initial()`, this function is not called.
     ///
     /// In this function you should call `get_frame_filter()` on the input nodes to retrieve the
     /// frames you requested in `get_frame_initial()`.
     ///
     /// Do not call `Node::get_frame()` from within this function.
-    fn get_frame(
-        &self,
+    fn get_frame<'a>(
+        &'a self,
         api: API,
-        core: CoreRef,
+        core: CoreRef<'a>,
         context: FrameContext,
         n: usize,
     ) -> Result<FrameRef, Error>;
@@ -209,18 +212,27 @@ unsafe extern "system" fn get_frame<F: Filter>(
 
         let rv = match activation_reason {
             x if x == ffi::VSActivationReason::arInitial as _ => {
-                if let Err(err) = filter.get_frame_initial(api, core, context, n) {
-                    let mut buf = String::new();
+                match filter.get_frame_initial(api, core, context, n) {
+                    Ok(Some(frame)) => {
+                        let ptr = frame.ptr();
+                        // The ownership is transferred to the caller.
+                        mem::forget(frame);
+                        ptr
+                    }
+                    Ok(None) => ptr::null(),
+                    Err(err) => {
+                        let mut buf = String::new();
 
-                    buf += &format!("Error in Filter::get_frame_initial(): {}", err.cause());
+                        buf += &format!("Error in Filter::get_frame_initial(): {}", err.cause());
 
-                    push_backtrace(&mut buf, &err);
+                        push_backtrace(&mut buf, &err);
 
-                    let buf = CString::new(buf.replace('\0', "\\0")).unwrap();
-                    api.set_filter_error(buf.as_ptr(), frame_ctx);
+                        let buf = CString::new(buf.replace('\0', "\\0")).unwrap();
+                        api.set_filter_error(buf.as_ptr(), frame_ctx);
+
+                        ptr::null()
+                    }
                 }
-
-                ptr::null()
             }
             x if x == ffi::VSActivationReason::arAllFramesReady as _ => {
                 match filter.get_frame(api, core, context, n) {

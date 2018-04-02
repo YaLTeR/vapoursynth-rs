@@ -8,4 +8,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 failure = "0.1"
+rand = "0.4"
 vapoursynth = { path = "../vapoursynth" }
