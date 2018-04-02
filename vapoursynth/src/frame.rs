@@ -268,6 +268,19 @@ impl Frame {
         unsafe { API::get_cached().get_frame_read_ptr(self, plane as i32) }
     }
 
+    /// Returns a mutable pointer to the plane's pixels.
+    ///
+    /// The pointer points to an array with a length of `height() * stride()` and is valid for as
+    /// long as the frame is alive.
+    ///
+    /// # Panics
+    /// Panics if `plane >= format().plane_count()`.
+    pub fn data_ptr_mut(&mut self, plane: usize) -> *mut u8 {
+        assert!(plane < self.format().plane_count());
+
+        unsafe { API::get_cached().get_frame_write_ptr(self, plane as i32) }
+    }
+
     /// Returns a slice of a plane's pixel row.
     ///
     /// The length of the returned slice is equal to `width() * format().bytes_per_sample()`.
@@ -289,6 +302,29 @@ impl Frame {
         let width = self.width(plane) * usize::from(self.format().bytes_per_sample());
 
         unsafe { slice::from_raw_parts(row_ptr, width) }
+    }
+
+    /// Returns a mutable slice of a plane's pixel row.
+    ///
+    /// The length of the returned slice is equal to `width() * format().bytes_per_sample()`.
+    ///
+    /// # Panics
+    /// Panics if `plane >= format().plane_count()` or if `row >= height()`.
+    pub fn data_row_mut(&mut self, plane: usize, row: usize) -> &mut [u8] {
+        assert!(plane < self.format().plane_count());
+        assert!(row < self.height(plane));
+
+        let stride = self.stride(plane);
+        let ptr = self.data_ptr_mut(plane);
+
+        let offset = stride * row;
+        assert!(offset <= isize::max_value() as usize);
+        let offset = offset as isize;
+
+        let row_ptr = unsafe { ptr.offset(offset) };
+        let width = self.width(plane) * usize::from(self.format().bytes_per_sample());
+
+        unsafe { slice::from_raw_parts_mut(row_ptr, width) }
     }
 
     /// Returns a slice of the plane's pixels.
@@ -315,9 +351,39 @@ impl Frame {
         Ok(unsafe { slice::from_raw_parts(ptr, length) })
     }
 
+    /// Returns a mutable slice of the plane's pixels.
+    ///
+    /// The length of the returned slice is `height() * width() * format().bytes_per_sample()`. If
+    /// the pixel data has non-zero padding (that is, `stride()` is larger than `width()`), and
+    /// error is returned, since returning the data slice would open access to uninitialized bytes.
+    ///
+    /// # Panics
+    /// Panics if `plane >= format().plane_count()` or if `row >= height()`.
+    pub fn data_mut(&mut self, plane: usize) -> Result<&mut [u8], NonZeroPadding> {
+        assert!(plane < self.format().plane_count());
+
+        let stride = self.stride(plane);
+        let width = self.width(plane) * usize::from(self.format().bytes_per_sample());
+        if stride != width {
+            return Err(NonZeroPadding(stride - width));
+        }
+
+        let height = self.height(plane);
+        let length = height * stride;
+        let ptr = self.data_ptr_mut(plane);
+
+        Ok(unsafe { slice::from_raw_parts_mut(ptr, length) })
+    }
+
     /// Returns a map of frame's properties.
     #[inline]
     pub fn props(&self) -> &Map {
         unsafe { Map::from_ptr(API::get_cached().get_frame_props_ro(self)) }
+    }
+
+    /// Returns a mutable map of frame's properties.
+    #[inline]
+    pub fn props_mut(&mut self) -> &mut Map {
+        unsafe { Map::from_mut_ptr(API::get_cached().get_frame_props_rw(self)) }
     }
 }

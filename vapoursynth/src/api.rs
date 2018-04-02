@@ -392,6 +392,19 @@ impl API {
         ((*self.handle).getReadPtr)(frame, plane)
     }
 
+    /// Returns a read-write pointer to a plane of a frame.
+    ///
+    /// # Safety
+    /// The caller must ensure `frame` is valid and `plane` is valid for the given `frame`.
+    #[inline]
+    pub(crate) unsafe fn get_frame_write_ptr(
+        self,
+        frame: &mut ffi::VSFrameRef,
+        plane: i32,
+    ) -> *mut u8 {
+        ((*self.handle).getWritePtr)(frame, plane)
+    }
+
     /// Returns a read-only pointer to a frame's properties.
     ///
     /// # Safety
@@ -400,6 +413,16 @@ impl API {
     #[inline]
     pub(crate) unsafe fn get_frame_props_ro(self, frame: &ffi::VSFrameRef) -> *const ffi::VSMap {
         ((*self.handle).getFramePropsRO)(frame)
+    }
+
+    /// Returns a read-write pointer to a frame's properties.
+    ///
+    /// # Safety
+    /// The caller must ensure `frame` is valid and the correct lifetime is assigned to the
+    /// returned map (it can't outlive `frame`).
+    #[inline]
+    pub(crate) unsafe fn get_frame_props_rw(self, frame: &mut ffi::VSFrameRef) -> *mut ffi::VSMap {
+        ((*self.handle).getFramePropsRW)(frame)
     }
 
     /// Creates a new `VSMap`.
