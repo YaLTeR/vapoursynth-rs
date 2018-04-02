@@ -244,3 +244,9 @@ impl Display for SampleType {
         )
     }
 }
+
+impl From<i32> for FormatID {
+    fn from(x: i32) -> Self {
+        FormatID(x)
+    }
+}
