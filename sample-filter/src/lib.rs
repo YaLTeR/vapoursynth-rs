@@ -4,6 +4,8 @@ extern crate failure;
 #[macro_use]
 extern crate vapoursynth;
 
+use std::slice;
+
 use failure::Error;
 use vapoursynth::prelude::*;
 use vapoursynth::plugins::*;
@@ -46,13 +48,61 @@ impl Filter for SampleFilter {
     fn get_frame(
         &self,
         _api: API,
-        _core: CoreRef,
+        core: CoreRef,
         context: FrameContext,
         n: usize,
-    ) -> Result<Frame, Error> {
-        self.source
+    ) -> Result<FrameRef, Error> {
+        let frame = self.source
             .get_frame_filter(context, n)
-            .ok_or(format_err!("Couldn't get the source frame"))
+            .ok_or(format_err!("Couldn't get the source frame"))?;
+
+        if frame.format().sample_type() == SampleType::Float {
+            bail!("Floating point formats are not supported");
+        }
+
+        let mut frame = FrameRefMut::copy_of(core, &frame);
+
+        for plane in 0..frame.format().plane_count() {
+            for row in 0..frame.height(plane) {
+                assert_eq!(frame.format().sample_type(), SampleType::Integer);
+
+                let bits_per_sample = frame.format().bits_per_sample();
+                let bytes_per_sample = frame.format().bytes_per_sample();
+
+                let data = frame.data_row_mut(plane, row);
+
+                match bytes_per_sample {
+                    1 => for pixel in data {
+                        *pixel = 255 - *pixel;
+                    },
+                    2 => {
+                        let row = unsafe {
+                            slice::from_raw_parts_mut(
+                                data.as_mut_ptr() as *mut u16,
+                                data.len() / bytes_per_sample as usize,
+                            )
+                        };
+                        for pixel in row {
+                            *pixel = ((1u64 << bits_per_sample) - 1) as u16 - *pixel;
+                        }
+                    }
+                    4 => {
+                        let row = unsafe {
+                            slice::from_raw_parts_mut(
+                                data.as_mut_ptr() as *mut u32,
+                                data.len() / bytes_per_sample as usize,
+                            )
+                        };
+                        for pixel in row {
+                            *pixel = ((1u64 << bits_per_sample) - 1) as u32 - *pixel;
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            }
+        }
+
+        Ok(frame.into())
     }
 }
 
