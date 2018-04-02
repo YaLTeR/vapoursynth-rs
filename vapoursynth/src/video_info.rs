@@ -171,3 +171,12 @@ impl<'a> VideoInfo<'a> {
         }
     }
 }
+
+impl<T> From<T> for Property<T>
+where
+    T: Debug + Clone + Copy + Eq + PartialEq,
+{
+    fn from(x: T) -> Self {
+        Property::Constant(x)
+    }
+}
