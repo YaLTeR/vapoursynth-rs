@@ -1,3 +1,6 @@
+### v0.1.2 (2nd Apr 2018)
+- Fixed `Frame::data_row()` returning slices of incorrect rows (using the `plane` value instead of the `row` value).
+
 ### v0.1.1 (24th Mar 2018)
 - Added support for targetting 32-bit Windows
 - Added automatic detection of common Windows VapourSynth library dirs
