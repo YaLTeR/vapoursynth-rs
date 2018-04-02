@@ -329,6 +329,37 @@ mod need_api_and_vsscript {
     }
 
     #[test]
+    fn gradient() {
+        let env = vsscript::Environment::from_file(
+            "test-vpy/gradient.vpy",
+            vsscript::EvalFlags::Nothing,
+        ).unwrap();
+
+        #[cfg(feature = "gte-vsscript-api-31")]
+        let node = env.get_output(0).unwrap().0;
+        #[cfg(not(feature = "gte-vsscript-api-31"))]
+        let node = env.get_output(0).unwrap();
+
+        let frame = node.get_frame(0).unwrap();
+        for plane in 0..3 {
+            for row in 0..16 {
+                let mut gt = [0u8; 16];
+                for col in 0..16 {
+                    gt[col] = match plane {
+                        0 => row as u8 * 16,
+                        1 => col as u8 * 16,
+                        2 => 0,
+                        _ => unreachable!()
+                    };
+                }
+
+                let data = frame.data_row(plane, row);
+                assert_eq!(data, &gt[..]);
+            }
+        }
+    }
+
+    #[test]
     fn clear_output() {
         let env =
             vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();

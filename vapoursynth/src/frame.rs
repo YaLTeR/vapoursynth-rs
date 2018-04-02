@@ -143,7 +143,7 @@ impl Frame {
         let stride = self.stride(plane);
         let ptr = self.data_ptr(plane);
 
-        let offset = stride * plane;
+        let offset = stride * row;
         assert!(offset <= isize::max_value() as usize);
         let offset = offset as isize;
 
