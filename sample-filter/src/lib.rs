@@ -12,13 +12,13 @@ use vapoursynth::plugins::*;
 use vapoursynth::core::CoreRef;
 use vapoursynth::video_info::VideoInfo;
 
-struct SampleFilter {
+struct Invert {
     source: Node,
 }
 
-impl Filter for SampleFilter {
+impl Filter for Invert {
     fn name() -> &'static str {
-        "SampleName"
+        "Invert"
     }
 
     fn args() -> &'static str {
@@ -27,7 +27,7 @@ impl Filter for SampleFilter {
 
     fn create(_api: API, _core: CoreRef, args: &Map) -> Result<Self, Error> {
         let source = args.get_node("clip").unwrap();
-        Ok(SampleFilter { source })
+        Ok(Invert { source })
     }
 
     fn video_info(&self, _api: API, _core: CoreRef) -> Vec<VideoInfo> {
@@ -108,10 +108,10 @@ impl Filter for SampleFilter {
 
 export_vapoursynth_plugin! {
     Metadata {
-        identifier: "com.example.invert",
-        namespace: "invert",
-        name: "Invert Example Plugin",
+        identifier: "com.example.vapoursynth-rs",
+        namespace: "vapoursynth_rs",
+        name: "Example vapoursynth-rs Plugin",
         read_only: true,
     },
-    [SampleFilter]
+    [Invert]
 }

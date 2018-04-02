@@ -15,6 +15,6 @@ clip = core.std.Splice([make_frame(vs.RGB24, [2**6, 2**6, 0]),
                         make_frame(vs.RGB48, [2**14, 2**14, 0])],
                        mismatch = True)
 
-clip = core.invert.SampleName(clip)
+clip = core.vapoursynth_rs.Invert(clip)
 clip = core.resize.Lanczos(clip, format = vs.YUV444P8, matrix_s = "709")
 clip.set_output()
