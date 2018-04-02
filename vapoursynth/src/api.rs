@@ -775,6 +775,21 @@ impl API {
     ) -> *const ffi::VSFrameRef {
         ((*self.handle).getFrameFilter)(n, node, frame_ctx)
     }
+
+    /// Duplicates the frame (not just the reference). As the frame buffer is shared in a
+    /// copy-on-write fashion, the frame content is not really duplicated until a write operation
+    /// occurs. This is transparent for the user.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn copy_frame(
+        self,
+        f: &ffi::VSFrameRef,
+        core: *mut ffi::VSCore,
+    ) -> *mut ffi::VSFrameRef {
+        ((*self.handle).copyFrame)(f, core)
+    }
 }
 
 impl MessageType {

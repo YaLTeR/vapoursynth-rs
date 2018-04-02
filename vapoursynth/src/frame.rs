@@ -5,6 +5,7 @@ use std::ops::{Deref, DerefMut};
 use vapoursynth_sys as ffi;
 
 use api::API;
+use core::CoreRef;
 use format::Format;
 use map::Map;
 use video_info::Resolution;
@@ -139,6 +140,18 @@ impl FrameRefMut {
     #[inline]
     pub(crate) fn ptr(&self) -> *mut ffi::VSFrameRef {
         self.handle
+    }
+
+    /// Creates a copy of the given frame.
+    ///
+    /// The plane data is copy-on-write, so this isn't very expensive by itself.
+    ///
+    /// Judging by the underlying implementation, it seems that any valid `core` can be used.
+    #[inline]
+    pub fn copy_of(core: CoreRef, frame: &Frame) -> Self {
+        Self {
+            handle: unsafe { API::get_cached().copy_frame(frame, core.ptr()) },
+        }
     }
 }
 
