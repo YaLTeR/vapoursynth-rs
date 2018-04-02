@@ -103,7 +103,7 @@ pub mod prelude {
     //! Contains the types you most likely want to import anyway.
     pub use super::api::{MessageType, API};
     pub use super::format::{ColorFamily, PresetFormat, SampleType};
-    pub use super::frame::Frame;
+    pub use super::frame::{Frame, FrameRef, FrameRefMut};
     pub use super::map::{Map, OwnedMap, ValueType};
     pub use super::node::{GetFrameError, Node};
     pub use super::video_info::Property;

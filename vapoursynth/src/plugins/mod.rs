@@ -8,7 +8,7 @@ use vapoursynth_sys as ffi;
 
 use api::API;
 use core::CoreRef;
-use frame::Frame;
+use frame::FrameRef;
 use map::Map;
 use video_info::VideoInfo;
 
@@ -120,7 +120,7 @@ pub trait Filter: Sized + Send + Sync {
         core: CoreRef,
         context: FrameContext,
         n: usize,
-    ) -> Result<Frame, Error>;
+    ) -> Result<FrameRef, Error>;
 }
 
 /// Pushes the error backtrace into the given string.

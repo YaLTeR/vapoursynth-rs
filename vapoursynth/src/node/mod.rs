@@ -8,7 +8,7 @@ use std::process;
 use vapoursynth_sys as ffi;
 
 use api::API;
-use frame::Frame;
+use frame::FrameRef;
 use plugins::FrameContext;
 use video_info::VideoInfo;
 
@@ -96,7 +96,7 @@ impl Node {
     ///
     /// # Panics
     /// Panics is `n` is greater than `i32::max_value()`.
-    pub fn get_frame(&self, n: usize) -> Result<Frame, GetFrameError<'static>> {
+    pub fn get_frame(&self, n: usize) -> Result<FrameRef, GetFrameError<'static>> {
         assert!(n <= i32::max_value() as usize);
         let n = n as i32;
 
@@ -114,7 +114,7 @@ impl Node {
             let error = unsafe { CStr::from_ptr(err_buf.as_ptr()) }.to_owned();
             Err(GetFrameError::new(Cow::Owned(error)))
         } else {
-            Ok(unsafe { Frame::from_ptr(handle) })
+            Ok(unsafe { FrameRef::from_ptr(handle) })
         }
     }
 
@@ -135,7 +135,7 @@ impl Node {
     /// Panics is `n` is greater than `i32::max_value()`.
     pub fn get_frame_async<F>(&self, n: usize, callback: F)
     where
-        F: FnOnce(Result<Frame, GetFrameError>, usize, Node) + Send + 'static,
+        F: FnOnce(Result<FrameRef, GetFrameError>, usize, Node) + Send + 'static,
     {
         struct CallbackData {
             callback: Box<CallbackFn>,
@@ -143,15 +143,15 @@ impl Node {
 
         // A little bit of magic for Box<FnOnce>.
         trait CallbackFn {
-            fn call(self: Box<Self>, frame: Result<Frame, GetFrameError>, n: usize, node: Node);
+            fn call(self: Box<Self>, frame: Result<FrameRef, GetFrameError>, n: usize, node: Node);
         }
 
         impl<F> CallbackFn for F
         where
-            F: FnOnce(Result<Frame, GetFrameError>, usize, Node),
+            F: FnOnce(Result<FrameRef, GetFrameError>, usize, Node),
         {
             #[cfg_attr(feature = "cargo-clippy", allow(boxed_local))]
-            fn call(self: Box<Self>, frame: Result<Frame, GetFrameError>, n: usize, node: Node) {
+            fn call(self: Box<Self>, frame: Result<FrameRef, GetFrameError>, n: usize, node: Node) {
                 (self)(frame, n, node)
             }
         }
@@ -172,7 +172,7 @@ impl Node {
                     Err(GetFrameError::new(error_msg))
                 } else {
                     debug_assert!(error_msg.is_null());
-                    Ok(Frame::from_ptr(frame))
+                    Ok(FrameRef::from_ptr(frame))
                 };
 
                 let node = Node::from_ptr(node);
@@ -242,7 +242,7 @@ impl Node {
     ///
     /// # Panics
     /// Panics is `n` is greater than `i32::max_value()`.
-    pub fn get_frame_filter(&self, context: FrameContext, n: usize) -> Option<Frame> {
+    pub fn get_frame_filter(&self, context: FrameContext, n: usize) -> Option<FrameRef> {
         assert!(n <= i32::max_value() as usize);
         let n = n as i32;
 
@@ -250,7 +250,7 @@ impl Node {
         if ptr.is_null() {
             None
         } else {
-            Some(unsafe { Frame::from_ptr(ptr) })
+            Some(unsafe { FrameRef::from_ptr(ptr) })
         }
     }
 }

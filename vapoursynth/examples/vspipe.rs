@@ -21,6 +21,7 @@ mod inner {
     use std::fmt::Debug;
     use std::fs::File;
     use std::io::{self, stdout, Stdout, Write};
+    use std::ops::Deref;
     use std::sync::{Arc, Condvar, Mutex};
     use std::time::Instant;
 
@@ -49,7 +50,7 @@ mod inner {
         output_target: OutputTarget,
         timecodes_file: Option<File>,
         error: Option<(usize, Error)>,
-        reorder_map: HashMap<usize, (Option<Frame>, Option<Frame>)>,
+        reorder_map: HashMap<usize, (Option<FrameRef>, Option<FrameRef>)>,
         last_requested_frame: usize,
         next_output_frame: usize,
         current_timecode: Ratio<i64>,
@@ -255,7 +256,7 @@ mod inner {
     }
 
     // Checks if the frame is completed, that is, we have the frame and, if needed, its alpha part.
-    fn is_completed(entry: &(Option<Frame>, Option<Frame>), have_alpha: bool) -> bool {
+    fn is_completed(entry: &(Option<FrameRef>, Option<FrameRef>), have_alpha: bool) -> bool {
         entry.0.is_some() && (!have_alpha || entry.1.is_some())
     }
 
@@ -320,7 +321,7 @@ mod inner {
     }
 
     fn frame_done_callback(
-        frame: Result<Frame, GetFrameError>,
+        frame: Result<FrameRef, GetFrameError>,
         n: usize,
         _node: &Node,
         shared_data: &Arc<SharedData>,
@@ -417,7 +418,7 @@ mod inner {
                             &mut state.output_target,
                             parameters,
                             &frame,
-                            alpha_frame.as_ref(),
+                            alpha_frame.as_ref().map(Deref::deref),
                         ) {
                             state.error = Some((n, error));
                         }

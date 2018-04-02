@@ -9,7 +9,7 @@ use std::{mem, ptr, result, slice};
 use vapoursynth_sys as ffi;
 
 use api::API;
-use frame::Frame;
+use frame::{Frame, FrameRef};
 use function::Function;
 use node::Node;
 
@@ -408,16 +408,16 @@ impl Map {
     ///
     /// This function retrieves the first value associated with the key.
     #[inline]
-    pub fn get_frame(&self, key: &str) -> Result<Frame> {
+    pub fn get_frame(&self, key: &str) -> Result<FrameRef> {
         let key = Map::make_raw_key(key)?;
         unsafe { self.get_frame_raw_unchecked(&key, 0) }
     }
 
     /// Retrieves frames from a map.
     #[inline]
-    pub fn get_frame_iter(&self, key: &str) -> Result<ValueIter<Frame>> {
+    pub fn get_frame_iter(&self, key: &str) -> Result<ValueIter<FrameRef>> {
         let key = Map::make_raw_key(key)?;
-        unsafe { ValueIter::<Frame>::new(self, Cow::Owned(key)) }
+        unsafe { ValueIter::<FrameRef>::new(self, Cow::Owned(key)) }
     }
 
     /// Retrieves a function from a map.
@@ -528,12 +528,16 @@ impl Map {
     /// # Safety
     /// The caller must ensure `key` is valid.
     #[inline]
-    pub(crate) unsafe fn get_frame_raw_unchecked(&self, key: &CStr, index: i32) -> Result<Frame> {
+    pub(crate) unsafe fn get_frame_raw_unchecked(
+        &self,
+        key: &CStr,
+        index: i32,
+    ) -> Result<FrameRef> {
         let mut error = 0;
         let value = API::get_cached().prop_get_frame(self, key.as_ptr(), index, &mut error);
         handle_get_prop_error(error)?;
 
-        Ok(Frame::from_ptr(value))
+        Ok(FrameRef::from_ptr(value))
     }
 
     /// Retrieves a function from a map.

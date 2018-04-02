@@ -1,6 +1,7 @@
 //! VapourSynth frames.
 
 use std::{mem, slice};
+use std::ops::{Deref, DerefMut};
 use vapoursynth_sys as ffi;
 
 use api::API;
@@ -13,34 +14,102 @@ use video_info::Resolution;
 #[fail(display = "Frame data has non-zero padding: {}", _0)]
 pub struct NonZeroPadding(usize);
 
-/// Contains one frame of a clip.
+/// One frame of a clip.
+// WARNING: use ONLY references to this type. The only thing this type is for is doing
+// &ffi::VSFrameRef and &mut ffi::VSFrameRef without exposing the (unknown size) ffi type outside.
+pub struct Frame(ffi::VSFrameRef);
+
+unsafe impl Sync for Frame {}
+
+#[doc(hidden)]
+impl Deref for Frame {
+    type Target = ffi::VSFrameRef;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        unsafe { mem::transmute(self) }
+    }
+}
+
+#[doc(hidden)]
+impl DerefMut for Frame {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { mem::transmute(self) }
+    }
+}
+
+/// A reference to a ref-counted frame.
 #[derive(Debug)]
-pub struct Frame {
+pub struct FrameRef {
     handle: *const ffi::VSFrameRef,
 }
 
-unsafe impl Send for Frame {}
-unsafe impl Sync for Frame {}
+unsafe impl Send for FrameRef {}
+unsafe impl Sync for FrameRef {}
 
-impl Drop for Frame {
+/// A reference to a mutable frame.
+#[derive(Debug)]
+pub struct FrameRefMut {
+    handle: *mut ffi::VSFrameRef,
+}
+
+unsafe impl Send for FrameRefMut {}
+unsafe impl Sync for FrameRefMut {}
+
+impl Drop for FrameRef {
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            API::get_cached().free_frame(self.handle);
+            API::get_cached().free_frame(self);
         }
     }
 }
 
-impl Clone for Frame {
+impl Clone for FrameRef {
     #[inline]
     fn clone(&self) -> Self {
-        let handle = unsafe { API::get_cached().clone_frame(self.handle) };
+        let handle = unsafe { API::get_cached().clone_frame(self) };
         Self { handle }
     }
 }
 
-impl Frame {
-    /// Wraps `handle` in a `Frame`.
+impl Drop for FrameRefMut {
+    #[inline]
+    fn drop(&mut self) {
+        unsafe {
+            API::get_cached().free_frame(self);
+        }
+    }
+}
+
+impl Deref for FrameRef {
+    type Target = Frame;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        unsafe { Frame::from_ptr(self.handle) }
+    }
+}
+
+impl Deref for FrameRefMut {
+    type Target = Frame;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        unsafe { Frame::from_ptr(self.handle) }
+    }
+}
+
+impl DerefMut for FrameRefMut {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { Frame::from_mut_ptr(self.handle) }
+    }
+}
+
+impl FrameRef {
+    /// Wraps `handle` in a `FrameRef`.
     ///
     /// # Safety
     /// The caller must ensure `handle` is valid and API is cached.
@@ -54,12 +123,68 @@ impl Frame {
     pub(crate) fn ptr(&self) -> *const ffi::VSFrameRef {
         self.handle
     }
+}
+
+impl FrameRefMut {
+    /// Wraps `handle` in a `FrameRefMut`.
+    ///
+    /// # Safety
+    /// The caller must ensure `handle` is valid and API is cached.
+    #[inline]
+    pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSFrameRef) -> Self {
+        Self { handle }
+    }
+
+    /// Returns the underlying pointer.
+    #[inline]
+    pub(crate) fn ptr(&self) -> *mut ffi::VSFrameRef {
+        self.handle
+    }
+}
+
+impl From<FrameRefMut> for FrameRef {
+    #[inline]
+    fn from(x: FrameRefMut) -> FrameRef {
+        let rv = FrameRef { handle: x.handle };
+        mem::forget(x);
+        rv
+    }
+}
+
+impl Frame {
+    /// Converts a pointer to a frame to a reference.
+    ///
+    /// # Safety
+    /// The caller needs to ensure the pointer is valid, the lifetime is valid and there are no
+    /// active mutable references to the map during the lifetime.
+    #[inline]
+    pub(crate) unsafe fn from_ptr<'a>(handle: *const ffi::VSFrameRef) -> &'a Frame {
+        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
+        unsafe { mem::transmute(handle) }
+    }
+
+    /// Converts a mutable pointer to a frame to a reference.
+    ///
+    /// # Safety
+    /// The caller needs to ensure the pointer is valid, the lifetime is valid and there are no
+    /// active references to the map during the lifetime.
+    #[inline]
+    pub(crate) unsafe fn from_mut_ptr<'a>(handle: *mut ffi::VSFrameRef) -> &'a mut Frame {
+        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
+        unsafe { mem::transmute(handle) }
+    }
+
+    /// Returns the underlying pointer.
+    #[inline]
+    pub(crate) fn ptr(&self) -> *const ffi::VSFrameRef {
+        self.deref()
+    }
 
     /// Returns the frame format.
     #[inline]
     pub fn format(&self) -> Format {
         unsafe {
-            let ptr = API::get_cached().get_frame_format(self.handle);
+            let ptr = API::get_cached().get_frame_format(self);
             Format::from_ptr(ptr)
         }
     }
@@ -74,7 +199,7 @@ impl Frame {
     pub fn width(&self, plane: usize) -> usize {
         assert!(plane < self.format().plane_count());
 
-        unsafe { API::get_cached().get_frame_width(self.handle, plane as i32) as usize }
+        unsafe { API::get_cached().get_frame_width(self, plane as i32) as usize }
     }
 
     /// Returns the height of a plane, in pixels.
@@ -87,7 +212,7 @@ impl Frame {
     pub fn height(&self, plane: usize) -> usize {
         assert!(plane < self.format().plane_count());
 
-        unsafe { API::get_cached().get_frame_height(self.handle, plane as i32) as usize }
+        unsafe { API::get_cached().get_frame_height(self, plane as i32) as usize }
     }
 
     /// Returns the resolution of a plane.
@@ -114,7 +239,7 @@ impl Frame {
     pub fn stride(&self, plane: usize) -> usize {
         assert!(plane < self.format().plane_count());
 
-        unsafe { API::get_cached().get_frame_stride(self.handle, plane as i32) as usize }
+        unsafe { API::get_cached().get_frame_stride(self, plane as i32) as usize }
     }
 
     /// Returns a pointer to the plane's pixels.
@@ -127,7 +252,7 @@ impl Frame {
     pub fn data_ptr(&self, plane: usize) -> *const u8 {
         assert!(plane < self.format().plane_count());
 
-        unsafe { API::get_cached().get_frame_read_ptr(self.handle, plane as i32) }
+        unsafe { API::get_cached().get_frame_read_ptr(self, plane as i32) }
     }
 
     /// Returns a slice of a plane's pixel row.
@@ -180,6 +305,6 @@ impl Frame {
     /// Returns a map of frame's properties.
     #[inline]
     pub fn props(&self) -> &Map {
-        unsafe { Map::from_ptr(API::get_cached().get_frame_props_ro(self.handle)) }
+        unsafe { Map::from_ptr(API::get_cached().get_frame_props_ro(self)) }
     }
 }

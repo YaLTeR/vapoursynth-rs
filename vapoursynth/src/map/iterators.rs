@@ -108,5 +108,5 @@ impl_value_iter!(ValueType::Int, i64, get_int_raw_unchecked);
 impl_value_iter!(ValueType::Float, f64, get_float_raw_unchecked);
 impl_value_iter!(ValueType::Data, &'map [u8], get_data_raw_unchecked);
 impl_value_iter!(ValueType::Node, Node, get_node_raw_unchecked);
-impl_value_iter!(ValueType::Frame, Frame, get_frame_raw_unchecked);
+impl_value_iter!(ValueType::Frame, FrameRef, get_frame_raw_unchecked);
 impl_value_iter!(ValueType::Function, Function, get_function_raw_unchecked);

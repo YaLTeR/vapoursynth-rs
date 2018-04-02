@@ -330,7 +330,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `frame` is valid.
     #[inline]
-    pub(crate) unsafe fn free_frame(self, frame: *const ffi::VSFrameRef) {
+    pub(crate) unsafe fn free_frame(self, frame: &ffi::VSFrameRef) {
         ((*self.handle).freeFrame)(frame);
     }
 
@@ -339,10 +339,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `frame` is valid.
     #[inline]
-    pub(crate) unsafe fn clone_frame(
-        self,
-        frame: *const ffi::VSFrameRef,
-    ) -> *const ffi::VSFrameRef {
+    pub(crate) unsafe fn clone_frame(self, frame: &ffi::VSFrameRef) -> *const ffi::VSFrameRef {
         ((*self.handle).cloneFrameRef)(frame)
     }
 
@@ -351,10 +348,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `frame` is valid.
     #[inline]
-    pub(crate) unsafe fn get_frame_format(
-        self,
-        frame: *const ffi::VSFrameRef,
-    ) -> *const ffi::VSFormat {
+    pub(crate) unsafe fn get_frame_format(self, frame: &ffi::VSFrameRef) -> *const ffi::VSFormat {
         ((*self.handle).getFrameFormat)(frame)
     }
 
@@ -363,7 +357,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `frame` is valid and `plane` is valid for the given `frame`.
     #[inline]
-    pub(crate) unsafe fn get_frame_width(self, frame: *const ffi::VSFrameRef, plane: i32) -> i32 {
+    pub(crate) unsafe fn get_frame_width(self, frame: &ffi::VSFrameRef, plane: i32) -> i32 {
         ((*self.handle).getFrameWidth)(frame, plane)
     }
 
@@ -372,7 +366,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `frame` is valid and `plane` is valid for the given `frame`.
     #[inline]
-    pub(crate) unsafe fn get_frame_height(self, frame: *const ffi::VSFrameRef, plane: i32) -> i32 {
+    pub(crate) unsafe fn get_frame_height(self, frame: &ffi::VSFrameRef, plane: i32) -> i32 {
         ((*self.handle).getFrameHeight)(frame, plane)
     }
 
@@ -381,7 +375,7 @@ impl API {
     /// # Safety
     /// The caller must ensure `frame` is valid and `plane` is valid for the given `frame`.
     #[inline]
-    pub(crate) unsafe fn get_frame_stride(self, frame: *const ffi::VSFrameRef, plane: i32) -> i32 {
+    pub(crate) unsafe fn get_frame_stride(self, frame: &ffi::VSFrameRef, plane: i32) -> i32 {
         ((*self.handle).getStride)(frame, plane)
     }
 
@@ -392,7 +386,7 @@ impl API {
     #[inline]
     pub(crate) unsafe fn get_frame_read_ptr(
         self,
-        frame: *const ffi::VSFrameRef,
+        frame: &ffi::VSFrameRef,
         plane: i32,
     ) -> *const u8 {
         ((*self.handle).getReadPtr)(frame, plane)
@@ -404,10 +398,7 @@ impl API {
     /// The caller must ensure `frame` is valid and the correct lifetime is assigned to the
     /// returned map (it can't outlive `frame`).
     #[inline]
-    pub(crate) unsafe fn get_frame_props_ro(
-        self,
-        frame: *const ffi::VSFrameRef,
-    ) -> *const ffi::VSMap {
+    pub(crate) unsafe fn get_frame_props_ro(self, frame: &ffi::VSFrameRef) -> *const ffi::VSMap {
         ((*self.handle).getFramePropsRO)(frame)
     }
 
