@@ -87,7 +87,7 @@ impl<'a> CoreRef<'a> {
     /// Retrieves a registered or preset `Format` by its id. The id can be of a previously
     /// registered format, or one of the `PresetFormat`.
     #[inline]
-    pub fn get_format(&self, id: FormatID) -> Option<Format> {
+    pub fn get_format(&self, id: FormatID) -> Option<Format<'a>> {
         let ptr = unsafe { API::get_cached().get_format_preset(id.0, self.handle) };
         unsafe { ptr.as_ref().map(|p| Format::from_ptr(p)) }
     }
@@ -108,7 +108,7 @@ impl<'a> CoreRef<'a> {
         bits_per_sample: u8,
         sub_sampling_w: u8,
         sub_sampling_h: u8,
-    ) -> Option<Format> {
+    ) -> Option<Format<'a>> {
         unsafe {
             API::get_cached()
                 .register_format(
