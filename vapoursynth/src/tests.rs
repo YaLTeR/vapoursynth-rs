@@ -330,10 +330,9 @@ mod need_api_and_vsscript {
 
     #[test]
     fn gradient() {
-        let env = vsscript::Environment::from_file(
-            "test-vpy/gradient.vpy",
-            vsscript::EvalFlags::Nothing,
-        ).unwrap();
+        let env =
+            vsscript::Environment::from_file("test-vpy/gradient.vpy", vsscript::EvalFlags::Nothing)
+                .unwrap();
 
         #[cfg(feature = "gte-vsscript-api-31")]
         let node = env.get_output(0).unwrap().0;
@@ -349,7 +348,7 @@ mod need_api_and_vsscript {
                         0 => row as u8 * 16,
                         1 => col as u8 * 16,
                         2 => 0,
-                        _ => unreachable!()
+                        _ => unreachable!(),
                     };
                 }
 

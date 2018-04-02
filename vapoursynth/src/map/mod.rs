@@ -72,16 +72,14 @@ impl Deref for OwnedMap {
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
-        unsafe { mem::transmute(self.handle) }
+        unsafe { Map::from_ptr(self.handle) }
     }
 }
 
 impl DerefMut for OwnedMap {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
-        unsafe { mem::transmute(self.handle) }
+        unsafe { Map::from_mut_ptr(self.handle) }
     }
 }
 
@@ -163,6 +161,7 @@ impl Map {
     /// # Safety
     /// The caller needs to ensure the pointer is valid, the lifetime is valid and there are no
     /// active mutable references to the map during the lifetime.
+    #[inline]
     pub(crate) unsafe fn from_ptr<'a>(handle: *const ffi::VSMap) -> &'a Map {
         #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
         unsafe { mem::transmute(handle) }
@@ -173,6 +172,7 @@ impl Map {
     /// # Safety
     /// The caller needs to ensure the pointer is valid, the lifetime is valid and there are no
     /// active references to the map during the lifetime.
+    #[inline]
     pub(crate) unsafe fn from_mut_ptr<'a>(handle: *mut ffi::VSMap) -> &'a mut Map {
         #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
         unsafe { mem::transmute(handle) }

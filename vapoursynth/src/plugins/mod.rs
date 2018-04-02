@@ -212,10 +212,7 @@ unsafe extern "system" fn get_frame<F: Filter>(
                 if let Err(err) = filter.get_frame_initial(api, core, context, n) {
                     let mut buf = String::new();
 
-                    buf.push_str(&format!(
-                        "Error in Filter::get_frame_initial(): {}",
-                        err.cause()
-                    ));
+                    buf += &format!("Error in Filter::get_frame_initial(): {}", err.cause());
 
                     push_backtrace(&mut buf, &err);
 
@@ -236,7 +233,7 @@ unsafe extern "system" fn get_frame<F: Filter>(
                     Err(err) => {
                         let mut buf = String::new();
 
-                        buf.push_str(&format!("Error in Filter::get_frame(): {}", err.cause()));
+                        buf += &format!("{}", err.cause());
 
                         push_backtrace(&mut buf, &err);
 
@@ -284,11 +281,11 @@ unsafe extern "system" fn create<F: Filter>(
             Err(err) => {
                 let mut buf = String::new();
 
-                buf.push_str(&format!(
+                buf += &format!(
                     "Error in Filter::create() of {}: {}",
                     name_cstr.to_str().unwrap(),
                     err.cause()
-                ));
+                );
 
                 push_backtrace(&mut buf, &err);
 
