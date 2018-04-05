@@ -165,7 +165,7 @@ unsafe extern "system" fn create<F: Filter>(
     core: *mut ffi::VSCore,
     api: *const ffi::VSAPI,
 ) {
-    let name = Box::from_raw(user_data as *mut CString);
+    let name = CString::from_raw(user_data as _);
     let name_cstr = name.as_ref();
 
     API::set(api);
@@ -268,13 +268,11 @@ pub unsafe fn call_register_func<F: Filter>(register_func: *const c_void, plugin
     let args_cstring =
         CString::new(F::args()).expect("Couldn't convert the filter args to a CString");
 
-    let name = Box::new(name_cstring);
-
     register_func(
-        name.as_ptr(),
+        name_cstring.as_ptr(),
         args_cstring.as_ptr(),
         create::<F>,
-        Box::into_raw(name) as *mut c_void,
+        name_cstring.into_raw() as _,
         plugin as *mut ffi::VSPlugin,
     );
 }
