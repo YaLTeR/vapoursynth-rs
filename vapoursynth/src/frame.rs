@@ -160,9 +160,8 @@ impl<'core> FrameRefMut<'core> {
     #[inline]
     pub unsafe fn new_uninitialized(
         core: CoreRef<'core>,
-        // TODO: &'core Frame?
-        prop_src: Option<&Frame>,
-        format: Format,
+        prop_src: Option<&Frame<'core>>,
+        format: Format<'core>,
         resolution: Resolution,
     ) -> Self {
         assert!(resolution.width <= i32::max_value() as usize);
