@@ -81,6 +81,8 @@ pub trait FilterFunction {
     ///
     /// In this function you should take all input nodes for your filter and store them somewhere
     /// so that you can request their frames in `get_frame_initial()`.
+    // TODO: with generic associated types it'll be possible to make Filter<'core> an associated
+    // type of this trait and get rid of this Box.
     fn create<'core>(
         api: API,
         core: CoreRef<'core>,
