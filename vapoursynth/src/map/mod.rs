@@ -25,107 +25,148 @@ pub use self::value::ValueType;
 /// A VapourSynth map.
 ///
 /// A map contains key-value pairs where the value is zero or more elements of a certain type.
-// WARNING: use ONLY references to this type. The only thing this type is for is doing &ffi::VSMap
-// and &mut ffi::VSMap without exposing the (unknown size) ffi type outside.
-pub struct Map(ffi::VSMap);
+// This type is intended to be publicly used only in reference form.
+#[derive(Debug)]
+pub struct Map<'elem> {
+    // The actual mutability of this depends on whether it's accessed via `&Map` or `&mut Map`.
+    handle: *mut ffi::VSMap,
+    _elem: PhantomData<&'elem ()>,
+}
+
+/// A reference to a VapourSynth map.
+#[derive(Debug)]
+pub struct MapRef<'owner, 'elem> {
+    // Only immutable references to this are allowed.
+    map: Map<'elem>,
+    _owner: PhantomData<&'owner ()>,
+}
+
+/// A reference to a mutable VapourSynth map.
+#[derive(Debug)]
+pub struct MapRefMut<'owner, 'elem> {
+    // Both mutable and immutable references to this are allowed.
+    map: Map<'elem>,
+    _owner: PhantomData<&'owner ()>,
+}
+
+/// An owned VapourSynth map.
+#[derive(Debug)]
+pub struct OwnedMap<'elem> {
+    // Both mutable and immutable references to this are allowed.
+    map: Map<'elem>,
+}
+
+unsafe impl<'elem> Send for Map<'elem> {}
+unsafe impl<'elem> Sync for Map<'elem> {}
 
 #[doc(hidden)]
-impl Deref for Map {
+impl<'elem> Deref for Map<'elem> {
     type Target = ffi::VSMap;
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        unsafe { mem::transmute(self) }
+        unsafe { &*self.handle }
     }
 }
 
 #[doc(hidden)]
-impl DerefMut for Map {
+impl<'elem> DerefMut for Map<'elem> {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { mem::transmute(self) }
+        unsafe { &mut *self.handle }
     }
 }
 
-/// An owned VapourSynth map.
-///
-/// A map contains key-value pairs where the value is zero or more elements of a certain type.
-#[derive(Debug)]
-pub struct OwnedMap {
-    handle: *mut ffi::VSMap,
+impl<'owner, 'elem> Deref for MapRef<'owner, 'elem> {
+    type Target = Map<'elem>;
+
+    // Technically this should return `&'owner`.
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.map
+    }
 }
 
-unsafe impl Send for Map {}
-unsafe impl Sync for Map {}
+impl<'owner, 'elem> Deref for MapRefMut<'owner, 'elem> {
+    type Target = Map<'elem>;
 
-impl Drop for OwnedMap {
+    // Technically this should return `&'owner`.
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.map
+    }
+}
+
+impl<'owner, 'elem> DerefMut for MapRefMut<'owner, 'elem> {
+    // Technically this should return `&'owner`.
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.map
+    }
+}
+
+impl<'elem> Drop for OwnedMap<'elem> {
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            API::get_cached().free_map(&mut *self.handle);
+            API::get_cached().free_map(&mut self.map);
         }
     }
 }
 
-impl Deref for OwnedMap {
-    type Target = Map;
+impl<'elem> Deref for OwnedMap<'elem> {
+    type Target = Map<'elem>;
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        unsafe { Map::from_ptr(self.handle) }
+        &self.map
     }
 }
 
-impl DerefMut for OwnedMap {
+impl<'elem> DerefMut for OwnedMap<'elem> {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { Map::from_mut_ptr(self.handle) }
+        &mut self.map
     }
 }
 
-// impl Clone for Map {
-//     fn clone(&self) -> Self {
-//         let mut map = Map::new(self.api);
-//
-//         for i in 0..self.key_count() {
-//             let key = self.key_raw(i);
-//             let value = unsafe { self.values_raw_unchecked(key).unwrap() };
-//
-//             // TODO: this is stupid.
-//             match value {
-//                 ValueArray::Ints(xs) => unsafe {
-//                     #[cfg_attr(feature = "cargo-clippy", allow(needless_borrow))]
-//                     map.set_values_raw_unchecked(key, Values::IntArray(&xs));
-//                 },
-//                 ValueArray::Floats(xs) => unsafe {
-//                     #[cfg_attr(feature = "cargo-clippy", allow(needless_borrow))]
-//                     map.set_values_raw_unchecked(key, Values::FloatArray(&xs));
-//                 },
-//                 ValueArray::Data(xs) => unsafe {
-//                     map.set_values_raw_unchecked(key, Values::Data(&mut xs.iter().map(|&x| x)));
-//                 },
-//                 ValueArray::Nodes(xs) => unsafe {
-//                     map.set_values_raw_unchecked(key, Values::Nodes(&mut xs.iter()));
-//                 },
-//                 ValueArray::Frames(xs) => unsafe {
-//                     map.set_values_raw_unchecked(key, Values::Frames(&mut xs.iter()));
-//                 },
-//                 ValueArray::Functions(xs) => unsafe {
-//                     map.set_values_raw_unchecked(key, Values::Functions(&mut xs.iter()));
-//                 },
-//             }
-//         }
-//
-//         map
-//     }
-// }
-
-impl OwnedMap {
+impl<'elem> OwnedMap<'elem> {
     /// Creates a new map.
     #[inline]
     pub fn new(api: API) -> Self {
-        let handle = api.create_map();
-        Self { handle }
+        Self {
+            map: unsafe { Map::from_ptr(api.create_map()) },
+        }
+    }
+}
+
+impl<'owner, 'elem> MapRef<'owner, 'elem> {
+    /// Wraps pointer into `MapRef`.
+    ///
+    /// # Safety
+    /// The caller needs to ensure the pointer and the lifetimes are valid, and that there are no
+    /// mutable references to the given map.
+    #[inline]
+    pub(crate) unsafe fn from_ptr(handle: *const ffi::VSMap) -> Self {
+        Self {
+            map: Map::from_ptr(handle),
+            _owner: PhantomData,
+        }
+    }
+}
+
+impl<'owner, 'elem> MapRefMut<'owner, 'elem> {
+    /// Wraps pointer into `MapRefMut`.
+    ///
+    /// # Safety
+    /// The caller needs to ensure the pointer and the lifetimes are valid, and that there are no
+    /// references to the given map.
+    #[inline]
+    pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSMap) -> Self {
+        Self {
+            map: Map::from_ptr(handle),
+            _owner: PhantomData,
+        }
     }
 }
 
@@ -155,27 +196,18 @@ fn handle_append_prop_error(error: i32) -> Result<()> {
     }
 }
 
-impl Map {
-    /// Converts a pointer to a map to a reference.
+impl<'elem> Map<'elem> {
+    /// Wraps pointer into `Map`.
     ///
     /// # Safety
-    /// The caller needs to ensure the pointer is valid, the lifetime is valid and there are no
-    /// active mutable references to the map during the lifetime.
+    /// The caller needs to ensure the pointer is valid, the element lifetime is valid, and that
+    /// the resulting `Map` gets put into `MapRef` or `MapRefMut` or `OwnedMap` correctly.
     #[inline]
-    pub(crate) unsafe fn from_ptr<'a>(handle: *const ffi::VSMap) -> &'a Map {
-        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
-        unsafe { mem::transmute(handle) }
-    }
-
-    /// Converts a mutable pointer to a map to a reference.
-    ///
-    /// # Safety
-    /// The caller needs to ensure the pointer is valid, the lifetime is valid and there are no
-    /// active references to the map during the lifetime.
-    #[inline]
-    pub(crate) unsafe fn from_mut_ptr<'a>(handle: *mut ffi::VSMap) -> &'a mut Map {
-        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
-        unsafe { mem::transmute(handle) }
+    pub(crate) unsafe fn from_ptr(handle: *const ffi::VSMap) -> Self {
+        Self {
+            handle: handle as _,
+            _elem: PhantomData,
+        }
     }
 
     /// Checks if the key is valid. Valid keys start with an alphabetic character or an underscore,
@@ -392,14 +424,14 @@ impl Map {
     ///
     /// This function retrieves the first value associated with the key.
     #[inline]
-    pub fn get_node(&self, key: &str) -> Result<Node> {
+    pub fn get_node(&self, key: &str) -> Result<Node<'elem>> {
         let key = Map::make_raw_key(key)?;
         unsafe { self.get_node_raw_unchecked(&key, 0) }
     }
 
     /// Retrieves nodes from a map.
     #[inline]
-    pub fn get_node_iter(&self, key: &str) -> Result<ValueIter<Node>> {
+    pub fn get_node_iter(&self, key: &str) -> Result<ValueIter<Node<'elem>>> {
         let key = Map::make_raw_key(key)?;
         unsafe { ValueIter::<Node>::new(self, Cow::Owned(key)) }
     }
@@ -408,14 +440,14 @@ impl Map {
     ///
     /// This function retrieves the first value associated with the key.
     #[inline]
-    pub fn get_frame(&self, key: &str) -> Result<FrameRef> {
+    pub fn get_frame(&self, key: &str) -> Result<FrameRef<'elem>> {
         let key = Map::make_raw_key(key)?;
         unsafe { self.get_frame_raw_unchecked(&key, 0) }
     }
 
     /// Retrieves frames from a map.
     #[inline]
-    pub fn get_frame_iter(&self, key: &str) -> Result<ValueIter<FrameRef>> {
+    pub fn get_frame_iter(&self, key: &str) -> Result<ValueIter<FrameRef<'elem>>> {
         let key = Map::make_raw_key(key)?;
         unsafe { ValueIter::<FrameRef>::new(self, Cow::Owned(key)) }
     }
@@ -515,7 +547,11 @@ impl Map {
     /// # Safety
     /// The caller must ensure `key` is valid.
     #[inline]
-    pub(crate) unsafe fn get_node_raw_unchecked(&self, key: &CStr, index: i32) -> Result<Node> {
+    pub(crate) unsafe fn get_node_raw_unchecked(
+        &self,
+        key: &CStr,
+        index: i32,
+    ) -> Result<Node<'elem>> {
         let mut error = 0;
         let value = API::get_cached().prop_get_node(self, key.as_ptr(), index, &mut error);
         handle_get_prop_error(error)?;
@@ -532,7 +568,7 @@ impl Map {
         &self,
         key: &CStr,
         index: i32,
-    ) -> Result<FrameRef> {
+    ) -> Result<FrameRef<'elem>> {
         let mut error = 0;
         let value = API::get_cached().prop_get_frame(self, key.as_ptr(), index, &mut error);
         handle_get_prop_error(error)?;
@@ -641,14 +677,14 @@ impl Map {
 
     /// Appends a node to a map.
     #[inline]
-    pub fn append_node(&mut self, key: &str, x: &Node) -> Result<()> {
+    pub fn append_node(&mut self, key: &str, x: &Node<'elem>) -> Result<()> {
         let key = Map::make_raw_key(key)?;
         unsafe { self.append_node_raw_unchecked(&key, x) }
     }
 
     /// Appends a frame to a map.
     #[inline]
-    pub fn append_frame(&mut self, key: &str, x: &Frame) -> Result<()> {
+    pub fn append_frame(&mut self, key: &str, x: &Frame<'elem>) -> Result<()> {
         let key = Map::make_raw_key(key)?;
         unsafe { self.append_frame_raw_unchecked(&key, x) }
     }
@@ -705,7 +741,11 @@ impl Map {
     /// # Safety
     /// The caller must ensure `key` is valid.
     #[inline]
-    pub(crate) unsafe fn append_node_raw_unchecked(&mut self, key: &CStr, x: &Node) -> Result<()> {
+    pub(crate) unsafe fn append_node_raw_unchecked(
+        &mut self,
+        key: &CStr,
+        x: &Node<'elem>,
+    ) -> Result<()> {
         let error = API::get_cached().prop_set_node(
             self,
             key.as_ptr(),
@@ -724,12 +764,12 @@ impl Map {
     pub(crate) unsafe fn append_frame_raw_unchecked(
         &mut self,
         key: &CStr,
-        x: &Frame,
+        x: &Frame<'elem>,
     ) -> Result<()> {
         let error = API::get_cached().prop_set_frame(
             self,
             key.as_ptr(),
-            x.ptr(),
+            x.deref(),
             ffi::VSPropAppendMode::paAppend,
         );
 
@@ -814,7 +854,7 @@ impl Map {
 
     /// Sets a property value to a node.
     #[inline]
-    pub fn set_node(&mut self, key: &str, x: &Node) -> Result<()> {
+    pub fn set_node(&mut self, key: &str, x: &Node<'elem>) -> Result<()> {
         let key = Map::make_raw_key(key)?;
         unsafe {
             self.set_node_raw_unchecked(&key, x);
@@ -824,7 +864,7 @@ impl Map {
 
     /// Sets a property value to a frame.
     #[inline]
-    pub fn set_frame(&mut self, key: &str, x: &Frame) -> Result<()> {
+    pub fn set_frame(&mut self, key: &str, x: &Frame<'elem>) -> Result<()> {
         let key = Map::make_raw_key(key)?;
         unsafe {
             self.set_frame_raw_unchecked(&key, x);
@@ -921,7 +961,7 @@ impl Map {
     /// # Safety
     /// The caller must ensure `key` is valid.
     #[inline]
-    pub(crate) unsafe fn set_node_raw_unchecked(&mut self, key: &CStr, x: &Node) {
+    pub(crate) unsafe fn set_node_raw_unchecked(&mut self, key: &CStr, x: &Node<'elem>) {
         let error = API::get_cached().prop_set_node(
             self,
             key.as_ptr(),
@@ -937,11 +977,11 @@ impl Map {
     /// # Safety
     /// The caller must ensure `key` is valid.
     #[inline]
-    pub(crate) unsafe fn set_frame_raw_unchecked(&mut self, key: &CStr, x: &Frame) {
+    pub(crate) unsafe fn set_frame_raw_unchecked(&mut self, key: &CStr, x: &Frame<'elem>) {
         let error = API::get_cached().prop_set_frame(
             self,
             key.as_ptr(),
-            x.ptr(),
+            x.deref(),
             ffi::VSPropAppendMode::paReplace,
         );
 

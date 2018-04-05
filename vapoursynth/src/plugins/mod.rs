@@ -39,9 +39,9 @@ pub struct Metadata {
     pub read_only: bool,
 }
 
-/// A filter interface.
-pub trait Filter: Sized + Send + Sync {
-    /// Returns the name of the filter.
+/// A filter function interface.
+pub trait FilterFunction {
+    /// Returns the name of the function.
     ///
     /// The characters allowed are letters, numbers, and the underscore. The first character must
     /// be a letter. In other words: `^[a-zA-Z][a-zA-Z0-9_]*$`.
@@ -49,7 +49,7 @@ pub trait Filter: Sized + Send + Sync {
     /// For example, `Invert`.
     fn name() -> &'static str;
 
-    /// Returns the filter argument string.
+    /// Returns the argument string.
     ///
     /// Arguments are separated by a semicolon. Each argument is made of several fields separated
     /// by a colon. Don’t insert additional whitespace characters, or VapourSynth will die.
@@ -76,17 +76,24 @@ pub trait Filter: Sized + Send + Sync {
     /// Creates a new instance of the filter and returns it.
     ///
     /// `args` contains the filter arguments, as specified by the argument string from
-    /// `Filter::args()`. Their presence and types are validated by VapourSynth so it's safe to
-    /// `unwrap()`.
+    /// `FilterFunction::args()`. Their presence and types are validated by VapourSynth so it's
+    /// safe to `unwrap()`.
     ///
     /// In this function you should take all input nodes for your filter and store them somewhere
     /// so that you can request their frames in `get_frame_initial()`.
-    fn create(api: API, core: CoreRef, args: &Map) -> Result<Self, Error>;
+    fn create<'core>(
+        api: API,
+        core: CoreRef<'core>,
+        args: &Map<'core>,
+    ) -> Result<Box<Filter<'core> + 'core>, Error>;
+}
 
+/// A filter interface.
+pub trait Filter<'core>: Send + Sync {
     /// Returns the parameters of this filter's output node.
     ///
     /// The returned vector should contain one entry for each node output index.
-    fn video_info<'a>(&'a self, api: API, core: CoreRef<'a>) -> Vec<VideoInfo>;
+    fn video_info(&self, api: API, core: CoreRef<'core>) -> Vec<VideoInfo<'core>>;
 
     /// Requests the necessary frames from downstream nodes.
     ///
@@ -97,13 +104,13 @@ pub trait Filter: Sized + Send + Sync {
     /// frame and return it here.
     ///
     /// Do not call `Node::get_frame()` from within this function.
-    fn get_frame_initial<'a>(
-        &'a self,
+    fn get_frame_initial(
+        &self,
         api: API,
-        core: CoreRef<'a>,
+        core: CoreRef<'core>,
         context: FrameContext,
         n: usize,
-    ) -> Result<Option<FrameRef>, Error>;
+    ) -> Result<Option<FrameRef<'core>>, Error>;
 
     /// Returns the requested frame.
     ///
@@ -114,11 +121,11 @@ pub trait Filter: Sized + Send + Sync {
     /// frames you requested in `get_frame_initial()`.
     ///
     /// Do not call `Node::get_frame()` from within this function.
-    fn get_frame<'a>(
-        &'a self,
+    fn get_frame(
+        &self,
         api: API,
-        core: CoreRef<'a>,
+        core: CoreRef<'core>,
         context: FrameContext,
         n: usize,
-    ) -> Result<FrameRef, Error>;
+    ) -> Result<FrameRef<'core>, Error>;
 }

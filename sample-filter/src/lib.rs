@@ -16,11 +16,9 @@ use vapoursynth::format::FormatID;
 use vapoursynth::node::Flags;
 use vapoursynth::video_info::{Framerate, Resolution, VideoInfo};
 
-struct Invert {
-    source: Node,
-}
+struct InvertFunction;
 
-impl Filter for Invert {
+impl FilterFunction for InvertFunction {
     fn name() -> &'static str {
         "Invert"
     }
@@ -29,22 +27,32 @@ impl Filter for Invert {
         "clip:clip"
     }
 
-    fn create(_api: API, _core: CoreRef, args: &Map) -> Result<Self, Error> {
+    fn create<'core>(
+        _api: API,
+        _core: CoreRef<'core>,
+        args: &Map<'core>,
+    ) -> Result<Box<Filter<'core> + 'core>, Error> {
         let source = args.get_node("clip").unwrap();
-        Ok(Invert { source })
+        Ok(Box::new(Invert { source }))
     }
+}
 
-    fn video_info(&self, _api: API, _core: CoreRef) -> Vec<VideoInfo> {
+struct Invert<'core> {
+    source: Node<'core>,
+}
+
+impl<'core> Filter<'core> for Invert<'core> {
+    fn video_info(&self, _api: API, _core: CoreRef<'core>) -> Vec<VideoInfo<'core>> {
         vec![self.source.info()]
     }
 
     fn get_frame_initial(
         &self,
         _api: API,
-        _core: CoreRef,
+        _core: CoreRef<'core>,
         context: FrameContext,
         n: usize,
-    ) -> Result<Option<FrameRef>, Error> {
+    ) -> Result<Option<FrameRef<'core>>, Error> {
         self.source.request_frame_filter(context, n);
         Ok(None)
     }
@@ -52,10 +60,10 @@ impl Filter for Invert {
     fn get_frame(
         &self,
         _api: API,
-        core: CoreRef,
+        core: CoreRef<'core>,
         context: FrameContext,
         n: usize,
-    ) -> Result<FrameRef, Error> {
+    ) -> Result<FrameRef<'core>, Error> {
         let frame = self.source
             .get_frame_filter(context, n)
             .ok_or(format_err!("Couldn't get the source frame"))?;
@@ -110,14 +118,9 @@ impl Filter for Invert {
     }
 }
 
-struct RandomNoise {
-    format_id: FormatID,
-    resolution: Resolution,
-    framerate: Framerate,
-    length: usize,
-}
+struct RandomNoiseFunction;
 
-impl Filter for RandomNoise {
+impl FilterFunction for RandomNoiseFunction {
     fn name() -> &'static str {
         "RandomNoise"
     }
@@ -126,7 +129,11 @@ impl Filter for RandomNoise {
         "width:int;height:int;format:int;length:int;fpsnum:int;fpsden:int"
     }
 
-    fn create(_api: API, core: CoreRef, args: &Map) -> Result<Self, Error> {
+    fn create<'core>(
+        _api: API,
+        core: CoreRef<'core>,
+        args: &Map<'core>,
+    ) -> Result<Box<Filter<'core> + 'core>, Error> {
         let format_id = (args.get_int("format").unwrap() as i32).into();
         let format = core.get_format(format_id)
             .ok_or(format_err!("No such format"))?;
@@ -165,7 +172,7 @@ impl Filter for RandomNoise {
         }
         let fpsden = fpsden as u64;
 
-        Ok(RandomNoise {
+        Ok(Box::new(RandomNoise {
             format_id,
             resolution: Resolution { width, height },
             framerate: Framerate {
@@ -173,10 +180,19 @@ impl Filter for RandomNoise {
                 denominator: fpsden,
             },
             length,
-        })
+        }))
     }
+}
 
-    fn video_info<'a>(&'a self, _api: API, core: CoreRef<'a>) -> Vec<VideoInfo> {
+struct RandomNoise {
+    format_id: FormatID,
+    resolution: Resolution,
+    framerate: Framerate,
+    length: usize,
+}
+
+impl<'core> Filter<'core> for RandomNoise {
+    fn video_info(&self, _api: API, core: CoreRef<'core>) -> Vec<VideoInfo<'core>> {
         vec![
             VideoInfo {
                 format: core.get_format(self.format_id).unwrap().into(),
@@ -191,10 +207,10 @@ impl Filter for RandomNoise {
     fn get_frame_initial(
         &self,
         _api: API,
-        core: CoreRef,
+        core: CoreRef<'core>,
         _context: FrameContext,
         _n: usize,
-    ) -> Result<Option<FrameRef>, Error> {
+    ) -> Result<Option<FrameRef<'core>>, Error> {
         let format = core.get_format(self.format_id).unwrap();
         let mut frame =
             unsafe { FrameRefMut::new_uninitialized(core, None, format, self.resolution) };
@@ -251,10 +267,10 @@ impl Filter for RandomNoise {
     fn get_frame(
         &self,
         _api: API,
-        _core: CoreRef,
+        _core: CoreRef<'core>,
         _context: FrameContext,
         _n: usize,
-    ) -> Result<FrameRef, Error> {
+    ) -> Result<FrameRef<'core>, Error> {
         unreachable!()
     }
 }
@@ -266,5 +282,5 @@ export_vapoursynth_plugin! {
         name: "Example vapoursynth-rs Plugin",
         read_only: true,
     },
-    [Invert, RandomNoise]
+    [InvertFunction, RandomNoiseFunction]
 }

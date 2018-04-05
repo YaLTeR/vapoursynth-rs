@@ -2,6 +2,7 @@
 
 use std::borrow::Cow;
 use std::ffi::CStr;
+use std::marker::PhantomData;
 use std::{mem, panic};
 use std::os::raw::{c_char, c_void};
 use std::process;
@@ -43,14 +44,15 @@ impl From<ffi::VSNodeFlags> for Flags {
 
 /// A reference to a node in the constructed filter graph.
 #[derive(Debug)]
-pub struct Node {
+pub struct Node<'core> {
     handle: *mut ffi::VSNodeRef,
+    _owner: PhantomData<&'core ()>,
 }
 
-unsafe impl Send for Node {}
-unsafe impl Sync for Node {}
+unsafe impl<'core> Send for Node<'core> {}
+unsafe impl<'core> Sync for Node<'core> {}
 
-impl Drop for Node {
+impl<'core> Drop for Node<'core> {
     #[inline]
     fn drop(&mut self) {
         unsafe {
@@ -59,22 +61,28 @@ impl Drop for Node {
     }
 }
 
-impl Clone for Node {
+impl<'core> Clone for Node<'core> {
     #[inline]
     fn clone(&self) -> Self {
         let handle = unsafe { API::get_cached().clone_node(self.handle) };
-        Self { handle }
+        Self {
+            handle,
+            _owner: PhantomData,
+        }
     }
 }
 
-impl Node {
+impl<'core> Node<'core> {
     /// Wraps `handle` in a `Node`.
     ///
     /// # Safety
-    /// The caller must ensure `handle` is valid and API is cached.
+    /// The caller must ensure `handle` and the lifetime is valid and API is cached.
     #[inline]
     pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSNodeRef) -> Self {
-        Self { handle }
+        Self {
+            handle,
+            _owner: PhantomData,
+        }
     }
 
     /// Returns the underlying pointer.
@@ -84,8 +92,10 @@ impl Node {
     }
 
     /// Returns the video info associated with this `Node`.
+    // Since we don't store the pointer to the actual `ffi::VSVideoInfo` and the lifetime is that
+    // of the `ffi::VSFormat`, this returns `VideoInfo<'core>` rather than `VideoInfo<'a>`.
     #[inline]
-    pub fn info(&self) -> VideoInfo {
+    pub fn info(&self) -> VideoInfo<'core> {
         unsafe {
             let ptr = API::get_cached().get_video_info(self.handle);
             VideoInfo::from_ptr(ptr)
@@ -94,9 +104,11 @@ impl Node {
 
     /// Generates a frame directly.
     ///
+    /// The `'error` lifetime is unbounded because this function always returns owned data.
+    ///
     /// # Panics
     /// Panics is `n` is greater than `i32::max_value()`.
-    pub fn get_frame(&self, n: usize) -> Result<FrameRef, GetFrameError<'static>> {
+    pub fn get_frame<'error>(&self, n: usize) -> Result<FrameRef<'core>, GetFrameError<'error>> {
         assert!(n <= i32::max_value() as usize);
         let n = n as i32;
 
@@ -135,35 +147,45 @@ impl Node {
     /// Panics is `n` is greater than `i32::max_value()`.
     pub fn get_frame_async<F>(&self, n: usize, callback: F)
     where
-        F: FnOnce(Result<FrameRef, GetFrameError>, usize, Node) + Send + 'static,
+        F: FnOnce(Result<FrameRef<'core>, GetFrameError>, usize, Node<'core>) + Send + 'core,
     {
-        struct CallbackData {
-            callback: Box<CallbackFn>,
+        struct CallbackData<'core> {
+            callback: Box<CallbackFn<'core> + 'core>,
         }
 
         // A little bit of magic for Box<FnOnce>.
-        trait CallbackFn {
-            fn call(self: Box<Self>, frame: Result<FrameRef, GetFrameError>, n: usize, node: Node);
+        trait CallbackFn<'core> {
+            fn call(
+                self: Box<Self>,
+                frame: Result<FrameRef<'core>, GetFrameError>,
+                n: usize,
+                node: Node<'core>,
+            );
         }
 
-        impl<F> CallbackFn for F
+        impl<'core, F> CallbackFn<'core> for F
         where
-            F: FnOnce(Result<FrameRef, GetFrameError>, usize, Node),
+            F: FnOnce(Result<FrameRef<'core>, GetFrameError>, usize, Node<'core>),
         {
             #[cfg_attr(feature = "cargo-clippy", allow(boxed_local))]
-            fn call(self: Box<Self>, frame: Result<FrameRef, GetFrameError>, n: usize, node: Node) {
+            fn call(
+                self: Box<Self>,
+                frame: Result<FrameRef<'core>, GetFrameError>,
+                n: usize,
+                node: Node<'core>,
+            ) {
                 (self)(frame, n, node)
             }
         }
 
-        unsafe extern "system" fn c_callback(
+        unsafe extern "system" fn c_callback<'core>(
             user_data: *mut c_void,
             frame: *const ffi::VSFrameRef,
             n: i32,
             node: *mut ffi::VSNodeRef,
             error_msg: *const c_char,
         ) {
-            let user_data = Box::from_raw(user_data as *mut CallbackData);
+            let user_data = Box::from_raw(user_data as *mut CallbackData<'core>);
 
             let closure = panic::AssertUnwindSafe(move || {
                 let frame = if frame.is_null() {
@@ -184,7 +206,6 @@ impl Node {
             });
 
             if panic::catch_unwind(closure).is_err() {
-                eprintln!("panic in the get_frame_async() callback, aborting");
                 process::abort();
             }
         }
@@ -242,7 +263,7 @@ impl Node {
     ///
     /// # Panics
     /// Panics is `n` is greater than `i32::max_value()`.
-    pub fn get_frame_filter(&self, context: FrameContext, n: usize) -> Option<FrameRef> {
+    pub fn get_frame_filter(&self, context: FrameContext, n: usize) -> Option<FrameRef<'core>> {
         assert!(n <= i32::max_value() as usize);
         let n = n as i32;
 

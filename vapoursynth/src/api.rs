@@ -823,7 +823,7 @@ impl API {
     #[inline]
     pub(crate) unsafe fn new_video_frame(
         self,
-        format: *const ffi::VSFormat,
+        format: &ffi::VSFormat,
         width: i32,
         height: i32,
         prop_src: *const ffi::VSFrameRef,

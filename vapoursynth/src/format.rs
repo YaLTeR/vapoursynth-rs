@@ -3,13 +3,13 @@
 use std::ffi::CStr;
 use std::fmt::{self, Display};
 use std::marker::PhantomData;
+use std::ops::Deref;
 use vapoursynth_sys as ffi;
 
 /// Contains information about a video format.
-#[derive(Debug, Clone, Copy, Eq)]
-pub struct Format<'a> {
-    handle: *const ffi::VSFormat,
-    _owner: PhantomData<&'a ()>,
+#[derive(Debug, Clone, Copy)]
+pub struct Format<'core> {
+    handle: &'core ffi::VSFormat,
 }
 
 /// Preset VapourSynth formats.
@@ -82,48 +82,52 @@ pub enum SampleType {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct FormatID(pub(crate) i32);
 
-impl<'a> PartialEq for Format<'a> {
+impl<'core> PartialEq for Format<'core> {
     #[inline]
-    fn eq(&self, other: &Format) -> bool {
+    fn eq(&self, other: &Format<'core>) -> bool {
         self.id() == other.id()
     }
 }
 
-impl<'a> Format<'a> {
+impl<'core> Eq for Format<'core> {}
+
+#[doc(hidden)]
+impl<'core> Deref for Format<'core> {
+    type Target = ffi::VSFormat;
+
+    // Technically this should return `&'core`.
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        self.handle
+    }
+}
+
+impl<'core> Format<'core> {
     /// Wraps a raw pointer in a `Format`.
     ///
     /// # Safety
-    /// The caller must ensure `ptr` is valid.
+    /// The caller must ensure `ptr` and the lifetime is valid.
     #[inline]
     pub(crate) unsafe fn from_ptr(ptr: *const ffi::VSFormat) -> Self {
-        Self {
-            handle: ptr,
-            _owner: PhantomData,
-        }
-    }
-
-    /// Returns the underlying pointer.
-    #[inline]
-    pub(crate) fn ptr(&self) -> *const ffi::VSFormat {
-        self.handle
+        Self { handle: &*ptr }
     }
 
     /// Gets the unique identifier of this format.
     #[inline]
     pub fn id(self) -> FormatID {
-        FormatID(unsafe { (*self.handle).id })
+        FormatID(self.handle.id)
     }
 
     /// Gets the printable name of this format.
     #[inline]
-    pub fn name(self) -> &'a str {
-        unsafe { CStr::from_ptr(&(*self.handle).name as _).to_str().unwrap() }
+    pub fn name(self) -> &'core str {
+        unsafe { CStr::from_ptr(&self.handle.name as _).to_str().unwrap() }
     }
 
     /// Gets the number of planes of this format.
     #[inline]
     pub fn plane_count(self) -> usize {
-        let plane_count = unsafe { (*self.handle).numPlanes };
+        let plane_count = self.handle.numPlanes;
         debug_assert!(plane_count >= 0);
         plane_count as usize
     }
@@ -131,7 +135,7 @@ impl<'a> Format<'a> {
     /// Gets the color family of this format.
     #[inline]
     pub fn color_family(self) -> ColorFamily {
-        match unsafe { (*self.handle).colorFamily } {
+        match self.handle.colorFamily {
             x if x == ffi::VSColorFamily::cmGray as i32 => ColorFamily::Gray,
             x if x == ffi::VSColorFamily::cmRGB as i32 => ColorFamily::RGB,
             x if x == ffi::VSColorFamily::cmYUV as i32 => ColorFamily::YUV,
@@ -144,7 +148,7 @@ impl<'a> Format<'a> {
     /// Gets the sample type of this format.
     #[inline]
     pub fn sample_type(self) -> SampleType {
-        match unsafe { (*self.handle).sampleType } {
+        match self.handle.sampleType {
             x if x == ffi::VSSampleType::stInteger as i32 => SampleType::Integer,
             x if x == ffi::VSSampleType::stFloat as i32 => SampleType::Float,
             _ => unreachable!(),
@@ -154,7 +158,7 @@ impl<'a> Format<'a> {
     /// Gets the number of significant bits per sample.
     #[inline]
     pub fn bits_per_sample(self) -> u8 {
-        let rv = unsafe { (*self.handle).bitsPerSample };
+        let rv = self.handle.bitsPerSample;
         debug_assert!(rv >= 0 && rv <= i32::from(u8::max_value()));
         rv as u8
     }
@@ -163,7 +167,7 @@ impl<'a> Format<'a> {
     /// possible that can fit the number of bits used per sample.
     #[inline]
     pub fn bytes_per_sample(self) -> u8 {
-        let rv = unsafe { (*self.handle).bytesPerSample };
+        let rv = self.handle.bytesPerSample;
         debug_assert!(rv >= 0 && rv <= i32::from(u8::max_value()));
         rv as u8
     }
@@ -171,7 +175,7 @@ impl<'a> Format<'a> {
     /// log2 subsampling factor, applied to second and third plane.
     #[inline]
     pub fn sub_sampling_w(self) -> u8 {
-        let rv = unsafe { (*self.handle).subSamplingW };
+        let rv = self.handle.subSamplingW;
         debug_assert!(rv >= 0 && rv <= i32::from(u8::max_value()));
         rv as u8
     }
@@ -179,7 +183,7 @@ impl<'a> Format<'a> {
     /// log2 subsampling factor, applied to second and third plane.
     #[inline]
     pub fn sub_sampling_h(self) -> u8 {
-        let rv = unsafe { (*self.handle).subSamplingH };
+        let rv = self.handle.subSamplingH;
         debug_assert!(rv >= 0 && rv <= i32::from(u8::max_value()));
         rv as u8
     }

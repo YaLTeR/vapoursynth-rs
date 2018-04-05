@@ -1,6 +1,7 @@
 //! Video clip formats.
 
 use std::fmt::Debug;
+use std::ops::Deref;
 use std::ptr;
 use vapoursynth_sys as ffi;
 
@@ -40,9 +41,9 @@ pub enum Property<T: Debug + Clone + Copy + Eq + PartialEq> {
 
 /// Contains information about a video clip.
 #[derive(Debug, Copy, Clone)]
-pub struct VideoInfo<'a> {
+pub struct VideoInfo<'core> {
     /// Format of the clip.
-    pub format: Property<Format<'a>>,
+    pub format: Property<Format<'core>>,
 
     /// Framerate of the clip.
     pub framerate: Property<Framerate>,
@@ -62,11 +63,11 @@ pub struct VideoInfo<'a> {
     pub flags: node::Flags,
 }
 
-impl<'a> VideoInfo<'a> {
+impl<'core> VideoInfo<'core> {
     /// Creates a `VideoInfo` from a raw pointer.
     ///
     /// # Safety
-    /// The caller must ensure `ptr` is valid.
+    /// The caller must ensure `ptr` and the lifetime is valid.
     pub(crate) unsafe fn from_ptr(ptr: *const ffi::VSVideoInfo) -> Self {
         let info = &*ptr;
 
@@ -133,7 +134,7 @@ impl<'a> VideoInfo<'a> {
     pub(crate) fn ffi_type(self) -> ffi::VSVideoInfo {
         let format = match self.format {
             Property::Variable => ptr::null(),
-            Property::Constant(x) => x.ptr(),
+            Property::Constant(x) => x.deref(),
         };
 
         let (fps_num, fps_den) = match self.framerate {

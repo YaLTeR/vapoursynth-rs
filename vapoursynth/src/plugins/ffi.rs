@@ -2,15 +2,15 @@
 use failure::Error;
 use std::ffi::CString;
 use std::{mem, panic, process, ptr};
-use std::ops::DerefMut;
+use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 use vapoursynth_sys as ffi;
 
 use api::API;
 use core::CoreRef;
 use frame::FrameRef;
-use map::Map;
-use plugins::{Filter, FrameContext, Metadata};
+use map::{Map, MapRef, MapRefMut};
+use plugins::{Filter, FilterFunction, FrameContext, Metadata};
 use video_info::VideoInfo;
 
 /// Pushes the error backtrace into the given string.
@@ -23,7 +23,7 @@ fn push_backtrace(buf: &mut String, err: &Error) {
 }
 
 /// Sets the video info of the output node of this filter.
-unsafe extern "system" fn init<F: Filter>(
+unsafe extern "system" fn init<'core>(
     _in_: *mut ffi::VSMap,
     out: *mut ffi::VSMap,
     instance_data: *mut *mut c_void,
@@ -33,7 +33,7 @@ unsafe extern "system" fn init<F: Filter>(
 ) {
     let closure = move || {
         let core = CoreRef::from_ptr(core);
-        let filter = Box::from_raw(*(instance_data as *mut *mut F));
+        let filter = Box::from_raw(*(instance_data as *mut *mut Box<Filter<'core> + 'core>));
 
         let vi = filter
             .video_info(API::get_cached(), core)
@@ -51,8 +51,8 @@ unsafe extern "system" fn init<F: Filter>(
             // state after a panic.
             //
             // Just set the error message.
-            let out = Map::from_mut_ptr(out);
-            out.set_error(&format!("Panic during init() of {}", F::name()));
+            let mut out = MapRefMut::from_ptr(out);
+            out.set_error("Panic during Filter::video_info()");
         };
 
         if panic::catch_unwind(closure).is_err() {
@@ -62,13 +62,13 @@ unsafe extern "system" fn init<F: Filter>(
 }
 
 /// Drops the filter.
-unsafe extern "system" fn free<F: Filter>(
+unsafe extern "system" fn free<'core>(
     instance_data: *mut c_void,
     core: *mut ffi::VSCore,
     _vsapi: *const ffi::VSAPI,
 ) {
     let closure = move || {
-        let filter = Box::from_raw(instance_data as *mut F);
+        let filter = Box::from_raw(instance_data as *mut Box<Filter<'core> + 'core>);
         drop(filter);
     };
 
@@ -78,7 +78,7 @@ unsafe extern "system" fn free<F: Filter>(
 }
 
 /// Calls `Filter::get_frame_initial()` and `Filter::get_frame()`.
-unsafe extern "system" fn get_frame<F: Filter>(
+unsafe extern "system" fn get_frame<'core>(
     n: i32,
     activation_reason: i32,
     instance_data: *mut *mut c_void,
@@ -92,7 +92,7 @@ unsafe extern "system" fn get_frame<F: Filter>(
         let core = CoreRef::from_ptr(core);
         let context = FrameContext::from_ptr(frame_ctx);
 
-        let filter = Box::from_raw(*(instance_data as *mut *mut F));
+        let filter = Box::from_raw(*(instance_data as *mut *mut Box<Filter<'core> + 'core>));
 
         debug_assert!(n >= 0);
         let n = n as usize;
@@ -101,7 +101,7 @@ unsafe extern "system" fn get_frame<F: Filter>(
             x if x == ffi::VSActivationReason::arInitial as _ => {
                 match filter.get_frame_initial(api, core, context, n) {
                     Ok(Some(frame)) => {
-                        let ptr = frame.ptr();
+                        let ptr = frame.deref().deref() as *const _;
                         // The ownership is transferred to the caller.
                         mem::forget(frame);
                         ptr
@@ -124,7 +124,7 @@ unsafe extern "system" fn get_frame<F: Filter>(
             x if x == ffi::VSActivationReason::arAllFramesReady as _ => {
                 match filter.get_frame(api, core, context, n) {
                     Ok(frame) => {
-                        let ptr = frame.ptr();
+                        let ptr = frame.deref().deref() as *const _;
                         // The ownership is transferred to the caller.
                         mem::forget(frame);
                         ptr
@@ -158,7 +158,7 @@ unsafe extern "system" fn get_frame<F: Filter>(
 }
 
 /// Creates a new instance of the filter.
-unsafe extern "system" fn create<F: Filter>(
+unsafe extern "system" fn create<F: FilterFunction>(
     in_: *const ffi::VSMap,
     out: *mut ffi::VSMap,
     user_data: *mut c_void,
@@ -171,11 +171,11 @@ unsafe extern "system" fn create<F: Filter>(
     API::set(api);
 
     let closure = move || {
-        let args = Map::from_ptr(in_);
-        let out = Map::from_mut_ptr(out);
+        let args = MapRef::from_ptr(in_);
+        let mut out = MapRefMut::from_ptr(out);
         let core = CoreRef::from_ptr(core);
 
-        let filter = match F::create(API::get_cached(), core, args) {
+        let filter = match F::create(API::get_cached(), core, &args) {
             Ok(filter) => Box::new(filter),
             Err(err) => {
                 let mut buf = String::new();
@@ -195,11 +195,11 @@ unsafe extern "system" fn create<F: Filter>(
 
         API::get_cached().create_filter(
             in_,
-            out.deref_mut(),
+            out.deref_mut().deref_mut(),
             name_cstr.as_ptr(),
-            init::<F>,
-            get_frame::<F>,
-            Some(free::<F>),
+            init,
+            get_frame,
+            Some(free),
             ffi::VSFilterMode::fmParallel,
             ffi::VSNodeFlags(0),
             Box::into_raw(filter) as *mut _,
@@ -209,7 +209,7 @@ unsafe extern "system" fn create<F: Filter>(
 
     if panic::catch_unwind(closure).is_err() {
         let closure = move || {
-            let out = Map::from_mut_ptr(out);
+            let mut out = MapRefMut::from_ptr(out);
             out.set_error(&format!(
                 "Panic during Filter::create() of {}",
                 name_cstr.to_str().unwrap()
@@ -260,7 +260,10 @@ pub unsafe fn call_config_func(
 /// # Safety
 /// The caller must ensure the pointers are valid.
 #[inline]
-pub unsafe fn call_register_func<F: Filter>(register_func: *const c_void, plugin: *mut c_void) {
+pub unsafe fn call_register_func<F: FilterFunction>(
+    register_func: *const c_void,
+    plugin: *mut c_void,
+) {
     let register_func = *(&register_func as *const _ as *const ffi::VSRegisterFunction);
 
     let name_cstring =
@@ -284,8 +287,8 @@ pub unsafe fn call_register_func<F: Filter>(register_func: *const c_void, plugin
 ///
 /// The first parameter is a `Metadata` expression containing your plugin's metadata.
 ///
-/// Following it is a list of types implementing `Filter`, those are the filters the plugin will
-/// export.
+/// Following it is a list of types implementing `FilterFunction`, those are the filter functions
+/// the plugin will export.
 ///
 /// # Example
 /// ```no_compile
@@ -296,7 +299,7 @@ pub unsafe fn call_register_func<F: Filter>(register_func: *const c_void, plugin
 ///         name: "Invert Example Plugin",
 ///         read_only: true,
 ///     },
-///     [SampleFilter]
+///     [SampleFilterFunction]
 /// }
 /// ```
 #[macro_export]

@@ -4,15 +4,15 @@ use super::*;
 
 /// An iterator over the keys of a map.
 #[derive(Clone, Copy)]
-pub struct Keys<'a> {
-    map: &'a Map,
+pub struct Keys<'map, 'elem: 'map> {
+    map: &'map Map<'elem>,
     count: usize,
     index: usize,
 }
 
-impl<'a> Keys<'a> {
+impl<'map, 'elem> Keys<'map, 'elem> {
     #[inline]
-    pub(crate) fn new(map: &'a Map) -> Self {
+    pub(crate) fn new(map: &'map Map<'elem>) -> Self {
         Self {
             map,
             count: map.key_count(),
@@ -21,8 +21,8 @@ impl<'a> Keys<'a> {
     }
 }
 
-impl<'a> Iterator for Keys<'a> {
-    type Item = &'a str;
+impl<'map, 'elem> Iterator for Keys<'map, 'elem> {
+    type Item = &'map str;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -42,11 +42,11 @@ impl<'a> Iterator for Keys<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Keys<'a> {}
+impl<'map, 'elem> ExactSizeIterator for Keys<'map, 'elem> {}
 
 /// An iterator over the values associated with a certain key of a map.
-pub struct ValueIter<'map, 'key, T> {
-    map: &'map Map,
+pub struct ValueIter<'map, 'elem: 'map, 'key, T> {
+    map: &'map Map<'elem>,
     key: Cow<'key, CStr>, // Just using this as an enum { owned, borrowed }.
     count: i32,
     index: i32,
@@ -55,12 +55,12 @@ pub struct ValueIter<'map, 'key, T> {
 
 macro_rules! impl_value_iter {
     ($value_type:path, $type:ty, $func:ident) => (
-        impl<'map, 'key> ValueIter<'map, 'key, $type> {
+        impl<'map, 'elem, 'key> ValueIter<'map, 'elem, 'key, $type> {
             /// Creates a `ValueIter` from the given `map` and `key`.
             ///
             /// # Safety
             /// The caller must ensure `key` is valid.
-            pub(crate) unsafe fn new(map: &'map Map, key: Cow<'key, CStr>) -> Result<Self> {
+            pub(crate) unsafe fn new(map: &'map Map<'elem>, key: Cow<'key, CStr>) -> Result<Self> {
                 // Check if the value type is correct.
                 match map.value_type_raw_unchecked(&key)? {
                     $value_type => {},
@@ -78,7 +78,7 @@ macro_rules! impl_value_iter {
             }
         }
 
-        impl<'map, 'key> Iterator for ValueIter<'map, 'key, $type> {
+        impl<'map, 'elem, 'key> Iterator for ValueIter<'map, 'elem, 'key, $type> {
             type Item = $type;
 
             #[inline]
@@ -100,13 +100,13 @@ macro_rules! impl_value_iter {
             }
         }
 
-        impl<'map, 'key> ExactSizeIterator for ValueIter<'map, 'key, $type> {}
+        impl<'map, 'elem, 'key> ExactSizeIterator for ValueIter<'map, 'elem, 'key, $type> {}
     )
 }
 
 impl_value_iter!(ValueType::Int, i64, get_int_raw_unchecked);
 impl_value_iter!(ValueType::Float, f64, get_float_raw_unchecked);
 impl_value_iter!(ValueType::Data, &'map [u8], get_data_raw_unchecked);
-impl_value_iter!(ValueType::Node, Node, get_node_raw_unchecked);
-impl_value_iter!(ValueType::Frame, FrameRef, get_frame_raw_unchecked);
+impl_value_iter!(ValueType::Node, Node<'elem>, get_node_raw_unchecked);
+impl_value_iter!(ValueType::Frame, FrameRef<'elem>, get_frame_raw_unchecked);
 impl_value_iter!(ValueType::Function, Function, get_function_raw_unchecked);

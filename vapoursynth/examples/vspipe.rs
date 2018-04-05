@@ -36,9 +36,9 @@ mod inner {
         Empty,
     }
 
-    struct OutputParameters {
-        node: Node,
-        alpha_node: Option<Node>,
+    struct OutputParameters<'core> {
+        node: Node<'core>,
+        alpha_node: Option<Node<'core>>,
         start_frame: usize,
         end_frame: usize,
         requests: usize,
@@ -46,11 +46,11 @@ mod inner {
         progress: bool,
     }
 
-    struct OutputState {
+    struct OutputState<'core> {
         output_target: OutputTarget,
         timecodes_file: Option<File>,
         error: Option<(usize, Error)>,
-        reorder_map: HashMap<usize, (Option<FrameRef>, Option<FrameRef>)>,
+        reorder_map: HashMap<usize, (Option<FrameRef<'core>>, Option<FrameRef<'core>>)>,
         last_requested_frame: usize,
         next_output_frame: usize,
         current_timecode: Ratio<i64>,
@@ -61,10 +61,10 @@ mod inner {
         fps: Option<f64>,
     }
 
-    struct SharedData {
+    struct SharedData<'core> {
         output_done_pair: (Mutex<bool>, Condvar),
-        output_parameters: OutputParameters,
-        output_state: Mutex<OutputState>,
+        output_parameters: OutputParameters<'core>,
+        output_state: Mutex<OutputState<'core>>,
     }
 
     impl Write for OutputTarget {
@@ -320,11 +320,11 @@ mod inner {
         Ok(())
     }
 
-    fn frame_done_callback(
-        frame: Result<FrameRef, GetFrameError>,
+    fn frame_done_callback<'core>(
+        frame: Result<FrameRef<'core>, GetFrameError>,
         n: usize,
-        _node: &Node,
-        shared_data: &Arc<SharedData>,
+        _node: &Node<'core>,
+        shared_data: &Arc<SharedData<'core>>,
         alpha: bool,
     ) {
         let parameters = &shared_data.output_parameters;

@@ -1,5 +1,6 @@
 //! VapourSynth frames.
 
+use std::marker::PhantomData;
 use std::{mem, ptr, slice};
 use std::ops::{Deref, DerefMut};
 use vapoursynth_sys as ffi;
@@ -7,7 +8,7 @@ use vapoursynth_sys as ffi;
 use api::API;
 use core::CoreRef;
 use format::Format;
-use map::Map;
+use map::{MapRef, MapRefMut};
 use video_info::Resolution;
 
 /// An error indicating that the frame data has non-zero padding.
@@ -16,130 +17,122 @@ use video_info::Resolution;
 pub struct NonZeroPadding(usize);
 
 /// One frame of a clip.
-// WARNING: use ONLY references to this type. The only thing this type is for is doing
-// &ffi::VSFrameRef and &mut ffi::VSFrameRef without exposing the (unknown size) ffi type outside.
-pub struct Frame(ffi::VSFrameRef);
-
-unsafe impl Sync for Frame {}
-
-#[doc(hidden)]
-impl Deref for Frame {
-    type Target = ffi::VSFrameRef;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        unsafe { mem::transmute(self) }
-    }
-}
-
-#[doc(hidden)]
-impl DerefMut for Frame {
-    #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { mem::transmute(self) }
-    }
+// This type is intended to be publicly used only in reference form.
+#[derive(Debug)]
+pub struct Frame<'core> {
+    // The actual mutability of this depends on whether it's accessed via `&Frame` or `&mut Frame`.
+    handle: *mut ffi::VSFrameRef,
+    // The cached frame format for fast access.
+    format: Format<'core>,
+    _owner: PhantomData<&'core ()>,
 }
 
 /// A reference to a ref-counted frame.
 #[derive(Debug)]
-pub struct FrameRef {
-    handle: *const ffi::VSFrameRef,
+pub struct FrameRef<'core> {
+    // Only immutable references to this are allowed.
+    frame: Frame<'core>,
 }
-
-unsafe impl Send for FrameRef {}
-unsafe impl Sync for FrameRef {}
 
 /// A reference to a mutable frame.
 #[derive(Debug)]
-pub struct FrameRefMut {
-    handle: *mut ffi::VSFrameRef,
+pub struct FrameRefMut<'core> {
+    // Both mutable and immutable references to this are allowed.
+    frame: Frame<'core>,
 }
 
-unsafe impl Send for FrameRefMut {}
-unsafe impl Sync for FrameRefMut {}
+unsafe impl<'core> Send for Frame<'core> {}
+unsafe impl<'core> Sync for Frame<'core> {}
 
-impl Drop for FrameRef {
-    #[inline]
-    fn drop(&mut self) {
-        unsafe {
-            API::get_cached().free_frame(self);
-        }
-    }
-}
+#[doc(hidden)]
+impl<'core> Deref for Frame<'core> {
+    type Target = ffi::VSFrameRef;
 
-impl Clone for FrameRef {
-    #[inline]
-    fn clone(&self) -> Self {
-        let handle = unsafe { API::get_cached().clone_frame(self) };
-        Self { handle }
-    }
-}
-
-impl Drop for FrameRefMut {
-    #[inline]
-    fn drop(&mut self) {
-        unsafe {
-            API::get_cached().free_frame(self);
-        }
-    }
-}
-
-impl Deref for FrameRef {
-    type Target = Frame;
-
+    // Technically this should return `&'core`.
     #[inline]
     fn deref(&self) -> &Self::Target {
-        unsafe { Frame::from_ptr(self.handle) }
+        unsafe { &*self.handle }
     }
 }
 
-impl Deref for FrameRefMut {
-    type Target = Frame;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        unsafe { Frame::from_ptr(self.handle) }
-    }
-}
-
-impl DerefMut for FrameRefMut {
+#[doc(hidden)]
+impl<'core> DerefMut for Frame<'core> {
+    // Technically this should return `&'core`.
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { Frame::from_mut_ptr(self.handle) }
+        unsafe { &mut *self.handle }
     }
 }
 
-impl FrameRef {
+impl<'core> Drop for Frame<'core> {
+    #[inline]
+    fn drop(&mut self) {
+        unsafe {
+            API::get_cached().free_frame(&self);
+        }
+    }
+}
+
+impl<'core> Clone for FrameRef<'core> {
+    #[inline]
+    fn clone(&self) -> Self {
+        unsafe {
+            let handle = API::get_cached().clone_frame(self);
+            Self {
+                frame: Frame::from_ptr(handle),
+            }
+        }
+    }
+}
+
+impl<'core> Deref for FrameRef<'core> {
+    type Target = Frame<'core>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.frame
+    }
+}
+
+impl<'core> Deref for FrameRefMut<'core> {
+    type Target = Frame<'core>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.frame
+    }
+}
+
+impl<'core> DerefMut for FrameRefMut<'core> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.frame
+    }
+}
+
+impl<'core> FrameRef<'core> {
     /// Wraps `handle` in a `FrameRef`.
     ///
     /// # Safety
-    /// The caller must ensure `handle` is valid and API is cached.
+    /// The caller must ensure `handle` and the lifetime is valid and API is cached.
     #[inline]
     pub(crate) unsafe fn from_ptr(handle: *const ffi::VSFrameRef) -> Self {
-        Self { handle }
-    }
-
-    /// Returns the underlying pointer.
-    #[inline]
-    pub(crate) fn ptr(&self) -> *const ffi::VSFrameRef {
-        self.handle
+        Self {
+            frame: Frame::from_ptr(handle),
+        }
     }
 }
 
-impl FrameRefMut {
+impl<'core> FrameRefMut<'core> {
     /// Wraps `handle` in a `FrameRefMut`.
     ///
     /// # Safety
-    /// The caller must ensure `handle` is valid and API is cached.
+    /// The caller must ensure `handle` and the lifetime is valid and API is cached.
     #[inline]
     pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSFrameRef) -> Self {
-        Self { handle }
-    }
-
-    /// Returns the underlying pointer.
-    #[inline]
-    pub(crate) fn ptr(&self) -> *mut ffi::VSFrameRef {
-        self.handle
+        Self {
+            frame: Frame::from_ptr(handle),
+        }
     }
 
     /// Creates a copy of the given frame.
@@ -148,9 +141,9 @@ impl FrameRefMut {
     ///
     /// Judging by the underlying implementation, it seems that any valid `core` can be used.
     #[inline]
-    pub fn copy_of(core: CoreRef, frame: &Frame) -> Self {
+    pub fn copy_of(core: CoreRef, frame: &Frame<'core>) -> Self {
         Self {
-            handle: unsafe { API::get_cached().copy_frame(frame, core.ptr()) },
+            frame: unsafe { Frame::from_ptr(API::get_cached().copy_frame(frame, core.ptr())) },
         }
     }
 
@@ -166,7 +159,8 @@ impl FrameRefMut {
     /// Panics if the given resolution has components that don't fit into an `i32`.
     #[inline]
     pub unsafe fn new_uninitialized(
-        core: CoreRef,
+        core: CoreRef<'core>,
+        // TODO: &'core Frame?
         prop_src: Option<&Frame>,
         format: Format,
         resolution: Resolution,
@@ -175,64 +169,49 @@ impl FrameRefMut {
         assert!(resolution.height <= i32::max_value() as usize);
 
         Self {
-            handle: unsafe {
-                API::get_cached().new_video_frame(
-                    format.ptr(),
+            frame: unsafe {
+                Frame::from_ptr(API::get_cached().new_video_frame(
+                    &format,
                     resolution.width as i32,
                     resolution.height as i32,
-                    prop_src.map(Frame::ptr).unwrap_or(ptr::null()),
+                    prop_src.map(|f| f.deref() as _).unwrap_or(ptr::null()),
                     core.ptr(),
-                )
+                ))
             },
         }
     }
 }
 
-impl From<FrameRefMut> for FrameRef {
+impl<'core> From<FrameRefMut<'core>> for FrameRef<'core> {
     #[inline]
-    fn from(x: FrameRefMut) -> FrameRef {
-        let rv = FrameRef { handle: x.handle };
-        mem::forget(x);
-        rv
+    fn from(x: FrameRefMut<'core>) -> Self {
+        Self { frame: x.frame }
     }
 }
 
-impl Frame {
+impl<'core> Frame<'core> {
     /// Converts a pointer to a frame to a reference.
     ///
     /// # Safety
-    /// The caller needs to ensure the pointer is valid, the lifetime is valid and there are no
-    /// active mutable references to the map during the lifetime.
+    /// The caller needs to ensure the pointer and the lifetime is valid, and that the resulting
+    /// `Frame` gets put into `FrameRef` or `FrameRefMut` according to the input pointer
+    /// mutability.
     #[inline]
-    pub(crate) unsafe fn from_ptr<'a>(handle: *const ffi::VSFrameRef) -> &'a Frame {
-        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
-        unsafe { mem::transmute(handle) }
-    }
-
-    /// Converts a mutable pointer to a frame to a reference.
-    ///
-    /// # Safety
-    /// The caller needs to ensure the pointer is valid, the lifetime is valid and there are no
-    /// active references to the map during the lifetime.
-    #[inline]
-    pub(crate) unsafe fn from_mut_ptr<'a>(handle: *mut ffi::VSFrameRef) -> &'a mut Frame {
-        #[cfg_attr(feature = "cargo-clippy", allow(transmute_ptr_to_ref))]
-        unsafe { mem::transmute(handle) }
-    }
-
-    /// Returns the underlying pointer.
-    #[inline]
-    pub(crate) fn ptr(&self) -> *const ffi::VSFrameRef {
-        self.deref()
+    pub(crate) unsafe fn from_ptr(handle: *const ffi::VSFrameRef) -> Self {
+        Self {
+            handle: handle as _,
+            format: unsafe {
+                let ptr = API::get_cached().get_frame_format(&*handle);
+                Format::from_ptr(ptr)
+            },
+            _owner: PhantomData,
+        }
     }
 
     /// Returns the frame format.
     #[inline]
-    pub fn format(&self) -> Format {
-        unsafe {
-            let ptr = API::get_cached().get_frame_format(self);
-            Format::from_ptr(ptr)
-        }
+    pub fn format(&self) -> Format<'core> {
+        self.format
     }
 
     /// Returns the width of a plane, in pixels.
@@ -410,13 +389,13 @@ impl Frame {
 
     /// Returns a map of frame's properties.
     #[inline]
-    pub fn props(&self) -> &Map {
-        unsafe { Map::from_ptr(API::get_cached().get_frame_props_ro(self)) }
+    pub fn props(&self) -> MapRef {
+        unsafe { MapRef::from_ptr(API::get_cached().get_frame_props_ro(self)) }
     }
 
     /// Returns a mutable map of frame's properties.
     #[inline]
-    pub fn props_mut(&mut self) -> &mut Map {
-        unsafe { Map::from_mut_ptr(API::get_cached().get_frame_props_rw(self)) }
+    pub fn props_mut(&mut self) -> MapRefMut {
+        unsafe { MapRefMut::from_ptr(API::get_cached().get_frame_props_rw(self)) }
     }
 }
