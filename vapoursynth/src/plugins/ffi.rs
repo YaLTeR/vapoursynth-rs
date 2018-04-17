@@ -13,6 +13,14 @@ use map::{Map, MapRef, MapRefMut};
 use plugins::{Filter, FilterFunction, FrameContext, Metadata};
 use video_info::VideoInfo;
 
+/// Container for the internal filter function data.
+pub(crate) struct FilterFunctionData<F: FilterFunction> {
+    pub filter_function: F,
+    // Store the name since it's supposed to be the same between two invocations (register and
+    // create_filter).
+    pub name: CString,
+}
+
 /// Pushes the error backtrace into the given string.
 fn push_backtrace(buf: &mut String, err: &Error) {
     for cause in err.causes().skip(1) {
@@ -158,67 +166,61 @@ unsafe extern "system" fn get_frame<'core>(
 }
 
 /// Creates a new instance of the filter.
-unsafe extern "system" fn create<F: FilterFunction>(
+pub(crate) unsafe extern "system" fn create<F: FilterFunction>(
     in_: *const ffi::VSMap,
     out: *mut ffi::VSMap,
     user_data: *mut c_void,
     core: *mut ffi::VSCore,
     api: *const ffi::VSAPI,
 ) {
-    let name = CString::from_raw(user_data as _);
-    let name_cstr = name.as_ref();
-
-    API::set(api);
-
     let closure = move || {
+        API::set(api);
+
         let args = MapRef::from_ptr(in_);
         let mut out = MapRefMut::from_ptr(out);
         let core = CoreRef::from_ptr(core);
+        let data = Box::from_raw(user_data as *mut FilterFunctionData<F>);
 
-        let filter = match F::create(API::get_cached(), core, &args) {
-            Ok(filter) => Box::new(filter),
+        let filter = match data.filter_function.create(API::get_cached(), core, &args) {
+            Ok(Some(filter)) => Some(Box::new(filter)),
+            Ok(None) => None,
             Err(err) => {
                 let mut buf = String::new();
 
                 buf += &format!(
                     "Error in Filter::create() of {}: {}",
-                    name_cstr.to_str().unwrap(),
+                    data.name.to_str().unwrap(),
                     err.cause()
                 );
 
                 push_backtrace(&mut buf, &err);
 
                 out.set_error(&buf.replace('\0', "\\0")).unwrap();
-                return;
+                None
             }
         };
 
-        API::get_cached().create_filter(
-            in_,
-            out.deref_mut().deref_mut(),
-            name_cstr.as_ptr(),
-            init,
-            get_frame,
-            Some(free),
-            ffi::VSFilterMode::fmParallel,
-            ffi::VSNodeFlags(0),
-            Box::into_raw(filter) as *mut _,
-            core.ptr(),
-        );
+        if let Some(filter) = filter {
+            API::get_cached().create_filter(
+                in_,
+                out.deref_mut().deref_mut(),
+                data.name.as_ptr(),
+                init,
+                get_frame,
+                Some(free),
+                ffi::VSFilterMode::fmParallel,
+                ffi::VSNodeFlags(0),
+                Box::into_raw(filter) as *mut _,
+                core.ptr(),
+            );
+        }
+
+        mem::forget(data);
     };
 
     if panic::catch_unwind(closure).is_err() {
-        let closure = move || {
-            let mut out = MapRefMut::from_ptr(out);
-            out.set_error(&format!(
-                "Panic during Filter::create() of {}",
-                name_cstr.to_str().unwrap()
-            ));
-        };
-
-        if panic::catch_unwind(closure).is_err() {
-            process::abort();
-        }
+        // The `FilterFunction` might have been left in an inconsistent state, so we have to abort.
+        process::abort();
     }
 }
 
@@ -263,19 +265,25 @@ pub unsafe fn call_config_func(
 pub unsafe fn call_register_func<F: FilterFunction>(
     register_func: *const c_void,
     plugin: *mut c_void,
+    filter_function: F,
 ) {
     let register_func = *(&register_func as *const _ as *const ffi::VSRegisterFunction);
 
-    let name_cstring =
-        CString::new(F::name()).expect("Couldn't convert the filter name to a CString");
-    let args_cstring =
-        CString::new(F::args()).expect("Couldn't convert the filter args to a CString");
+    let name_cstring = CString::new(filter_function.name())
+        .expect("Couldn't convert the filter name to a CString");
+    let args_cstring = CString::new(filter_function.args())
+        .expect("Couldn't convert the filter args to a CString");
+
+    let data = Box::new(FilterFunctionData {
+        filter_function,
+        name: name_cstring,
+    });
 
     register_func(
-        name_cstring.as_ptr(),
+        data.name.as_ptr(),
         args_cstring.as_ptr(),
         create::<F>,
-        name_cstring.into_raw() as _,
+        Box::into_raw(data) as _,
         plugin as *mut ffi::VSPlugin,
     );
 }
@@ -287,7 +295,7 @@ pub unsafe fn call_register_func<F: FilterFunction>(
 ///
 /// The first parameter is a `Metadata` expression containing your plugin's metadata.
 ///
-/// Following it is a list of types implementing `FilterFunction`, those are the filter functions
+/// Following it is a list of values implementing `FilterFunction`, those are the filter functions
 /// the plugin will export.
 ///
 /// # Example
@@ -299,12 +307,12 @@ pub unsafe fn call_register_func<F: FilterFunction>(
 ///         name: "Invert Example Plugin",
 ///         read_only: true,
 ///     },
-///     [SampleFilterFunction]
+///     [SampleFilterFunction::new(), OtherFunction::new()]
 /// }
 /// ```
 #[macro_export]
 macro_rules! export_vapoursynth_plugin {
-    ($metadata:expr, [$($filter:ty),*]) => (
+    ($metadata:expr, [$($filter:expr),*$(,)*]) => (
         use ::std::os::raw::c_void;
 
         #[allow(non_snake_case)]
@@ -320,7 +328,7 @@ macro_rules! export_vapoursynth_plugin {
             let closure = move || {
                 call_config_func(config_func, plugin, $metadata);
 
-                $(call_register_func::<$filter>(register_func, plugin);)*
+                $(call_register_func(register_func, plugin, $filter);)*
             };
 
             if panic::catch_unwind(closure).is_err() {

@@ -40,14 +40,14 @@ pub struct Metadata {
 }
 
 /// A filter function interface.
-pub trait FilterFunction {
+pub trait FilterFunction: Send + Sync {
     /// Returns the name of the function.
     ///
     /// The characters allowed are letters, numbers, and the underscore. The first character must
     /// be a letter. In other words: `^[a-zA-Z][a-zA-Z0-9_]*$`.
     ///
     /// For example, `Invert`.
-    fn name() -> &'static str;
+    fn name(&self) -> &str;
 
     /// Returns the argument string.
     ///
@@ -71,9 +71,13 @@ pub trait FilterFunction {
     // TODO: automate this. Filters should have their `create()` function accept the arguments
     // directly, and there should be a custom derive or something that generates the argument
     // string.
-    fn args() -> &'static str;
+    fn args(&self) -> &str;
 
-    /// Creates a new instance of the filter and returns it.
+    /// The callback for this filter function.
+    ///
+    /// In most cases this is where you should create a new instance of the filter and return it.
+    /// However, a filter function like AviSynth compat's `LoadPlugin()` which isn't actually a
+    /// filter, can return `None`.
     ///
     /// `args` contains the filter arguments, as specified by the argument string from
     /// `FilterFunction::args()`. Their presence and types are validated by VapourSynth so it's
@@ -84,10 +88,11 @@ pub trait FilterFunction {
     // TODO: with generic associated types it'll be possible to make Filter<'core> an associated
     // type of this trait and get rid of this Box.
     fn create<'core>(
+        &self,
         api: API,
         core: CoreRef<'core>,
         args: &Map<'core>,
-    ) -> Result<Box<Filter<'core> + 'core>, Error>;
+    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error>;
 }
 
 /// A filter interface.

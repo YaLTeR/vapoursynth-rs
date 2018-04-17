@@ -7,6 +7,7 @@ use vapoursynth_sys as ffi;
 
 use api::API;
 use map::{Map, OwnedMap};
+use plugins::{self, FilterFunction};
 
 /// A VapourSynth plugin.
 #[derive(Debug, Clone, Copy)]
@@ -77,5 +78,30 @@ impl<'core> Plugin<'core> {
         Ok(unsafe {
             OwnedMap::from_ptr(API::get_cached().invoke(self.handle, name.as_ptr(), args.deref()))
         })
+    }
+
+    /// Registers a filter function to be exported by a non-readonly plugin.
+    #[inline]
+    pub fn register_function<F: FilterFunction>(&self, filter_function: F) -> Result<(), NulError> {
+        // TODO: this is almost the same code as plugins::ffi::call_register_function().
+        let name_cstring = CString::new(filter_function.name())?;
+        let args_cstring = CString::new(filter_function.args())?;
+
+        let data = Box::new(plugins::ffi::FilterFunctionData::<F> {
+            filter_function,
+            name: name_cstring,
+        });
+
+        unsafe {
+            API::get_cached().register_function(
+                data.name.as_ptr(),
+                args_cstring.as_ptr(),
+                plugins::ffi::create::<F>,
+                Box::into_raw(data) as _,
+                self.handle,
+            );
+        }
+
+        Ok(())
     }
 }

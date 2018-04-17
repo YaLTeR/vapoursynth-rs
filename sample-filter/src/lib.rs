@@ -5,9 +5,10 @@ extern crate rand;
 #[macro_use]
 extern crate vapoursynth;
 
+use std::ffi::CStr;
 use std::{ptr, slice};
 
-use failure::Error;
+use failure::{Error, ResultExt};
 use rand::Rng;
 use vapoursynth::prelude::*;
 use vapoursynth::plugins::*;
@@ -16,24 +17,28 @@ use vapoursynth::format::FormatID;
 use vapoursynth::node::Flags;
 use vapoursynth::video_info::{Framerate, Resolution, VideoInfo};
 
+const PLUGIN_IDENTIFIER: &str = "com.example.vapoursynth-rs";
+
+// A filter that inverts the pixel values.
 struct InvertFunction;
 
 impl FilterFunction for InvertFunction {
-    fn name() -> &'static str {
+    fn name(&self) -> &str {
         "Invert"
     }
 
-    fn args() -> &'static str {
+    fn args(&self) -> &str {
         "clip:clip"
     }
 
     fn create<'core>(
+        &self,
         _api: API,
         _core: CoreRef<'core>,
         args: &Map<'core>,
-    ) -> Result<Box<Filter<'core> + 'core>, Error> {
+    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
         let source = args.get_node("clip").unwrap();
-        Ok(Box::new(Invert { source }))
+        Ok(Some(Box::new(Invert { source })))
     }
 }
 
@@ -118,22 +123,27 @@ impl<'core> Filter<'core> for Invert<'core> {
     }
 }
 
-struct RandomNoiseFunction;
+// A filter that outputs random noise.
+struct RandomNoiseFunction {
+    // Store the name for the MakeRandomNoiseFunction example.
+    name: String,
+}
 
 impl FilterFunction for RandomNoiseFunction {
-    fn name() -> &'static str {
-        "RandomNoise"
+    fn name(&self) -> &str {
+        &self.name
     }
 
-    fn args() -> &'static str {
+    fn args(&self) -> &str {
         "width:int;height:int;format:int;length:int;fpsnum:int;fpsden:int"
     }
 
     fn create<'core>(
+        &self,
         _api: API,
         core: CoreRef<'core>,
         args: &Map<'core>,
-    ) -> Result<Box<Filter<'core> + 'core>, Error> {
+    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
         let format_id = (args.get_int("format").unwrap() as i32).into();
         let format = core.get_format(format_id)
             .ok_or(format_err!("No such format"))?;
@@ -172,7 +182,7 @@ impl FilterFunction for RandomNoiseFunction {
         }
         let fpsden = fpsden as u64;
 
-        Ok(Box::new(RandomNoise {
+        Ok(Some(Box::new(RandomNoise {
             format_id,
             resolution: Resolution { width, height },
             framerate: Framerate {
@@ -180,7 +190,7 @@ impl FilterFunction for RandomNoiseFunction {
                 denominator: fpsden,
             },
             length,
-        }))
+        })))
     }
 }
 
@@ -275,12 +285,48 @@ impl<'core> Filter<'core> for RandomNoise {
     }
 }
 
+// A filter function that makes a random noise filter function with the given name at runtime.
+struct MakeRandomNoiseFunction;
+
+impl FilterFunction for MakeRandomNoiseFunction {
+    fn name(&self) -> &str {
+        "MakeRandomNoiseFilter"
+    }
+
+    fn args(&self) -> &str {
+        "name:data"
+    }
+
+    fn create<'core>(
+        &self,
+        _api: API,
+        core: CoreRef<'core>,
+        args: &Map<'core>,
+    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+        let name = unsafe { CStr::from_ptr(args.get_data("name").unwrap().as_ptr() as _) };
+        let name = name.to_str()
+            .context("name contains invalid UTF-8")?
+            .to_owned();
+
+        let plugin = core.get_plugin_by_id(PLUGIN_IDENTIFIER).unwrap().unwrap();
+        plugin
+            .register_function(RandomNoiseFunction { name })
+            .unwrap();
+
+        Ok(None)
+    }
+}
+
 export_vapoursynth_plugin! {
     Metadata {
-        identifier: "com.example.vapoursynth-rs",
+        identifier: PLUGIN_IDENTIFIER,
         namespace: "vapoursynth_rs",
         name: "Example vapoursynth-rs Plugin",
-        read_only: true,
+        read_only: false,
     },
-    [InvertFunction, RandomNoiseFunction]
+    [
+        InvertFunction,
+        RandomNoiseFunction { name: "RandomNoise".to_owned() },
+        MakeRandomNoiseFunction,
+    ]
 }

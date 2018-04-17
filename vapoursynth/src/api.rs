@@ -943,6 +943,22 @@ impl API {
     ) {
         ((*self.handle).callFunc)(func, in_, out, ptr::null_mut(), ptr::null());
     }
+
+    /// Registers a filter exported by the plugin. A plugin can export any number of filters.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn register_function(
+        self,
+        name: *const c_char,
+        args: *const c_char,
+        args_func: ffi::VSPublicFunction,
+        function_data: *mut c_void,
+        plugin: *mut ffi::VSPlugin,
+    ) {
+        ((*self.handle).registerFunction)(name, args, args_func, function_data, plugin);
+    }
 }
 
 impl MessageType {
