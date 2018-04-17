@@ -831,6 +831,15 @@ impl API {
     ) -> *mut ffi::VSFrameRef {
         ((*self.handle).newVideoFrame)(format, width, height, prop_src, core)
     }
+
+    /// Returns the index of the node from which the frame is being requested.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn get_output_index(self, frame_ctx: *mut ffi::VSFrameContext) -> i32 {
+        ((*self.handle).getOutputIndex)(frame_ctx)
+    }
 }
 
 impl MessageType {
