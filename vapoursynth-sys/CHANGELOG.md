@@ -1,3 +1,6 @@
+## v0.2.1 (26th Mar 2018)
+- Silenced some clippy warnings
+
 ## v0.2.0 (24th Mar 2018)
 - Added support for targetting 32-bit Windows
 - Added automatic detection of common Windows VapourSynth library dirs

@@ -634,15 +634,16 @@ impl<'elem> Map<'elem> {
     /// The caller must ensure `key` is valid.
     pub(crate) unsafe fn touch_raw_unchecked(&mut self, key: &CStr, value_type: ValueType) {
         macro_rules! touch_value {
-            ($func:ident, $value:expr) => ({
-                let result = API::get_cached().$func(
-                    self,
-                    key.as_ptr(),
-                    $value,
-                    ffi::VSPropAppendMode::paTouch
-                );
+            ($func: ident, $value: expr) => {{
+                let result =
+                    API::get_cached().$func(
+                        self,
+                        key.as_ptr(),
+                        $value,
+                        ffi::VSPropAppendMode::paTouch
+                    );
                 debug_assert!(result == 0);
-            })
+            }};
         }
 
         match value_type {

@@ -40,6 +40,7 @@ pub struct VSMap {
 pub struct VSFrameContext {
     _unused: [u8; 0],
 }
+#[cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSColorFamily {
@@ -55,6 +56,7 @@ pub enum VSSampleType {
     stInteger = 0,
     stFloat = 1,
 }
+#[cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum VSPresetFormat {
@@ -308,6 +310,7 @@ pub struct VSAPI {
         unsafe extern "system" fn(ns: *const c_char, core: *mut VSCore) -> *mut VSPlugin,
     pub getPlugins: unsafe extern "system" fn(core: *mut VSCore) -> *mut VSMap,
     pub getFunctions: unsafe extern "system" fn(plugin: *mut VSPlugin) -> *mut VSMap,
+    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
     pub createFilter: unsafe extern "system" fn(
         in_: *const VSMap,
         out: *mut VSMap,

@@ -704,6 +704,7 @@ impl API {
     ///
     /// # Safety
     /// The caller must ensure all pointers are valid.
+    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
     #[inline]
     pub(crate) unsafe fn create_filter(
         self,
