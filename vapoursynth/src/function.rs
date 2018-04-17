@@ -1,19 +1,26 @@
 //! VapourSynth callable functions.
 
+use std::marker::PhantomData;
+use std::{mem, panic, process};
+use std::ops::{Deref, DerefMut};
+use std::os::raw::c_void;
 use vapoursynth_sys as ffi;
 
 use api::API;
+use core::CoreRef;
+use map::{Map, MapRef, MapRefMut};
 
 /// Holds a reference to a function that may be called.
 #[derive(Debug)]
-pub struct Function {
+pub struct Function<'core> {
     handle: *mut ffi::VSFuncRef,
+    _marker: PhantomData<&'core ()>,
 }
 
-unsafe impl Send for Function {}
-unsafe impl Sync for Function {}
+unsafe impl<'core> Send for Function<'core> {}
+unsafe impl<'core> Sync for Function<'core> {}
 
-impl Drop for Function {
+impl<'core> Drop for Function<'core> {
     #[inline]
     fn drop(&mut self) {
         unsafe {
@@ -22,27 +29,94 @@ impl Drop for Function {
     }
 }
 
-impl Clone for Function {
+impl<'core> Clone for Function<'core> {
     #[inline]
     fn clone(&self) -> Self {
         let handle = unsafe { API::get_cached().clone_func(self.handle) };
-        Self { handle }
+        Self {
+            handle,
+            _marker: PhantomData,
+        }
     }
 }
 
-impl Function {
+impl<'core> Function<'core> {
     /// Wraps `handle` in a `Function`.
     ///
     /// # Safety
-    /// The caller must ensure `handle` is valid and API is cached.
+    /// The caller must ensure `handle` and the lifetime are valid and API is cached.
     #[inline]
     pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSFuncRef) -> Self {
-        Self { handle }
+        Self {
+            handle,
+            _marker: PhantomData,
+        }
     }
 
     /// Returns the underlying pointer.
     #[inline]
     pub(crate) fn ptr(&self) -> *mut ffi::VSFuncRef {
         self.handle
+    }
+
+    /// Creates a new function.
+    ///
+    /// To indicate an error from the callback, set an error on the output map.
+    #[inline]
+    pub fn new<F>(api: API, core: CoreRef<'core>, callback: F) -> Self
+    where
+        F: Fn(API, CoreRef<'core>, &Map<'core>, &mut Map<'core>) + Send + Sync + 'core,
+    {
+        unsafe extern "system" fn c_callback<'core, F>(
+            in_: *const ffi::VSMap,
+            out: *mut ffi::VSMap,
+            user_data: *mut c_void,
+            core: *mut ffi::VSCore,
+            _vsapi: *const ffi::VSAPI,
+        ) where
+            F: Fn(API, CoreRef<'core>, &Map<'core>, &mut Map<'core>) + Send + Sync + 'core,
+        {
+            let closure = move || {
+                let api = API::get_cached();
+                let core = CoreRef::from_ptr(core);
+                let in_ = MapRef::from_ptr(in_);
+                let mut out = MapRefMut::from_ptr(out);
+                let callback = Box::from_raw(user_data as *mut F);
+
+                callback(api, core, &in_, &mut out);
+
+                mem::forget(callback);
+            };
+
+            if panic::catch_unwind(closure).is_err() {
+                process::abort();
+            }
+        }
+
+        unsafe extern "system" fn c_free<F>(user_data: *mut c_void) {
+            drop(Box::from_raw(user_data as *mut F))
+        }
+
+        let data = Box::new(callback);
+
+        let handle = unsafe {
+            API::get_cached().create_func(
+                c_callback::<'core, F>,
+                Box::into_raw(data) as _,
+                Some(c_free::<F>),
+                core.ptr(),
+            )
+        };
+
+        Self {
+            handle,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Calls the function. If the call fails `out` will have an error set.
+    #[inline]
+    pub fn call(&self, in_: &Map<'core>, out: &mut Map<'core>) {
+        unsafe { API::get_cached().call_func(self.handle, in_.deref(), out.deref_mut()) };
     }
 }

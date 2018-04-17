@@ -12,6 +12,7 @@ mod need_api_and_vsscript {
 
     use super::*;
     use prelude::*;
+    use function::Function;
     use video_info::{Framerate, Resolution};
 
     fn props_test(frame: &Frame, fps_num: i64) {
@@ -533,6 +534,30 @@ mod need_api_and_vsscript {
         let yuv422p8 = core.get_format(PresetFormat::YUV422P8.into()).unwrap();
         assert_eq!(yuv422p8.sub_sampling_w(), 1);
         assert_eq!(yuv422p8.sub_sampling_h(), 0);
+    }
+
+    #[test]
+    fn functions() {
+        let env =
+            vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
+                .unwrap();
+
+        let core = env.get_core().unwrap();
+        let api = API::get().unwrap();
+
+        let function = Function::new(api, core, |_api, _core, in_, out| {
+            assert_eq!(in_.get_int("hello").unwrap(), 1337);
+            out.set_int("there", 42).unwrap();
+        });
+
+        let mut in_ = OwnedMap::new(api);
+        let mut out = OwnedMap::new(api);
+        in_.set_int("hello", 1337).unwrap();
+
+        function.call(&in_, &mut out);
+
+        assert!(out.error().is_none());
+        assert_eq!(out.get_int("there").unwrap(), 42);
     }
 }
 

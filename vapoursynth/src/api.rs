@@ -831,6 +831,20 @@ impl API {
         ((*self.handle).newVideoFrame)(format, width, height, prop_src, core)
     }
 
+    /// Invokes a filter.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn invoke(
+        self,
+        plugin: *mut ffi::VSPlugin,
+        name: *const c_char,
+        args: *const ffi::VSMap,
+    ) -> *mut ffi::VSMap {
+        ((*self.handle).invoke)(plugin, name, args)
+    }
+
     /// Returns the index of the node from which the frame is being requested.
     ///
     /// # Safety
@@ -838,6 +852,35 @@ impl API {
     #[inline]
     pub(crate) unsafe fn get_output_index(self, frame_ctx: *mut ffi::VSFrameContext) -> i32 {
         ((*self.handle).getOutputIndex)(frame_ctx)
+    }
+
+    /// Creates a user-defined function.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn create_func(
+        self,
+        func: ffi::VSPublicFunction,
+        user_data: *mut c_void,
+        free: ffi::VSFreeFuncData,
+        core: *mut ffi::VSCore,
+    ) -> *mut ffi::VSFuncRef {
+        ((*self.handle).createFunc)(func, user_data, free, core, self.handle)
+    }
+
+    /// Calls a function. If the call fails out will have an error set.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn call_func(
+        self,
+        func: *mut ffi::VSFuncRef,
+        in_: *const ffi::VSMap,
+        out: *mut ffi::VSMap,
+    ) {
+        ((*self.handle).callFunc)(func, in_, out, ptr::null_mut(), ptr::null());
     }
 }
 

@@ -456,14 +456,14 @@ impl<'elem> Map<'elem> {
     ///
     /// This function retrieves the first value associated with the key.
     #[inline]
-    pub fn get_function(&self, key: &str) -> Result<Function> {
+    pub fn get_function(&self, key: &str) -> Result<Function<'elem>> {
         let key = Map::make_raw_key(key)?;
         unsafe { self.get_function_raw_unchecked(&key, 0) }
     }
 
     /// Retrieves functions from a map.
     #[inline]
-    pub fn get_function_iter(&self, key: &str) -> Result<ValueIter<Function>> {
+    pub fn get_function_iter(&self, key: &str) -> Result<ValueIter<Function<'elem>>> {
         let key = Map::make_raw_key(key)?;
         unsafe { ValueIter::<Function>::new(self, Cow::Owned(key)) }
     }
@@ -585,7 +585,7 @@ impl<'elem> Map<'elem> {
         &self,
         key: &CStr,
         index: i32,
-    ) -> Result<Function> {
+    ) -> Result<Function<'elem>> {
         let mut error = 0;
         let value = API::get_cached().prop_get_func(self, key.as_ptr(), index, &mut error);
         handle_get_prop_error(error)?;
@@ -691,7 +691,7 @@ impl<'elem> Map<'elem> {
 
     /// Appends a function to a map.
     #[inline]
-    pub fn append_function(&mut self, key: &str, x: &Function) -> Result<()> {
+    pub fn append_function(&mut self, key: &str, x: &Function<'elem>) -> Result<()> {
         let key = Map::make_raw_key(key)?;
         unsafe { self.append_function_raw_unchecked(&key, x) }
     }
@@ -784,7 +784,7 @@ impl<'elem> Map<'elem> {
     pub(crate) unsafe fn append_function_raw_unchecked(
         &mut self,
         key: &CStr,
-        x: &Function,
+        x: &Function<'elem>,
     ) -> Result<()> {
         let error = API::get_cached().prop_set_func(
             self,
@@ -874,7 +874,7 @@ impl<'elem> Map<'elem> {
 
     /// Sets a property value to a function.
     #[inline]
-    pub fn set_function(&mut self, key: &str, x: &Function) -> Result<()> {
+    pub fn set_function(&mut self, key: &str, x: &Function<'elem>) -> Result<()> {
         let key = Map::make_raw_key(key)?;
         unsafe {
             self.set_function_raw_unchecked(&key, x);
@@ -993,7 +993,7 @@ impl<'elem> Map<'elem> {
     /// # Safety
     /// The caller must ensure `key` is valid.
     #[inline]
-    pub(crate) unsafe fn set_function_raw_unchecked(&mut self, key: &CStr, x: &Function) {
+    pub(crate) unsafe fn set_function_raw_unchecked(&mut self, key: &CStr, x: &Function<'elem>) {
         let error = API::get_cached().prop_set_func(
             self,
             key.as_ptr(),
