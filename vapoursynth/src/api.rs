@@ -192,7 +192,6 @@ impl API {
                 });
 
                 if panic::catch_unwind(closure).is_err() {
-                    eprintln!("panic in the set_message_handler() callback, aborting");
                     process::abort();
                 }
             }
