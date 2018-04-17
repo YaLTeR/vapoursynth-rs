@@ -138,6 +138,18 @@ impl<'elem> OwnedMap<'elem> {
             map: unsafe { Map::from_ptr(api.create_map()) },
         }
     }
+
+    /// Wraps pointer into `OwnedMap`.
+    ///
+    /// # Safety
+    /// The caller needs to ensure the pointer and the lifetime is valid and that this is an owned
+    /// map pointer.
+    #[inline]
+    pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSMap) -> Self {
+        Self {
+            map: Map::from_ptr(handle),
+        }
+    }
 }
 
 impl<'owner, 'elem> MapRef<'owner, 'elem> {
