@@ -831,6 +831,67 @@ impl API {
         ((*self.handle).newVideoFrame)(format, width, height, prop_src, core)
     }
 
+    /// Returns a pointer to the plugin with the given identifier, or a null pointer if not found.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn get_plugin_by_id(
+        self,
+        identifier: *const c_char,
+        core: *mut ffi::VSCore,
+    ) -> *mut ffi::VSPlugin {
+        ((*self.handle).getPluginById)(identifier, core)
+    }
+
+    /// Returns a pointer to the plugin with the given namespace, or a null pointer if not found.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn get_plugin_by_ns(
+        self,
+        namespace: *const c_char,
+        core: *mut ffi::VSCore,
+    ) -> *mut ffi::VSPlugin {
+        ((*self.handle).getPluginByNs)(namespace, core)
+    }
+
+    /// Returns a map containing a list of all loaded plugins.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn get_plugins(self, core: *mut ffi::VSCore) -> *mut ffi::VSMap {
+        ((*self.handle).getPlugins)(core)
+    }
+
+    /// Returns a map containing a list of the filters exported by a plugin.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    #[inline]
+    pub(crate) unsafe fn get_functions(self, plugin: *mut ffi::VSPlugin) -> *mut ffi::VSMap {
+        ((*self.handle).getFunctions)(plugin)
+    }
+
+    /// Returns the absolute path to the plugin, including the plugin's file name. This is the real
+    /// location of the plugin, i.e. there are no symbolic links in the path.
+    ///
+    /// Path elements are always delimited with forward slashes.
+    ///
+    /// VapourSynth retains ownership of the returned pointer.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid.
+    // This was introduced in R25 without bumping the API version (R3) but we must be sure it's
+    // there, so require R3.1.
+    #[cfg(feature = "gte-vapoursynth-api-31")]
+    #[inline]
+    pub(crate) unsafe fn get_plugin_path(self, plugin: *mut ffi::VSPlugin) -> *const c_char {
+        ((*self.handle).getPluginPath)(plugin)
+    }
+
     /// Invokes a filter.
     ///
     /// # Safety

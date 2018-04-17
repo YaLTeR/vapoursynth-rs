@@ -94,6 +94,7 @@ pub mod frame;
 pub mod function;
 pub mod map;
 pub mod node;
+pub mod plugin;
 pub mod plugins;
 pub mod video_info;
 
@@ -106,6 +107,7 @@ pub mod prelude {
     pub use super::frame::{Frame, FrameRef, FrameRefMut};
     pub use super::map::{Map, OwnedMap, ValueType};
     pub use super::node::{GetFrameError, Node};
+    pub use super::plugin::Plugin;
     pub use super::video_info::Property;
 
     #[cfg(feature = "vsscript-functions")]

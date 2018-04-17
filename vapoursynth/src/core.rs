@@ -1,12 +1,14 @@
 //! VapourSynth cores.
 
-use std::ffi::CStr;
+use std::ffi::{CStr, CString, NulError};
 use std::fmt;
 use std::marker::PhantomData;
 use vapoursynth_sys as ffi;
 
 use api::API;
 use format::{ColorFamily, Format, FormatID, SampleType};
+use map::OwnedMap;
+use plugin::Plugin;
 
 /// Contains information about a VapourSynth core.
 #[derive(Debug, Clone, Copy, Hash)]
@@ -122,6 +124,43 @@ impl<'a> CoreRef<'a> {
                 .as_ref()
                 .map(|p| Format::from_ptr(p))
         }
+    }
+
+    /// Returns a plugin with the given identifier.
+    #[inline]
+    pub fn get_plugin_by_id(&self, id: &str) -> Result<Option<Plugin>, NulError> {
+        let id = CString::new(id)?;
+        let ptr = unsafe { API::get_cached().get_plugin_by_id(id.as_ptr(), self.handle) };
+        if ptr.is_null() {
+            Ok(None)
+        } else {
+            Ok(Some(unsafe { Plugin::from_ptr(ptr) }))
+        }
+    }
+
+    /// Returns a plugin with the given namespace.
+    ///
+    /// `get_plugin_by_id()` should be used instead.
+    #[inline]
+    pub fn get_plugin_by_namespace(&self, namespace: &str) -> Result<Option<Plugin>, NulError> {
+        let namespace = CString::new(namespace)?;
+        let ptr = unsafe { API::get_cached().get_plugin_by_ns(namespace.as_ptr(), self.handle) };
+        if ptr.is_null() {
+            Ok(None)
+        } else {
+            Ok(Some(unsafe { Plugin::from_ptr(ptr) }))
+        }
+    }
+
+    /// Returns a map containing a list of all loaded plugins.
+    ///
+    /// Keys: meaningless unique strings;
+    ///
+    /// Values: namespace, identifier, and full name, separated by semicolons.
+    // TODO: parse the values on the crate side and return a nice struct.
+    #[inline]
+    pub fn plugins(&self) -> OwnedMap {
+        unsafe { OwnedMap::from_ptr(API::get_cached().get_plugins(self.handle)) }
     }
 }
 

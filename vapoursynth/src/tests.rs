@@ -5,6 +5,7 @@ use super::*;
 #[cfg(all(feature = "vsscript-functions",
           any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
 mod need_api_and_vsscript {
+    use std::ffi::CStr;
     use std::fmt::Debug;
     use std::mem;
     use std::slice;
@@ -534,6 +535,79 @@ mod need_api_and_vsscript {
         let yuv422p8 = core.get_format(PresetFormat::YUV422P8.into()).unwrap();
         assert_eq!(yuv422p8.sub_sampling_w(), 1);
         assert_eq!(yuv422p8.sub_sampling_h(), 0);
+    }
+
+    #[test]
+    fn plugins() {
+        let env =
+            vsscript::Environment::from_file("test-vpy/green.vpy", vsscript::EvalFlags::Nothing)
+                .unwrap();
+
+        fn bind<'a, T: ?Sized, U: ?Sized>(_: &'a T, x: &'a U) -> &'a U {
+            x
+        }
+
+        let core = env.get_core().unwrap();
+        let plugins = core.plugins();
+        let ids: Vec<_> = plugins
+            .keys()
+            .filter_map(|key| unsafe {
+                bind(
+                    key,
+                    CStr::from_ptr(plugins.get_data(key).unwrap().as_ptr() as _),
+                ).to_str()
+                    .ok()
+            })
+            .filter_map(|id| id.split(';').nth(1))
+            .collect();
+        assert!(ids.contains(&"com.vapoursynth.std"));
+        assert!(ids.contains(&"com.vapoursynth.resize"));
+
+        let std = core.get_plugin_by_id("com.vapoursynth.std");
+        assert!(std.is_ok());
+        let std = std.unwrap();
+        assert!(std.is_some());
+        let std = std.unwrap();
+
+        let functions = std.functions();
+        let names: Vec<_> = functions
+            .keys()
+            .filter_map(|key| unsafe {
+                bind(
+                    key,
+                    CStr::from_ptr(functions.get_data(key).unwrap().as_ptr() as _),
+                ).to_str()
+                    .ok()
+                    .map(|value| (key, value))
+            })
+            .filter_map(|(key, value)| value.split(';').nth(0).map(|name| (key, name)))
+            .collect();
+        assert!(names.contains(&("CropRel", "CropRel")));
+
+        #[cfg(feature = "gte-vsscript-api-31")]
+        let (node, _) = env.get_output(0).unwrap();
+        #[cfg(not(feature = "gte-vsscript-api-31"))]
+        let (node, _) = (env.get_output(0).unwrap(), None::<Node>);
+
+        let mut args = OwnedMap::new(API::get().unwrap());
+        args.set_node("clip", &node);
+        args.set_int("left", 100);
+
+        let rv = std.invoke("CropRel", &args).unwrap();
+        assert!(rv.error().is_none());
+
+        let node = rv.get_node("clip");
+        assert!(node.is_ok());
+        let node = node.unwrap();
+
+        let frame = node.get_frame(0).unwrap();
+        assert_eq!(
+            frame.resolution(0),
+            Resolution {
+                width: 1820,
+                height: 1080,
+            }
+        );
     }
 
     #[test]
