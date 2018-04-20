@@ -4,7 +4,9 @@ use failure::Error;
 use api::API;
 use core::CoreRef;
 use frame::FrameRef;
-use map::Map;
+use function::Function;
+use map::{self, Map, Value, ValueIter};
+use node::Node;
 use video_info::VideoInfo;
 
 mod frame_context;
@@ -40,6 +42,8 @@ pub struct Metadata {
 }
 
 /// A filter function interface.
+///
+/// See the `make_filter_function!` macro that generates types implementing this automatically.
 pub trait FilterFunction: Send + Sync {
     /// Returns the name of the function.
     ///
@@ -68,9 +72,6 @@ pub trait FilterFunction: Send + Sync {
     ///
     /// The following example declares the arguments "blah", "moo", and "asdf":
     /// `blah:clip;moo:int[]:opt;asdf:float:opt;`
-    // TODO: automate this. Filters should have their `create()` function accept the arguments
-    // directly, and there should be a custom derive or something that generates the argument
-    // string.
     fn args(&self) -> &str;
 
     /// The callback for this filter function.
@@ -135,4 +136,314 @@ pub trait Filter<'core>: Send + Sync {
         context: FrameContext,
         n: usize,
     ) -> Result<FrameRef<'core>, Error>;
+}
+
+/// An internal trait representing a filter argument type.
+pub trait FilterArgument<'map, 'elem: 'map>
+    : Value<'map, 'elem> + private::Sealed {
+    /// Returns the VapourSynth type name for this argument type.
+    fn type_name() -> &'static str;
+}
+
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for i64 {
+    fn type_name() -> &'static str {
+        "int"
+    }
+}
+
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for f64 {
+    fn type_name() -> &'static str {
+        "float"
+    }
+}
+
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for &'map [u8] {
+    fn type_name() -> &'static str {
+        "data"
+    }
+}
+
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for Node<'elem> {
+    fn type_name() -> &'static str {
+        "clip"
+    }
+}
+
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for FrameRef<'elem> {
+    fn type_name() -> &'static str {
+        "frame"
+    }
+}
+
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for Function<'elem> {
+    fn type_name() -> &'static str {
+        "func"
+    }
+}
+
+/// An internal trait representing a filter parameter type (argument type + whether it's an array
+/// or optional).
+pub trait FilterParameter<'map, 'elem: 'map>: private::Sealed {
+    /// The underlying argument type for this parameter type.
+    type Argument: FilterArgument<'map, 'elem>;
+
+    /// Returns whether this parameter is an array.
+    fn is_array() -> bool;
+
+    /// Returns whether this parameter is optional.
+    fn is_optional() -> bool;
+
+    /// Retrieves this parameter from the given map.
+    fn get_from_map(map: &'map Map<'elem>, key: &str) -> Self;
+}
+
+impl<'map, 'elem: 'map, T> FilterParameter<'map, 'elem> for T
+where
+    T: FilterArgument<'map, 'elem>,
+{
+    type Argument = Self;
+
+    fn is_array() -> bool {
+        false
+    }
+
+    fn is_optional() -> bool {
+        false
+    }
+
+    fn get_from_map(map: &'map Map<'elem>, key: &str) -> Self {
+        Self::get_from_map(map, key).unwrap()
+    }
+}
+
+impl<'map, 'elem: 'map, T> FilterParameter<'map, 'elem> for Option<T>
+where
+    T: FilterArgument<'map, 'elem>,
+{
+    type Argument = T;
+
+    fn is_array() -> bool {
+        false
+    }
+
+    fn is_optional() -> bool {
+        true
+    }
+
+    fn get_from_map(map: &'map Map<'elem>, key: &str) -> Self {
+        match <Self::Argument as Value>::get_from_map(map, key) {
+            Ok(x) => Some(x),
+            Err(map::Error::KeyNotFound) => None,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl<'map, 'elem: 'map, 'key, T> FilterParameter<'map, 'elem> for ValueIter<'map, 'elem, 'key, T>
+where
+    T: FilterArgument<'map, 'elem>,
+{
+    type Argument = T;
+
+    fn is_array() -> bool {
+        true
+    }
+
+    fn is_optional() -> bool {
+        false
+    }
+
+    fn get_from_map(map: &'map Map<'elem>, key: &str) -> Self {
+        <Self::Argument>::get_iter_from_map(map, key).unwrap()
+    }
+}
+
+impl<'map, 'elem: 'map, 'key, T> FilterParameter<'map, 'elem>
+    for Option<ValueIter<'map, 'elem, 'key, T>>
+where
+    T: FilterArgument<'map, 'elem>,
+{
+    type Argument = T;
+
+    fn is_array() -> bool {
+        true
+    }
+
+    fn is_optional() -> bool {
+        true
+    }
+
+    fn get_from_map(map: &'map Map<'elem>, key: &str) -> Self {
+        match <Self::Argument as Value>::get_iter_from_map(map, key) {
+            Ok(x) => Some(x),
+            Err(map::Error::KeyNotFound) => None,
+            _ => unreachable!(),
+        }
+    }
+}
+
+mod private {
+    use super::{FilterArgument, FrameRef, Function, Node, ValueIter};
+
+    pub trait Sealed {}
+
+    impl Sealed for i64 {}
+    impl Sealed for f64 {}
+    impl<'map> Sealed for &'map [u8] {}
+    impl<'elem> Sealed for Node<'elem> {}
+    impl<'elem> Sealed for FrameRef<'elem> {}
+    impl<'elem> Sealed for Function<'elem> {}
+
+    impl<'map, 'elem: 'map, T> Sealed for Option<T>
+    where
+        T: FilterArgument<'map, 'elem>,
+    {
+    }
+
+    impl<'map, 'elem: 'map, 'key, T> Sealed for ValueIter<'map, 'elem, 'key, T>
+    where
+        T: FilterArgument<'map, 'elem>,
+    {
+    }
+
+    impl<'map, 'elem: 'map, 'key, T> Sealed for Option<ValueIter<'map, 'elem, 'key, T>>
+    where
+        T: FilterArgument<'map, 'elem>,
+    {
+    }
+}
+
+/// Make a filter function easily and avoid boilerplate.
+///
+/// This macro accepts the name of the filter function type, the name of the filter and the create
+/// function.
+///
+/// The macro generates a type implementing `FilterFunction` with the correct `args()` string
+/// derived from the function parameters of the specified create function. The generated
+/// `FilterFunction::create()` extracts all parameters from the argument map received from
+/// VapourSynth and passes them into the specified create function.
+///
+/// The create function should look like:
+/// ```ignore
+/// fn create<'core>(
+///     api: API,
+///     core: CoreRef<'core>,
+///     /* filter arguments */
+/// ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+///     /* ... */
+/// }
+/// ```
+///
+/// All VapourSynth-supported types can be used, as well as `Option<T>` for optional parameters and
+/// `ValueIter<T>` for array parameters. Array parameters can be empty.
+///
+/// Caveat: the macro doesn't currently allow specifying mutable parameters, so to do that they
+/// have to be reassigned to a mutable variable in the function body. This is mainly a problem for
+/// array parameters. See how the example below handles it.
+///
+/// Another caveat: underscore lifetimes are required for receiving `ValueIter<T>`.
+///
+/// # Example
+/// ```ignore
+/// make_filter_function! {
+///     MyFilterFunction, "MyFilter"
+///
+///     fn create_my_filter<'core>(
+///         _api: API,
+///         _core: CoreRef<'core>,
+///         int_parameter: i64,
+///         some_data: &[u8],
+///         optional_parameter: Option<f64>,
+///         array_parameter: ValueIter<'_, 'core, '_, Node<'core>>,
+///         optional_array_parameter: Option<ValueIter<'_, 'core, '_, FrameRef<'core>>>,
+///     ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+///         let mut array_parameter = array_parameter;
+///         Ok(Some(Box::new(MyFilter::new(/* ... */))));
+///     }
+/// }
+/// ```
+#[macro_export]
+macro_rules! make_filter_function {
+    (
+        $struct_name:ident, $function_name:tt
+
+        $(#[$attr:meta])*
+        fn $create_fn_name:ident<$lifetime:tt>(
+            $api_arg_name:ident : $api_arg_type:ty,
+            $core_arg_name:ident : $core_arg_type:ty,
+            $($arg_name:ident : $arg_type:ty),* $(,)*
+        ) -> Result<Option<Box<Filter<$lifetime_filter:tt> + $lifetime_filter_2:tt>>, Error>
+        $body:tt
+    ) => (
+        struct $struct_name {
+            args: String,
+        }
+
+        impl $struct_name {
+            fn new<'core>() -> Self {
+                let mut args = String::new();
+
+                $(
+                    args += &format!(
+                        "{}:{}",
+                        stringify!($arg_name), // TODO: allow using a different name.
+                        <<$arg_type as $crate::plugins::FilterParameter>::Argument>::type_name()
+                    );
+
+                    if <$arg_type as $crate::plugins::FilterParameter>::is_array() {
+                        args += "[]";
+                    }
+
+                    if <$arg_type as $crate::plugins::FilterParameter>::is_optional() {
+                        args += ":opt";
+                    }
+
+                    // TODO: allow specifying this.
+                    if <$arg_type as $crate::plugins::FilterParameter>::is_array() {
+                        args += ":empty";
+                    }
+
+                    args += ";";
+                )*
+
+                Self { args }
+            }
+        }
+
+        impl $crate::plugins::FilterFunction for $struct_name {
+            fn name(&self) -> &str {
+                $function_name
+            }
+
+            fn args(&self) -> &str {
+                &self.args
+            }
+
+            fn create<'core>(
+                &self,
+                api: API,
+                core: CoreRef<'core>,
+                args: &Map<'core>,
+            ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+                $create_fn_name(
+                    api,
+                    core,
+                    $(
+                        <$arg_type as $crate::plugins::FilterParameter>::get_from_map(
+                            args,
+                            stringify!($arg_name),
+                        )
+                    ),*
+                )
+            }
+        }
+
+        $(#[$attr])*
+        fn $create_fn_name<$lifetime>(
+            $api_arg_name : $api_arg_type,
+            $core_arg_name : $core_arg_type,
+            $($arg_name : $arg_type),*
+        ) -> Result<Option<Box<Filter<$lifetime_filter> + $lifetime_filter_2>>, Error>
+        $body
+    )
 }

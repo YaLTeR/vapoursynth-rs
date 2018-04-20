@@ -20,25 +20,15 @@ use vapoursynth::video_info::{Framerate, Resolution, VideoInfo};
 const PLUGIN_IDENTIFIER: &str = "com.example.vapoursynth-rs";
 
 // A filter that inverts the pixel values.
-struct InvertFunction;
+make_filter_function! {
+    InvertFunction, "Invert"
 
-impl FilterFunction for InvertFunction {
-    fn name(&self) -> &str {
-        "Invert"
-    }
-
-    fn args(&self) -> &str {
-        "clip:clip"
-    }
-
-    fn create<'core>(
-        &self,
+    fn create_invert<'core>(
         _api: API,
         _core: CoreRef<'core>,
-        args: &Map<'core>,
+        clip: Node<'core>,
     ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
-        let source = args.get_node("clip").unwrap();
-        Ok(Some(Box::new(Invert { source })))
+        Ok(Some(Box::new(Invert { source: clip })))
     }
 }
 
@@ -124,27 +114,20 @@ impl<'core> Filter<'core> for Invert<'core> {
 }
 
 // A filter that outputs random noise.
-struct RandomNoiseFunction {
-    // Store the name for the MakeRandomNoiseFunction example.
-    name: String,
-}
+make_filter_function! {
+    RandomNoiseFunction, "RandomNoise"
 
-impl FilterFunction for RandomNoiseFunction {
-    fn name(&self) -> &str {
-        &self.name
-    }
-
-    fn args(&self) -> &str {
-        "width:int;height:int;format:int;length:int;fpsnum:int;fpsden:int"
-    }
-
-    fn create<'core>(
-        &self,
+    fn create_random_noise<'core>(
         _api: API,
         core: CoreRef<'core>,
-        args: &Map<'core>,
+        format: i64,
+        width: i64,
+        height: i64,
+        length: i64,
+        fpsnum: i64,
+        fpsden: i64,
     ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
-        let format_id = (args.get_int("format").unwrap() as i32).into();
+        let format_id = (format as i32).into();
         let format = core.get_format(format_id)
             .ok_or(format_err!("No such format"))?;
 
@@ -152,31 +135,26 @@ impl FilterFunction for RandomNoiseFunction {
             bail!("Floating point formats are not supported");
         }
 
-        let width = args.get_int("width").unwrap();
         if width <= 0 || width > i32::max_value() as i64 {
             bail!("Invalid width");
         }
         let width = width as usize;
 
-        let height = args.get_int("height").unwrap();
         if height <= 0 || height > i32::max_value() as i64 {
             bail!("Invalid height");
         }
         let height = height as usize;
 
-        let length = args.get_int("length").unwrap();
         if length <= 0 || length > i32::max_value() as i64 {
             bail!("Invalid length");
         }
         let length = length as usize;
 
-        let fpsnum = args.get_int("fpsnum").unwrap();
         if fpsnum <= 0 {
             bail!("Invalid fpsnum");
         }
         let fpsnum = fpsnum as u64;
 
-        let fpsden = args.get_int("fpsden").unwrap();
         if fpsden <= 0 {
             bail!("Invalid fpsden");
         }
@@ -285,32 +263,53 @@ impl<'core> Filter<'core> for RandomNoise {
     }
 }
 
-// A filter function that makes a random noise filter function with the given name at runtime.
-struct MakeRandomNoiseFunction;
+// A random noise function but with variable name for MakeRandomNoiseFunction.
+struct VariableNameRandomNoiseFunction {
+    name: String,
 
-impl FilterFunction for MakeRandomNoiseFunction {
+    // So we don't have to implement args().
+    underlying_function: RandomNoiseFunction,
+}
+
+impl FilterFunction for VariableNameRandomNoiseFunction {
     fn name(&self) -> &str {
-        "MakeRandomNoiseFilter"
+        &self.name
     }
 
     fn args(&self) -> &str {
-        "name:data"
+        self.underlying_function.args()
     }
 
     fn create<'core>(
         &self,
-        _api: API,
+        api: API,
         core: CoreRef<'core>,
         args: &Map<'core>,
     ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
-        let name = unsafe { CStr::from_ptr(args.get_data("name").unwrap().as_ptr() as _) };
+        self.underlying_function.create(api, core, args)
+    }
+}
+
+// A filter function that makes a random noise filter function with the given name at runtime.
+make_filter_function! {
+    MakeRandomNoiseFunction, "MakeRandomNoiseFilter"
+
+    fn create_make_random_noise<'core>(
+        _api: API,
+        core: CoreRef<'core>,
+        name: &[u8],
+    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+        let name = unsafe { CStr::from_ptr(name.as_ptr() as _) };
         let name = name.to_str()
             .context("name contains invalid UTF-8")?
             .to_owned();
 
         let plugin = core.get_plugin_by_id(PLUGIN_IDENTIFIER).unwrap().unwrap();
         plugin
-            .register_function(RandomNoiseFunction { name })
+            .register_function(VariableNameRandomNoiseFunction {
+                name,
+                underlying_function: RandomNoiseFunction::new(),
+            })
             .unwrap();
 
         Ok(None)
@@ -325,8 +324,8 @@ export_vapoursynth_plugin! {
         read_only: false,
     },
     [
-        InvertFunction,
-        RandomNoiseFunction { name: "RandomNoise".to_owned() },
-        MakeRandomNoiseFunction,
+        InvertFunction::new(),
+        RandomNoiseFunction::new(),
+        MakeRandomNoiseFunction::new(),
     ]
 }
