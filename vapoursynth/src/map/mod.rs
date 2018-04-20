@@ -375,7 +375,10 @@ impl<'elem> Map<'elem> {
 
     /// Retrieves integers from a map.
     #[inline]
-    pub fn get_int_iter(&self, key: &str) -> Result<ValueIter<i64>> {
+    pub fn get_int_iter<'map, 'key>(
+        &'map self,
+        key: &str,
+    ) -> Result<ValueIter<'map, 'elem, 'key, i64>> {
         let key = Map::make_raw_key(key)?;
         unsafe { ValueIter::<i64>::new(self, Cow::Owned(key)) }
     }
@@ -411,7 +414,10 @@ impl<'elem> Map<'elem> {
 
     /// Retrieves floating point numbers from a map.
     #[inline]
-    pub fn get_float_iter(&self, key: &str) -> Result<ValueIter<f64>> {
+    pub fn get_float_iter<'map, 'key>(
+        &'map self,
+        key: &str,
+    ) -> Result<ValueIter<'map, 'elem, 'key, f64>> {
         let key = Map::make_raw_key(key)?;
         unsafe { ValueIter::<f64>::new(self, Cow::Owned(key)) }
     }
@@ -427,7 +433,10 @@ impl<'elem> Map<'elem> {
 
     /// Retrieves data from a map.
     #[inline]
-    pub fn get_data_iter(&self, key: &str) -> Result<ValueIter<&[u8]>> {
+    pub fn get_data_iter<'map, 'key>(
+        &'map self,
+        key: &str,
+    ) -> Result<ValueIter<'map, 'elem, 'key, &'map [u8]>> {
         let key = Map::make_raw_key(key)?;
         unsafe { ValueIter::<&[u8]>::new(self, Cow::Owned(key)) }
     }
@@ -443,7 +452,10 @@ impl<'elem> Map<'elem> {
 
     /// Retrieves nodes from a map.
     #[inline]
-    pub fn get_node_iter(&self, key: &str) -> Result<ValueIter<Node<'elem>>> {
+    pub fn get_node_iter<'map, 'key>(
+        &'map self,
+        key: &str,
+    ) -> Result<ValueIter<'map, 'elem, 'key, Node<'elem>>> {
         let key = Map::make_raw_key(key)?;
         unsafe { ValueIter::<Node>::new(self, Cow::Owned(key)) }
     }
@@ -459,7 +471,10 @@ impl<'elem> Map<'elem> {
 
     /// Retrieves frames from a map.
     #[inline]
-    pub fn get_frame_iter(&self, key: &str) -> Result<ValueIter<FrameRef<'elem>>> {
+    pub fn get_frame_iter<'map, 'key>(
+        &'map self,
+        key: &str,
+    ) -> Result<ValueIter<'map, 'elem, 'key, FrameRef<'elem>>> {
         let key = Map::make_raw_key(key)?;
         unsafe { ValueIter::<FrameRef>::new(self, Cow::Owned(key)) }
     }
@@ -475,7 +490,10 @@ impl<'elem> Map<'elem> {
 
     /// Retrieves functions from a map.
     #[inline]
-    pub fn get_function_iter(&self, key: &str) -> Result<ValueIter<Function<'elem>>> {
+    pub fn get_function_iter<'map, 'key>(
+        &'map self,
+        key: &str,
+    ) -> Result<ValueIter<'map, 'elem, 'key, Function<'elem>>> {
         let key = Map::make_raw_key(key)?;
         unsafe { ValueIter::<Function>::new(self, Cow::Owned(key)) }
     }
