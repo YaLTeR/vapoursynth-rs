@@ -14,7 +14,7 @@ use map::{Map, MapRef, MapRefMut};
 #[derive(Debug)]
 pub struct Function<'core> {
     handle: *mut ffi::VSFuncRef,
-    _marker: PhantomData<&'core ()>,
+    _owner: PhantomData<&'core ()>,
 }
 
 unsafe impl<'core> Send for Function<'core> {}
@@ -35,7 +35,7 @@ impl<'core> Clone for Function<'core> {
         let handle = unsafe { API::get_cached().clone_func(self.handle) };
         Self {
             handle,
-            _marker: PhantomData,
+            _owner: PhantomData,
         }
     }
 }
@@ -49,7 +49,7 @@ impl<'core> Function<'core> {
     pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSFuncRef) -> Self {
         Self {
             handle,
-            _marker: PhantomData,
+            _owner: PhantomData,
         }
     }
 
@@ -110,7 +110,7 @@ impl<'core> Function<'core> {
 
         Self {
             handle,
-            _marker: PhantomData,
+            _owner: PhantomData,
         }
     }
 
