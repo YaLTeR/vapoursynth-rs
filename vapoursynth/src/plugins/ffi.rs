@@ -299,7 +299,7 @@ pub unsafe fn call_register_func<F: FilterFunction>(
 /// the plugin will export.
 ///
 /// # Example
-/// ```no_compile
+/// ```ignore
 /// export_vapoursynth_plugin! {
 ///     Metadata {
 ///         identifier: "com.example.invert",
