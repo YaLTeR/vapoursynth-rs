@@ -364,6 +364,68 @@ impl<'elem> Map<'elem> {
         unsafe { self.value_type_raw_unchecked(&key) }
     }
 
+    /// Deletes the given key.
+    ///
+    /// # Safety
+    /// The caller must ensure `key` is valid.
+    #[inline]
+    pub(crate) unsafe fn delete_key_raw_unchecked(&mut self, key: &CStr) -> Result<()> {
+        let result = API::get_cached().prop_delete_key(self, key.as_ptr());
+        if result == 0 {
+            Err(Error::KeyNotFound)
+        } else {
+            debug_assert!(result == 1);
+            Ok(())
+        }
+    }
+
+    /// Deletes the given key.
+    #[inline]
+    pub fn delete_key(&mut self, key: &str) -> Result<()> {
+        let key = Map::make_raw_key(key)?;
+        unsafe { self.delete_key_raw_unchecked(&key) }
+    }
+
+    /// Touches the key. That is, if the key exists, nothing happens, otherwise a key is created
+    /// with no values associated.
+    ///
+    /// # Safety
+    /// The caller must ensure `key` is valid.
+    pub(crate) unsafe fn touch_raw_unchecked(&mut self, key: &CStr, value_type: ValueType) {
+        macro_rules! touch_value {
+            ($func: ident, $value: expr) => {{
+                let result =
+                    API::get_cached().$func(
+                        self,
+                        key.as_ptr(),
+                        $value,
+                        ffi::VSPropAppendMode::paTouch
+                    );
+                debug_assert!(result == 0);
+            }};
+        }
+
+        match value_type {
+            ValueType::Int => touch_value!(prop_set_int, 0),
+            ValueType::Float => touch_value!(prop_set_float, 0f64),
+            ValueType::Data => touch_value!(prop_set_data, &[]),
+            ValueType::Node => touch_value!(prop_set_node, ptr::null_mut()),
+            ValueType::Frame => touch_value!(prop_set_frame, ptr::null()),
+            ValueType::Function => touch_value!(prop_set_func, ptr::null_mut()),
+        }
+    }
+
+    /// Touches the key. That is, if the key exists, nothing happens, otherwise a key is created
+    /// with no values associated.
+    #[inline]
+    pub fn touch(&mut self, key: &str, value_type: ValueType) -> Result<()> {
+        let key = Map::make_raw_key(key)?;
+        unsafe {
+            self.touch_raw_unchecked(&key, value_type);
+        }
+        Ok(())
+    }
+
     /// Retrieves a property value.
     #[inline]
     pub fn get<'map, T: Value<'map, 'elem>>(&'map self, key: &str) -> Result<T> {
@@ -648,68 +710,6 @@ impl<'elem> Map<'elem> {
         handle_get_prop_error(error)?;
 
         Ok(Function::from_ptr(value))
-    }
-
-    /// Deletes the given key.
-    ///
-    /// # Safety
-    /// The caller must ensure `key` is valid.
-    #[inline]
-    pub(crate) unsafe fn delete_key_raw_unchecked(&mut self, key: &CStr) -> Result<()> {
-        let result = API::get_cached().prop_delete_key(self, key.as_ptr());
-        if result == 0 {
-            Err(Error::KeyNotFound)
-        } else {
-            debug_assert!(result == 1);
-            Ok(())
-        }
-    }
-
-    /// Deletes the given key.
-    #[inline]
-    pub fn delete_key(&mut self, key: &str) -> Result<()> {
-        let key = Map::make_raw_key(key)?;
-        unsafe { self.delete_key_raw_unchecked(&key) }
-    }
-
-    /// Touches the key. That is, if the key exists, nothing happens, otherwise a key is created
-    /// with no values associated.
-    ///
-    /// # Safety
-    /// The caller must ensure `key` is valid.
-    pub(crate) unsafe fn touch_raw_unchecked(&mut self, key: &CStr, value_type: ValueType) {
-        macro_rules! touch_value {
-            ($func: ident, $value: expr) => {{
-                let result =
-                    API::get_cached().$func(
-                        self,
-                        key.as_ptr(),
-                        $value,
-                        ffi::VSPropAppendMode::paTouch
-                    );
-                debug_assert!(result == 0);
-            }};
-        }
-
-        match value_type {
-            ValueType::Int => touch_value!(prop_set_int, 0),
-            ValueType::Float => touch_value!(prop_set_float, 0f64),
-            ValueType::Data => touch_value!(prop_set_data, &[]),
-            ValueType::Node => touch_value!(prop_set_node, ptr::null_mut()),
-            ValueType::Frame => touch_value!(prop_set_frame, ptr::null()),
-            ValueType::Function => touch_value!(prop_set_func, ptr::null_mut()),
-        }
-    }
-
-    /// Touches the key. That is, if the key exists, nothing happens, otherwise a key is created
-    /// with no values associated.
-    #[inline]
-    pub fn touch(&mut self, key: &str, value_type: ValueType) -> Result<()> {
-        let key = Map::make_raw_key(key)?;
-        unsafe {
-            self.touch_raw_unchecked(&key, value_type);
-        }
-        Ok(())
     }
 
     /// Appends an integer to a map.
