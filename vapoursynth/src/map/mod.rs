@@ -20,7 +20,7 @@ mod iterators;
 pub use self::iterators::{Keys, ValueIter};
 
 mod value;
-pub use self::value::ValueType;
+pub use self::value::{Value, ValueType};
 
 /// A VapourSynth map.
 ///
@@ -362,6 +362,33 @@ impl<'elem> Map<'elem> {
     pub fn value_type(&self, key: &str) -> Result<ValueType> {
         let key = Map::make_raw_key(key)?;
         unsafe { self.value_type_raw_unchecked(&key) }
+    }
+
+    /// Retrieves a property value.
+    #[inline]
+    pub fn get<'map, T: Value<'map, 'elem>>(&'map self, key: &str) -> Result<T> {
+        T::get_from_map(self, key)
+    }
+
+    /// Retrieves an iterator over the map values.
+    #[inline]
+    pub fn get_iter<'map, 'key, T: Value<'map, 'elem>>(
+        &'map self,
+        key: &str,
+    ) -> Result<ValueIter<'map, 'elem, 'key, T>> {
+        T::get_iter_from_map(self, key)
+    }
+
+    /// Sets a property value.
+    #[inline]
+    pub fn set<'map, T: Value<'map, 'elem>>(&'map mut self, key: &str, x: &T) -> Result<()> {
+        T::store_in_map(self, key, x)
+    }
+
+    /// Appends a property value.
+    #[inline]
+    pub fn append<'map, T: Value<'map, 'elem>>(&'map mut self, key: &str, x: &T) -> Result<()> {
+        T::append_to_map(self, key, x)
     }
 
     /// Retrieves an integer from a map.

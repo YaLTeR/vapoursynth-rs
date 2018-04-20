@@ -659,6 +659,10 @@ mod need_api {
             map.append_int("test_frame", 42),
             Err(map::Error::WrongValueType)
         );
+        assert_eq!(
+            map.append("test_frame", &42),
+            Err(map::Error::WrongValueType)
+        );
 
         assert_eq!(map.set_int("i", 42), Ok(()));
         assert_eq!(map.get_int("i"), Ok(42));
@@ -666,6 +670,19 @@ mod need_api {
         assert_eq!(map.get_int("i"), Ok(42));
         {
             let iter = map.get_int_iter("i");
+            assert!(iter.is_ok());
+            let mut iter = iter.unwrap();
+            assert_eq!(iter.next(), Some(42));
+            assert_eq!(iter.next(), Some(43));
+            assert_eq!(iter.next(), None);
+        }
+
+        assert_eq!(map.set("i", &42), Ok(()));
+        assert_eq!(map.get("i"), Ok(42));
+        assert_eq!(map.append("i", &43), Ok(()));
+        assert_eq!(map.get("i"), Ok(42));
+        {
+            let iter = map.get_iter::<i64>("i");
             assert!(iter.is_ok());
             let mut iter = iter.unwrap();
             assert_eq!(iter.next(), Some(42));
@@ -694,6 +711,19 @@ mod need_api {
             assert_eq!(iter.next(), None);
         }
 
+        assert_eq!(map.set("f", &42f64), Ok(()));
+        assert_eq!(map.get("f"), Ok(42f64));
+        assert_eq!(map.append("f", &43f64), Ok(()));
+        assert_eq!(map.get("f"), Ok(42f64));
+        {
+            let iter = map.get_iter::<f64>("f");
+            assert!(iter.is_ok());
+            let mut iter = iter.unwrap();
+            assert_eq!(iter.next(), Some(42f64));
+            assert_eq!(iter.next(), Some(43f64));
+            assert_eq!(iter.next(), None);
+        }
+
         #[cfg(feature = "gte-vapoursynth-api-31")]
         {
             assert_eq!(map.get_float_array("f"), Ok(&[42f64, 43f64][..]));
@@ -708,6 +738,19 @@ mod need_api {
         assert_eq!(map.get_data("d"), Ok(&[1, 2, 3][..]));
         {
             let iter = map.get_data_iter("d");
+            assert!(iter.is_ok());
+            let mut iter = iter.unwrap();
+            assert_eq!(iter.next(), Some(&[1, 2, 3][..]));
+            assert_eq!(iter.next(), Some(&[4, 5, 6][..]));
+            assert_eq!(iter.next(), None);
+        }
+
+        assert_eq!(map.set("d", &&[1, 2, 3][..]), Ok(()));
+        assert_eq!(map.get("d"), Ok(&[1, 2, 3][..]));
+        assert_eq!(map.append("d", &&[4, 5, 6][..]), Ok(()));
+        assert_eq!(map.get("d"), Ok(&[1, 2, 3][..]));
+        {
+            let iter = map.get_iter::<&[u8]>("d");
             assert!(iter.is_ok());
             let mut iter = iter.unwrap();
             assert_eq!(iter.next(), Some(&[1, 2, 3][..]));
