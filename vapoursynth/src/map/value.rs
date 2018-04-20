@@ -33,10 +33,12 @@ pub trait Value<'map, 'elem: 'map>: Sized {
 }
 
 impl<'map, 'elem: 'map> Value<'map, 'elem> for i64 {
+    #[inline]
     fn get_from_map(map: &Map, key: &str) -> Result<Self> {
         map.get_int(key)
     }
 
+    #[inline]
     fn get_iter_from_map<'key>(
         map: &'map Map<'elem>,
         key: &str,
@@ -44,10 +46,12 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for i64 {
         map.get_int_iter(key)
     }
 
+    #[inline]
     fn store_in_map(map: &mut Map, key: &str, x: &Self) -> Result<()> {
         map.set_int(key, *x)
     }
 
+    #[inline]
     fn append_to_map(map: &mut Map, key: &str, x: &Self) -> Result<()> {
         map.append_int(key, *x)
     }
@@ -58,6 +62,7 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for f64 {
         map.get_float(key)
     }
 
+    #[inline]
     fn get_iter_from_map<'key>(
         map: &'map Map<'elem>,
         key: &str,
@@ -65,20 +70,24 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for f64 {
         map.get_float_iter(key)
     }
 
+    #[inline]
     fn store_in_map(map: &mut Map, key: &str, x: &Self) -> Result<()> {
         map.set_float(key, *x)
     }
 
+    #[inline]
     fn append_to_map(map: &mut Map, key: &str, x: &Self) -> Result<()> {
         map.append_float(key, *x)
     }
 }
 
 impl<'map, 'elem: 'map> Value<'map, 'elem> for &'map [u8] {
+    #[inline]
     fn get_from_map(map: &'map Map, key: &str) -> Result<Self> {
         map.get_data(key)
     }
 
+    #[inline]
     fn get_iter_from_map<'key>(
         map: &'map Map<'elem>,
         key: &str,
@@ -86,20 +95,24 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for &'map [u8] {
         map.get_data_iter(key)
     }
 
+    #[inline]
     fn store_in_map(map: &'map mut Map, key: &str, x: &Self) -> Result<()> {
         map.set_data(key, x)
     }
 
+    #[inline]
     fn append_to_map(map: &'map mut Map, key: &str, x: &Self) -> Result<()> {
         map.append_data(key, x)
     }
 }
 
 impl<'map, 'elem: 'map> Value<'map, 'elem> for Node<'elem> {
+    #[inline]
     fn get_from_map(map: &Map<'elem>, key: &str) -> Result<Self> {
         map.get_node(key)
     }
 
+    #[inline]
     fn get_iter_from_map<'key>(
         map: &'map Map<'elem>,
         key: &str,
@@ -107,20 +120,24 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for Node<'elem> {
         map.get_node_iter(key)
     }
 
+    #[inline]
     fn store_in_map(map: &mut Map<'elem>, key: &str, x: &Self) -> Result<()> {
         map.set_node(key, x)
     }
 
+    #[inline]
     fn append_to_map(map: &mut Map<'elem>, key: &str, x: &Self) -> Result<()> {
         map.append_node(key, x)
     }
 }
 
 impl<'map, 'elem: 'map> Value<'map, 'elem> for FrameRef<'elem> {
+    #[inline]
     fn get_from_map(map: &Map<'elem>, key: &str) -> Result<Self> {
         map.get_frame(key)
     }
 
+    #[inline]
     fn get_iter_from_map<'key>(
         map: &'map Map<'elem>,
         key: &str,
@@ -128,20 +145,24 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for FrameRef<'elem> {
         map.get_frame_iter(key)
     }
 
+    #[inline]
     fn store_in_map(map: &mut Map<'elem>, key: &str, x: &Self) -> Result<()> {
         map.set_frame(key, x)
     }
 
+    #[inline]
     fn append_to_map(map: &mut Map<'elem>, key: &str, x: &Self) -> Result<()> {
         map.append_frame(key, x)
     }
 }
 
 impl<'map, 'elem: 'map> Value<'map, 'elem> for Function<'elem> {
+    #[inline]
     fn get_from_map(map: &Map<'elem>, key: &str) -> Result<Self> {
         map.get_function(key)
     }
 
+    #[inline]
     fn get_iter_from_map<'key>(
         map: &'map Map<'elem>,
         key: &str,
@@ -149,10 +170,12 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for Function<'elem> {
         map.get_function_iter(key)
     }
 
+    #[inline]
     fn store_in_map(map: &mut Map<'elem>, key: &str, x: &Self) -> Result<()> {
         map.set_function(key, x)
     }
 
+    #[inline]
     fn append_to_map(map: &mut Map<'elem>, key: &str, x: &Self) -> Result<()> {
         map.append_function(key, x)
     }

@@ -145,42 +145,6 @@ pub trait FilterArgument<'map, 'elem: 'map>
     fn type_name() -> &'static str;
 }
 
-impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for i64 {
-    fn type_name() -> &'static str {
-        "int"
-    }
-}
-
-impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for f64 {
-    fn type_name() -> &'static str {
-        "float"
-    }
-}
-
-impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for &'map [u8] {
-    fn type_name() -> &'static str {
-        "data"
-    }
-}
-
-impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for Node<'elem> {
-    fn type_name() -> &'static str {
-        "clip"
-    }
-}
-
-impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for FrameRef<'elem> {
-    fn type_name() -> &'static str {
-        "frame"
-    }
-}
-
-impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for Function<'elem> {
-    fn type_name() -> &'static str {
-        "func"
-    }
-}
-
 /// An internal trait representing a filter parameter type (argument type + whether it's an array
 /// or optional).
 pub trait FilterParameter<'map, 'elem: 'map>: private::Sealed {
@@ -197,20 +161,65 @@ pub trait FilterParameter<'map, 'elem: 'map>: private::Sealed {
     fn get_from_map(map: &'map Map<'elem>, key: &str) -> Self;
 }
 
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for i64 {
+    #[inline]
+    fn type_name() -> &'static str {
+        "int"
+    }
+}
+
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for f64 {
+    #[inline]
+    fn type_name() -> &'static str {
+        "float"
+    }
+}
+
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for &'map [u8] {
+    #[inline]
+    fn type_name() -> &'static str {
+        "data"
+    }
+}
+
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for Node<'elem> {
+    #[inline]
+    fn type_name() -> &'static str {
+        "clip"
+    }
+}
+
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for FrameRef<'elem> {
+    #[inline]
+    fn type_name() -> &'static str {
+        "frame"
+    }
+}
+
+impl<'map, 'elem: 'map> FilterArgument<'map, 'elem> for Function<'elem> {
+    #[inline]
+    fn type_name() -> &'static str {
+        "func"
+    }
+}
+
 impl<'map, 'elem: 'map, T> FilterParameter<'map, 'elem> for T
 where
     T: FilterArgument<'map, 'elem>,
 {
     type Argument = Self;
 
+    #[inline]
     fn is_array() -> bool {
         false
     }
 
+    #[inline]
     fn is_optional() -> bool {
         false
     }
 
+    #[inline]
     fn get_from_map(map: &'map Map<'elem>, key: &str) -> Self {
         Self::get_from_map(map, key).unwrap()
     }
@@ -222,14 +231,17 @@ where
 {
     type Argument = T;
 
+    #[inline]
     fn is_array() -> bool {
         false
     }
 
+    #[inline]
     fn is_optional() -> bool {
         true
     }
 
+    #[inline]
     fn get_from_map(map: &'map Map<'elem>, key: &str) -> Self {
         match <Self::Argument as Value>::get_from_map(map, key) {
             Ok(x) => Some(x),
@@ -245,14 +257,17 @@ where
 {
     type Argument = T;
 
+    #[inline]
     fn is_array() -> bool {
         true
     }
 
+    #[inline]
     fn is_optional() -> bool {
         false
     }
 
+    #[inline]
     fn get_from_map(map: &'map Map<'elem>, key: &str) -> Self {
         <Self::Argument>::get_iter_from_map(map, key).unwrap()
     }
@@ -265,14 +280,17 @@ where
 {
     type Argument = T;
 
+    #[inline]
     fn is_array() -> bool {
         true
     }
 
+    #[inline]
     fn is_optional() -> bool {
         true
     }
 
+    #[inline]
     fn get_from_map(map: &'map Map<'elem>, key: &str) -> Self {
         match <Self::Argument as Value>::get_iter_from_map(map, key) {
             Ok(x) => Some(x),
@@ -411,14 +429,17 @@ macro_rules! make_filter_function {
         }
 
         impl $crate::plugins::FilterFunction for $struct_name {
+            #[inline]
             fn name(&self) -> &str {
                 $function_name
             }
 
+            #[inline]
             fn args(&self) -> &str {
                 &self.args
             }
 
+            #[inline]
             fn create<'core>(
                 &self,
                 api: API,
