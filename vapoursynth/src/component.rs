@@ -1,3 +1,5 @@
+//! The pixel component trait.
+
 #[cfg(feature = "f16-pixel-type")]
 use half::f16;
 
