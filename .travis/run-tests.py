@@ -5,15 +5,21 @@ if __name__ == '__main__':
     VS_API_VERSIONS = ["vapoursynth-api-" + str(v) for v in range(31, 36)]
     VAPOURSYNTH_FUNCTIONS = ["vapoursynth-functions"]
     VSSCRIPT_FUNCTIONS = ["vsscript-functions"]
+    F16_PIXEL_TYPE = ["f16-pixel-type"]
 
     # The environment variable isn't there on AppVeyor.
-    if not 'TRAVIS_OS_NAME' in os.environ or os.environ['TRAVIS_OS_NAME'] == 'osx':
-        VSSCRIPT_API_VERSIONS = ["vsscript-api-" + str(v) for v in range(31, 33)]
+    if 'TRAVIS_OS_NAME' not in os.environ or os.environ['TRAVIS_OS_NAME'] == 'osx':
+        VSSCRIPT_API_VERSIONS = [
+            "vsscript-api-" + str(v) for v in range(31, 33)
+        ]
     else:
         # Trusty VapourSynth is old and doesn't support VSScript API above 3.0.
         VSSCRIPT_API_VERSIONS = []
 
-    features = [VS_API_VERSIONS, VSSCRIPT_API_VERSIONS, VAPOURSYNTH_FUNCTIONS, VSSCRIPT_FUNCTIONS]
+    features = [
+        VS_API_VERSIONS, VSSCRIPT_API_VERSIONS, VAPOURSYNTH_FUNCTIONS,
+        VSSCRIPT_FUNCTIONS, F16_PIXEL_TYPE
+    ]
 
     for f in features:
         f += [""]
@@ -25,7 +31,8 @@ if __name__ == '__main__':
         print("Starting tests with features: " + features_string)
         sys.stdout.flush()
 
-        returncode = subprocess.call(['cargo', 'test', '--verbose', '--features', features_string])
+        returncode = subprocess.call(
+            ['cargo', 'test', '--verbose', '--features', features_string])
         if returncode != 0:
             someone_failed = True
             print("TEST FAILURE: " + features_string)

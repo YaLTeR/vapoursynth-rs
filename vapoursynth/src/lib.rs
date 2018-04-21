@@ -79,6 +79,8 @@ extern crate bitflags;
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
+#[cfg(feature = "f16-pixel-type")]
+extern crate half;
 #[cfg(any(not(feature = "gte-vsscript-api-32"), test))]
 #[macro_use]
 extern crate lazy_static;

@@ -1,3 +1,6 @@
+#[cfg(feature = "f16-pixel-type")]
+use half::f16;
+
 use format::{Format, SampleType};
 
 /// A trait for possible pixel components.
@@ -31,5 +34,12 @@ unsafe impl Component for u32 {
 unsafe impl Component for f32 {
     fn is_valid(format: Format) -> bool {
         format.sample_type() == SampleType::Float && format.bytes_per_sample() == 4
+    }
+}
+
+#[cfg(feature = "f16-pixel-type")]
+unsafe impl Component for f16 {
+    fn is_valid(format: Format) -> bool {
+        format.sample_type() == SampleType::Float && format.bytes_per_sample() == 2
     }
 }
