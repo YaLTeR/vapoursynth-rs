@@ -88,6 +88,7 @@ extern crate vapoursynth_sys;
 pub mod vsscript;
 
 pub mod api;
+pub mod component;
 pub mod core;
 pub mod format;
 pub mod frame;
@@ -103,6 +104,7 @@ pub mod prelude {
     //!
     //! Contains the types you most likely want to import anyway.
     pub use super::api::{MessageType, API};
+    pub use super::component::Component;
     pub use super::format::{ColorFamily, PresetFormat, SampleType};
     pub use super::frame::{Frame, FrameRef, FrameRefMut};
     pub use super::map::{Map, OwnedMap, ValueType};

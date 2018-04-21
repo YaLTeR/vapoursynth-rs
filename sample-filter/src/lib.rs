@@ -6,7 +6,7 @@ extern crate rand;
 extern crate vapoursynth;
 
 use std::ffi::CStr;
-use std::{ptr, slice};
+use std::ptr;
 
 use failure::{Error, ResultExt};
 use rand::Rng;
@@ -76,34 +76,16 @@ impl<'core> Filter<'core> for Invert<'core> {
                 let bits_per_sample = frame.format().bits_per_sample();
                 let bytes_per_sample = frame.format().bytes_per_sample();
 
-                let data = frame.data_row_mut(plane, row);
-
                 match bytes_per_sample {
-                    1 => for pixel in data {
+                    1 => for pixel in frame.plane_row_mut::<u8>(plane, row) {
                         *pixel = 255 - *pixel;
                     },
-                    2 => {
-                        let data = unsafe {
-                            slice::from_raw_parts_mut(
-                                data.as_mut_ptr() as *mut u16,
-                                data.len() / bytes_per_sample as usize,
-                            )
-                        };
-                        for pixel in data {
-                            *pixel = ((1u64 << bits_per_sample) - 1) as u16 - *pixel;
-                        }
-                    }
-                    4 => {
-                        let data = unsafe {
-                            slice::from_raw_parts_mut(
-                                data.as_mut_ptr() as *mut u32,
-                                data.len() / bytes_per_sample as usize,
-                            )
-                        };
-                        for pixel in data {
-                            *pixel = ((1u64 << bits_per_sample) - 1) as u32 - *pixel;
-                        }
-                    }
+                    2 => for pixel in frame.plane_row_mut::<u16>(plane, row) {
+                        *pixel = ((1u64 << bits_per_sample) - 1) as u16 - *pixel;
+                    },
+                    4 => for pixel in frame.plane_row_mut::<u32>(plane, row) {
+                        *pixel = ((1u64 << bits_per_sample) - 1) as u32 - *pixel;
+                    },
                     _ => unreachable!(),
                 }
             }
@@ -210,21 +192,18 @@ impl<'core> Filter<'core> for RandomNoise {
                 let bytes_per_sample = frame.format().bytes_per_sample();
 
                 let mut rng = rand::thread_rng();
-                let data = frame.data_row_mut(plane, row);
 
                 match bytes_per_sample {
-                    1 => for col in 0..data.len() {
-                        unsafe {
-                            ptr::write(data.as_mut_ptr().offset(col as isize), rng.gen());
+                    1 => {
+                        let mut data = frame.plane_row_mut::<u8>(plane, row);
+                        for col in 0..data.len() {
+                            unsafe {
+                                ptr::write(data.as_mut_ptr().offset(col as isize), rng.gen());
+                            }
                         }
-                    },
+                    }
                     2 => {
-                        let data = unsafe {
-                            slice::from_raw_parts_mut(
-                                data.as_mut_ptr() as *mut u16,
-                                data.len() / bytes_per_sample as usize,
-                            )
-                        };
+                        let mut data = frame.plane_row_mut::<u16>(plane, row);
                         for col in 0..data.len() {
                             unsafe {
                                 ptr::write(data.as_mut_ptr().offset(col as isize), rng.gen());
@@ -232,12 +211,7 @@ impl<'core> Filter<'core> for RandomNoise {
                         }
                     }
                     4 => {
-                        let data = unsafe {
-                            slice::from_raw_parts_mut(
-                                data.as_mut_ptr() as *mut u32,
-                                data.len() / bytes_per_sample as usize,
-                            )
-                        };
+                        let mut data = frame.plane_row_mut::<u32>(plane, row);
                         for col in 0..data.len() {
                             unsafe {
                                 ptr::write(data.as_mut_ptr().offset(col as isize), rng.gen());

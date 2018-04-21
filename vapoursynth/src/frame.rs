@@ -6,6 +6,7 @@ use std::ops::{Deref, DerefMut};
 use vapoursynth_sys as ffi;
 
 use api::API;
+use component::Component;
 use core::CoreRef;
 use format::Format;
 use map::{MapRef, MapRefMut};
@@ -266,6 +267,102 @@ impl<'core> Frame<'core> {
         unsafe { API::get_cached().get_frame_stride(self, plane as i32) as usize }
     }
 
+    /// Returns a slice of a plane's pixel row.
+    ///
+    /// # Panics
+    /// Panics if the requested plane, row or component type is invalid.
+    #[inline]
+    pub fn plane_row<T: Component>(&self, plane: usize, row: usize) -> &[T] {
+        assert!(plane < self.format().plane_count());
+        assert!(row < self.height(plane));
+        assert!(T::is_valid(self.format()));
+
+        let stride = self.stride(plane);
+        let ptr = self.data_ptr(plane);
+
+        let offset = stride * row;
+        assert!(offset <= isize::max_value() as usize);
+        let offset = offset as isize;
+
+        let row_ptr = unsafe { ptr.offset(offset) };
+        let width = self.width(plane);
+
+        unsafe { slice::from_raw_parts(row_ptr as *const T, width) }
+    }
+
+    /// Returns a mutable slice of a plane's pixel row.
+    ///
+    /// # Panics
+    /// Panics if the requested plane, row or component type is invalid.
+    #[inline]
+    pub fn plane_row_mut<T: Component>(&mut self, plane: usize, row: usize) -> &mut [T] {
+        assert!(plane < self.format().plane_count());
+        assert!(row < self.height(plane));
+        assert!(T::is_valid(self.format()));
+
+        let stride = self.stride(plane);
+        let ptr = self.data_ptr_mut(plane);
+
+        let offset = stride * row;
+        assert!(offset <= isize::max_value() as usize);
+        let offset = offset as isize;
+
+        let row_ptr = unsafe { ptr.offset(offset) };
+        let width = self.width(plane);
+
+        unsafe { slice::from_raw_parts_mut(row_ptr as *mut T, width) }
+    }
+
+    /// Returns a slice of the plane's pixels.
+    ///
+    /// The length of the returned slice is `height() * width()`. If the pixel data has non-zero
+    /// padding (that is, `stride()` is larger than `width()`), an error is returned, since
+    /// returning the data slice would open access to uninitialized bytes.
+    ///
+    /// # Panics
+    /// Panics if the requested plane or component type is invalid.
+    pub fn plane<T: Component>(&self, plane: usize) -> Result<&[T], NonZeroPadding> {
+        assert!(plane < self.format().plane_count());
+        assert!(T::is_valid(self.format()));
+
+        let stride = self.stride(plane);
+        let width_in_bytes = self.width(plane) * usize::from(self.format().bytes_per_sample());
+        if stride != width_in_bytes {
+            return Err(NonZeroPadding(stride - width_in_bytes));
+        }
+
+        let height = self.height(plane);
+        let length = height * self.width(plane);
+        let ptr = self.data_ptr(plane);
+
+        Ok(unsafe { slice::from_raw_parts(ptr as *const T, length) })
+    }
+
+    /// Returns a mutable slice of the plane's pixels.
+    ///
+    /// The length of the returned slice is `height() * width()`. If the pixel data has non-zero
+    /// padding (that is, `stride()` is larger than `width()`), an error is returned, since
+    /// returning the data slice would open access to uninitialized bytes.
+    ///
+    /// # Panics
+    /// Panics if the requested plane or component type is invalid.
+    pub fn plane_mut<T: Component>(&mut self, plane: usize) -> Result<&mut [T], NonZeroPadding> {
+        assert!(plane < self.format().plane_count());
+        assert!(T::is_valid(self.format()));
+
+        let stride = self.stride(plane);
+        let width_in_bytes = self.width(plane) * usize::from(self.format().bytes_per_sample());
+        if stride != width_in_bytes {
+            return Err(NonZeroPadding(stride - width_in_bytes));
+        }
+
+        let height = self.height(plane);
+        let length = height * self.width(plane);
+        let ptr = self.data_ptr_mut(plane);
+
+        Ok(unsafe { slice::from_raw_parts_mut(ptr as *mut T, length) })
+    }
+
     /// Returns a pointer to the plane's pixels.
     ///
     /// The pointer points to an array with a length of `height() * stride()` and is valid for as
@@ -273,6 +370,7 @@ impl<'core> Frame<'core> {
     ///
     /// # Panics
     /// Panics if `plane >= format().plane_count()`.
+    #[inline]
     pub fn data_ptr(&self, plane: usize) -> *const u8 {
         assert!(plane < self.format().plane_count());
 
@@ -286,6 +384,7 @@ impl<'core> Frame<'core> {
     ///
     /// # Panics
     /// Panics if `plane >= format().plane_count()`.
+    #[inline]
     pub fn data_ptr_mut(&mut self, plane: usize) -> *mut u8 {
         assert!(plane < self.format().plane_count());
 
@@ -341,7 +440,7 @@ impl<'core> Frame<'core> {
     /// Returns a slice of the plane's pixels.
     ///
     /// The length of the returned slice is `height() * width() * format().bytes_per_sample()`. If
-    /// the pixel data has non-zero padding (that is, `stride()` is larger than `width()`), and
+    /// the pixel data has non-zero padding (that is, `stride()` is larger than `width()`), an
     /// error is returned, since returning the data slice would open access to uninitialized bytes.
     ///
     /// # Panics
@@ -365,7 +464,7 @@ impl<'core> Frame<'core> {
     /// Returns a mutable slice of the plane's pixels.
     ///
     /// The length of the returned slice is `height() * width() * format().bytes_per_sample()`. If
-    /// the pixel data has non-zero padding (that is, `stride()` is larger than `width()`), and
+    /// the pixel data has non-zero padding (that is, `stride()` is larger than `width()`), an
     /// error is returned, since returning the data slice would open access to uninitialized bytes.
     ///
     /// # Panics

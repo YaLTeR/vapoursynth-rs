@@ -57,6 +57,8 @@ mod need_api_and_vsscript {
             for row in 0..resolution.height {
                 let data_row = frame.data_row(plane, row);
                 assert_eq!(&data_row[..], &color[..]);
+                let data_row = frame.plane_row::<u8>(plane, row);
+                assert_eq!(&data_row[..], &color[..]);
             }
         }
     }
@@ -171,6 +173,8 @@ mod need_api_and_vsscript {
             for row in 0..resolution.height {
                 let data_row = frame.data_row(plane, row);
                 assert_eq!(&data_row[..], &color[..]);
+                let data_row = frame.plane_row::<u8>(plane, row);
+                assert_eq!(&data_row[..], &color[..]);
             }
         }
 
@@ -196,6 +200,8 @@ mod need_api_and_vsscript {
 
         for row in 0..resolution.height {
             let data_row = frame.data_row(plane, row);
+            assert_eq!(&data_row[..], &color[..]);
+            let data_row = frame.plane_row::<u8>(plane, row);
             assert_eq!(&data_row[..], &color[..]);
         }
 
@@ -264,17 +270,12 @@ mod need_api_and_vsscript {
         for row in 0..resolution.height {
             let data_row = frame.data_row(0, row);
             assert_eq!(&data_row[..], &[128; 1920][..]);
+            let data_row = frame.plane_row::<u8>(0, row);
+            assert_eq!(&data_row[..], &[128; 1920][..]);
         }
     }
 
-    unsafe fn transmute_slice<T: Sized, U: Sized>(x: &[T]) -> &[U] {
-        slice::from_raw_parts(
-            x.as_ptr() as *const U,
-            x.len() / (mem::size_of::<U>() / mem::size_of::<T>()),
-        )
-    }
-
-    fn verify_pixel_format<T: Debug + PartialEq + Copy>(
+    fn verify_pixel_format<T: Component + Debug + Clone + Copy + PartialEq>(
         env: &Environment,
         index: i32,
         bits_per_sample: u8,
@@ -297,21 +298,20 @@ mod need_api_and_vsscript {
             let row_gt = vec![color[plane_num]; frame.width(plane_num)];
 
             for y in 0..frame.height(plane_num) {
-                let row = frame.data_row(plane_num, y);
-                assert_eq!(
-                    row.len(),
-                    frame.width(plane_num) * usize::from(bytes_per_sample)
-                );
-
-                assert_eq!(&row_gt[..], unsafe { transmute_slice(row) });
+                let row = frame.plane_row(plane_num, y);
+                assert_eq!(row.len(), frame.width(plane_num));
+                assert_eq!(&row_gt[..], row);
             }
 
-            if let Ok(data) = frame.data(plane_num) {
-                assert_eq!(
-                    data.len(),
-                    frame.height(plane_num) * frame.width(plane_num)
-                        * usize::from(bytes_per_sample)
-                );
+            if let Ok(data) = frame.plane(plane_num) {
+                assert_eq!(data.len(), frame.height(plane_num) * frame.width(plane_num));
+
+                for y in 0..frame.height(plane_num) {
+                    assert_eq!(
+                        &row_gt[..],
+                        &data[y * frame.width(plane_num)..(y + 1) * frame.width(plane_num)]
+                    );
+                }
             }
         }
     }
@@ -355,6 +355,8 @@ mod need_api_and_vsscript {
                 }
 
                 let data = frame.data_row(plane, row);
+                assert_eq!(data, &gt[..]);
+                let data = frame.plane_row::<u8>(plane, row);
                 assert_eq!(data, &gt[..]);
             }
         }
