@@ -1,6 +1,9 @@
 sudo: required
 language: rust
 
+services:
+  - docker
+
 os:
   - linux
   - osx
@@ -27,28 +30,20 @@ matrix:
 cache: cargo
 
 before_install:
-  - sh .travis/install-vapoursynth.sh
-
-install:
-  - if [ "$TARGET_ARCH" = "i686" ]; then
-      rustup target add i686-unknown-linux-gnu;
-      export CARGO_BUILD_TARGET=i686-unknown-linux-gnu;
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+      brew install vapoursynth;
+    else
+      docker build -t testing-environment .travis/$TARGET_ARCH;
     fi
 
 script:
-  # Build and test with no features.
-  - cargo build --verbose
-  - cargo test --verbose
-
-  # Build with all features.
-  - cargo build --verbose --all-features
-
-  # Doc with all features.
-  - cargo doc --verbose --all-features
-  - cp .travis/index.html target/doc/
-
-  # Test with all possible combinations of all features.
-  - cd vapoursynth; python3 ../.travis/run-tests.py
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+      sh .travis/script.sh;
+    else
+      docker run --mount type=bind,source=$PWD,target=/vapoursynth-rs
+        -e TARGET_ARCH -e TRAVIS_RUST_VERSION
+        testing-environment /bin/sh vapoursynth-rs/.travis/script-docker.sh;
+    fi
 
 after_success:
   - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$TARGET_ARCH" = "x86_64" ]; then

@@ -3,18 +3,10 @@ import itertools, os, subprocess, sys
 
 if __name__ == '__main__':
     VS_API_VERSIONS = ["vapoursynth-api-" + str(v) for v in range(31, 36)]
+    VSSCRIPT_API_VERSIONS = ["vsscript-api-" + str(v) for v in range(31, 33)]
     VAPOURSYNTH_FUNCTIONS = ["vapoursynth-functions"]
     VSSCRIPT_FUNCTIONS = ["vsscript-functions"]
     F16_PIXEL_TYPE = ["f16-pixel-type"]
-
-    # The environment variable isn't there on AppVeyor.
-    if 'TRAVIS_OS_NAME' not in os.environ or os.environ['TRAVIS_OS_NAME'] == 'osx':
-        VSSCRIPT_API_VERSIONS = [
-            "vsscript-api-" + str(v) for v in range(31, 33)
-        ]
-    else:
-        # Trusty VapourSynth is old and doesn't support VSScript API above 3.0.
-        VSSCRIPT_API_VERSIONS = []
 
     features = [
         VS_API_VERSIONS, VSSCRIPT_API_VERSIONS, VAPOURSYNTH_FUNCTIONS,
