@@ -19,19 +19,53 @@ use vapoursynth::video_info::{Framerate, Resolution, VideoInfo};
 
 const PLUGIN_IDENTIFIER: &str = "com.example.vapoursynth-rs";
 
-// A filter that inverts the pixel values.
-make_filter_function! {
-    InvertFunction, "Invert"
+// A simple filter that passes the frames through unchanged.
+struct Passthrough<'core> {
+    source: Node<'core>,
+}
 
-    fn create_invert<'core>(
+impl<'core> Filter<'core> for Passthrough<'core> {
+    fn video_info(&self, _api: API, _core: CoreRef<'core>) -> Vec<VideoInfo<'core>> {
+        vec![self.source.info()]
+    }
+
+    fn get_frame_initial(
+        &self,
+        _api: API,
+        _core: CoreRef<'core>,
+        context: FrameContext,
+        n: usize,
+    ) -> Result<Option<FrameRef<'core>>, Error> {
+        self.source.request_frame_filter(context, n);
+        Ok(None)
+    }
+
+    fn get_frame(
+        &self,
+        _api: API,
+        _core: CoreRef<'core>,
+        context: FrameContext,
+        n: usize,
+    ) -> Result<FrameRef<'core>, Error> {
+        self.source
+            .get_frame_filter(context, n)
+            .ok_or(format_err!("Couldn't get the source frame"))
+    }
+}
+
+make_filter_function! {
+    PassthroughFunction, "Passthrough"
+
+    fn create_passthrough<'core>(
         _api: API,
         _core: CoreRef<'core>,
         clip: Node<'core>,
     ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
-        Ok(Some(Box::new(Invert { source: clip })))
+        Ok(Some(Box::new(Passthrough { source: clip })))
     }
 }
 
+// A filter that inverts the pixel values.
 struct Invert<'core> {
     source: Node<'core>,
 }
@@ -95,65 +129,19 @@ impl<'core> Filter<'core> for Invert<'core> {
     }
 }
 
-// A filter that outputs random noise.
 make_filter_function! {
-    RandomNoiseFunction, "RandomNoise"
+    InvertFunction, "Invert"
 
-    fn create_random_noise<'core>(
+    fn create_invert<'core>(
         _api: API,
-        core: CoreRef<'core>,
-        format: i64,
-        width: i64,
-        height: i64,
-        length: i64,
-        fpsnum: i64,
-        fpsden: i64,
+        _core: CoreRef<'core>,
+        clip: Node<'core>,
     ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
-        let format_id = (format as i32).into();
-        let format = core.get_format(format_id)
-            .ok_or(format_err!("No such format"))?;
-
-        if format.sample_type() == SampleType::Float {
-            bail!("Floating point formats are not supported");
-        }
-
-        if width <= 0 || width > i32::max_value() as i64 {
-            bail!("Invalid width");
-        }
-        let width = width as usize;
-
-        if height <= 0 || height > i32::max_value() as i64 {
-            bail!("Invalid height");
-        }
-        let height = height as usize;
-
-        if length <= 0 || length > i32::max_value() as i64 {
-            bail!("Invalid length");
-        }
-        let length = length as usize;
-
-        if fpsnum <= 0 {
-            bail!("Invalid fpsnum");
-        }
-        let fpsnum = fpsnum as u64;
-
-        if fpsden <= 0 {
-            bail!("Invalid fpsden");
-        }
-        let fpsden = fpsden as u64;
-
-        Ok(Some(Box::new(RandomNoise {
-            format_id,
-            resolution: Resolution { width, height },
-            framerate: Framerate {
-                numerator: fpsnum,
-                denominator: fpsden,
-            },
-            length,
-        })))
+        Ok(Some(Box::new(Invert { source: clip })))
     }
 }
 
+// A filter that outputs random noise.
 struct RandomNoise {
     format_id: FormatID,
     resolution: Resolution,
@@ -237,6 +225,64 @@ impl<'core> Filter<'core> for RandomNoise {
     }
 }
 
+make_filter_function! {
+    RandomNoiseFunction, "RandomNoise"
+
+    fn create_random_noise<'core>(
+        _api: API,
+        core: CoreRef<'core>,
+        format: i64,
+        width: i64,
+        height: i64,
+        length: i64,
+        fpsnum: i64,
+        fpsden: i64,
+    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+        let format_id = (format as i32).into();
+        let format = core.get_format(format_id)
+            .ok_or(format_err!("No such format"))?;
+
+        if format.sample_type() == SampleType::Float {
+            bail!("Floating point formats are not supported");
+        }
+
+        if width <= 0 || width > i32::max_value() as i64 {
+            bail!("Invalid width");
+        }
+        let width = width as usize;
+
+        if height <= 0 || height > i32::max_value() as i64 {
+            bail!("Invalid height");
+        }
+        let height = height as usize;
+
+        if length <= 0 || length > i32::max_value() as i64 {
+            bail!("Invalid length");
+        }
+        let length = length as usize;
+
+        if fpsnum <= 0 {
+            bail!("Invalid fpsnum");
+        }
+        let fpsnum = fpsnum as u64;
+
+        if fpsden <= 0 {
+            bail!("Invalid fpsden");
+        }
+        let fpsden = fpsden as u64;
+
+        Ok(Some(Box::new(RandomNoise {
+            format_id,
+            resolution: Resolution { width, height },
+            framerate: Framerate {
+                numerator: fpsnum,
+                denominator: fpsden,
+            },
+            length,
+        })))
+    }
+}
+
 // A random noise function but with variable name for MakeRandomNoiseFunction.
 struct VariableNameRandomNoiseFunction {
     name: String,
@@ -298,6 +344,7 @@ export_vapoursynth_plugin! {
         read_only: false,
     },
     [
+        PassthroughFunction::new(),
         InvertFunction::new(),
         RandomNoiseFunction::new(),
         MakeRandomNoiseFunction::new(),
