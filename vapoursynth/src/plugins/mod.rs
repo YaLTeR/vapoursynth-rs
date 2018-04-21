@@ -402,11 +402,11 @@ macro_rules! make_filter_function {
                 let mut args = String::new();
 
                 $(
-                    args += &format!(
-                        "{}:{}",
-                        stringify!($arg_name), // TODO: allow using a different name.
-                        <<$arg_type as $crate::plugins::FilterParameter>::Argument>::type_name()
-                    );
+                    // Don't use format!() for better constant propagation.
+                    args += stringify!($arg_name); // TODO: allow using a different name.
+                    args += ":";
+                    args
+                        += <<$arg_type as $crate::plugins::FilterParameter>::Argument>::type_name();
 
                     if <$arg_type as $crate::plugins::FilterParameter>::is_array() {
                         args += "[]";
