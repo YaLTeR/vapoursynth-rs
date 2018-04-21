@@ -1,4 +1,5 @@
-## v0.2.1 (26th Mar 2018)
+### v0.2.1
+- Added missing plugin-related types
 - Silenced some clippy warnings
 
 ## v0.2.0 (24th Mar 2018)
