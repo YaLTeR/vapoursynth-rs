@@ -1,5 +1,5 @@
 [package]
-name = "sample-filter"
+name = "sample-plugin"
 version = "0.1.0"
 authors = ["Ivan Molodetskikh <yalterz@gmail.com>"]
 

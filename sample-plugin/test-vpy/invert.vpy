@@ -1,6 +1,6 @@
 import vapoursynth as vs
 from vapoursynth import core
-core.std.LoadPlugin('../../target/debug/libsample_filter.so')
+core.std.LoadPlugin('../../target/debug/libsample_plugin.so')
 
 def make_frame(format, color):
  return core.std.BlankClip(width = 320,

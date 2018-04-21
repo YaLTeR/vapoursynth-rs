@@ -1,6 +1,6 @@
 import vapoursynth as vs
 from vapoursynth import core
-core.std.LoadPlugin('../../target/debug/libsample_filter.so')
+core.std.LoadPlugin('../../target/debug/libsample_plugin.so')
 
 clip = core.vapoursynth_rs.RandomNoise(width = 320,
                                        height = 240,

@@ -1,6 +1,6 @@
 import vapoursynth as vs
 from vapoursynth import core
-core.std.LoadPlugin('../../target/debug/libsample_filter.so')
+core.std.LoadPlugin('../../target/debug/libsample_plugin.so')
 
 core.vapoursynth_rs.MakeRandomNoiseFilter("MyAwesomeRandomNoise")
 
