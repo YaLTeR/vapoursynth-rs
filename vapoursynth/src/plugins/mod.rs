@@ -391,8 +391,9 @@ macro_rules! make_filter_function {
             $api_arg_name:ident : $api_arg_type:ty,
             $core_arg_name:ident : $core_arg_type:ty,
             $($arg_name:ident : $arg_type:ty),* $(,)*
-        ) -> Result<Option<Box<Filter<$lifetime_filter:tt> + $lifetime_filter_2:tt>>, Error>
-        $body:tt
+        ) -> $return_type:ty {
+            $($body:tt)*
+        }
     ) => (
         struct $struct_name {
             args: String,
@@ -446,7 +447,7 @@ macro_rules! make_filter_function {
                 api: API,
                 core: CoreRef<'core>,
                 args: &Map<'core>,
-            ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+            ) -> Result<Option<Box<$crate::plugins::Filter<'core> + 'core>>, Error> {
                 $create_fn_name(
                     api,
                     core,
@@ -465,7 +466,8 @@ macro_rules! make_filter_function {
             $api_arg_name : $api_arg_type,
             $core_arg_name : $core_arg_type,
             $($arg_name : $arg_type),*
-        ) -> Result<Option<Box<Filter<$lifetime_filter> + $lifetime_filter_2>>, Error>
-        $body
+        ) -> $return_type {
+            $($body)*
+        }
     )
 }
