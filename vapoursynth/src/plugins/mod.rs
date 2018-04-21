@@ -342,6 +342,7 @@ mod private {
 /// VapourSynth and passes them into the specified create function.
 ///
 /// The create function should look like:
+///
 /// ```ignore
 /// fn create<'core>(
 ///     api: API,
