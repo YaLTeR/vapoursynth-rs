@@ -343,6 +343,23 @@ mod need_api_and_vsscript {
     }
 
     #[test]
+    #[should_panic]
+    fn invalid_component_type() {
+        let env = vsscript::Environment::from_file(
+            "test-vpy/pixel-formats.vpy",
+            vsscript::EvalFlags::Nothing,
+        ).unwrap();
+
+        #[cfg(feature = "gte-vsscript-api-31")]
+        let node = env.get_output(0).unwrap().0;
+        #[cfg(not(feature = "gte-vsscript-api-31"))]
+        let node = env.get_output(0).unwrap();
+
+        let frame = node.get_frame(0).unwrap();
+        let _ = frame.plane_row::<u8>(0, 0); // Should be u16.
+    }
+
+    #[test]
     fn gradient() {
         let env =
             vsscript::Environment::from_file("test-vpy/gradient.vpy", vsscript::EvalFlags::Nothing)
