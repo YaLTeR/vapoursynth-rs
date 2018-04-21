@@ -21,7 +21,7 @@ All VapourSynth and VSScript API versions starting with 3.0 are supported. By de
 * `vsscript-api-31` for VSScript API 3.1
 * `vsscript-api-32` for VSScript API 3.2
 
-To enable linking to VapourSynth or VSScript functions (currently required to do anything useful), enable the following Cargo features:
+To enable linking to VapourSynth or VSScript functions, enable the following Cargo features:
 
 * `vapoursynth-functions` for VapourSynth functions (`getVapourSynthAPI()`)
 * `vsscript-functions` for VSScript functions (`vsscript_*()`)

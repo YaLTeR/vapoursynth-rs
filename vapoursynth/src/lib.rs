@@ -6,14 +6,18 @@
 //! ## Functionality
 //!
 //! Most of the VapourSynth API is covered. It's possible to evaluate `.vpy` scripts, access their
-//! properties and output, retrieve frames. A notable exception is API for creating VapourSynth
-//! filters, which will come out next.
+//! properties and output, retrieve frames; enumerate loaded plugins and invoke their functions as
+//! well as create VapourSynth filters.
 //!
 //! For an example usage see
 //! [examples/vspipe.rs](https://github.com/YaLTeR/vapoursynth-rs/blob/master/vapoursynth/examples/vspipe.rs),
 //! a complete reimplementation of VapourSynth's
 //! [vspipe](https://github.com/vapoursynth/vapoursynth/blob/master/src/vspipe/vspipe.cpp) in safe
 //! Rust utilizing this crate.
+//!
+//! For a VapourSynth plugin example see
+//! [sample-plugin](https://github.com/YaLTeR/vapoursynth-rs/blob/master/sample-plugin) which
+//! implements some simple filters.
 //!
 //! ## Short example
 //!
@@ -38,6 +42,90 @@
 //! # }
 //! ```
 //!
+//! ## Plugins
+//!
+//! To make a VapourSynth plugin, start by creating a new Rust library with
+//! `crate-type = ["cdylib"]`. Then add filters by implementing the `plugins::Filter` trait. Bind
+//! them to functions by implementing `plugins::FilterFunction`, which is much more easily done via
+//! the `make_filter_function!` macro. Finally, put `export_vapoursynth_plugin!` at the top level
+//! of `src/lib.rs` to export the functionality.
+//!
+//! ## Short plugin example
+//!
+//! ```no_run
+//! #[macro_use]
+//! extern crate failure;
+//! #[macro_use]
+//! extern crate vapoursynth;
+//!
+//! use failure::Error;
+//! use vapoursynth::prelude::*;
+//! use vapoursynth::core::CoreRef;
+//! use vapoursynth::plugins::{Filter, FilterArgument, FrameContext, Metadata};
+//! use vapoursynth::video_info::VideoInfo;
+//!
+//! // A simple filter that passes the frames through unchanged.
+//! struct Passthrough<'core> {
+//!     source: Node<'core>,
+//! }
+//!
+//! impl<'core> Filter<'core> for Passthrough<'core> {
+//!     fn video_info(&self, _api: API, _core: CoreRef<'core>) -> Vec<VideoInfo<'core>> {
+//!         vec![self.source.info()]
+//!     }
+//!
+//!     fn get_frame_initial(
+//!         &self,
+//!         _api: API,
+//!         _core: CoreRef<'core>,
+//!         context: FrameContext,
+//!         n: usize,
+//!     ) -> Result<Option<FrameRef<'core>>, Error> {
+//!         self.source.request_frame_filter(context, n);
+//!         Ok(None)
+//!     }
+//!
+//!     fn get_frame(
+//!         &self,
+//!         _api: API,
+//!         _core: CoreRef<'core>,
+//!         context: FrameContext,
+//!         n: usize,
+//!     ) -> Result<FrameRef<'core>, Error> {
+//!         self.source
+//!             .get_frame_filter(context, n)
+//!             .ok_or(format_err!("Couldn't get the source frame"))
+//!     }
+//! }
+//!
+//! make_filter_function! {
+//!     PassthroughFunction, "Passthrough"
+//!
+//!     fn create_passthrough<'core>(
+//!         _api: API,
+//!         _core: CoreRef<'core>,
+//!         clip: Node<'core>,
+//!     ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+//!         Ok(Some(Box::new(Passthrough { source: clip })))
+//!     }
+//! }
+//!
+//! export_vapoursynth_plugin! {
+//!     Metadata {
+//!         identifier: "com.example.passthrough",
+//!         namespace: "passthrough",
+//!         name: "Example Plugin",
+//!         read_only: true,
+//!     },
+//!     [PassthroughFunction::new()]
+//! }
+//! # fn main() {
+//! # }
+//! ```
+//!
+//! Check [sample-plugin](https://github.com/YaLTeR/vapoursynth-rs/blob/master/sample-plugin) for
+//! an example plugin which exports some simple filters.
+//!
 //! ## Supported Versions
 //!
 //! All VapourSynth and VSScript API versions starting with 3.0 are supported. By default the
@@ -52,8 +140,7 @@
 //! * `vsscript-api-31` for VSScript API 3.1
 //! * `vsscript-api-32` for VSScript API 3.2
 //!
-//! To enable linking to VapourSynth or VSScript functions (currently required to do anything
-//! useful), enable the following Cargo features:
+//! To enable linking to VapourSynth or VSScript functions, enable the following Cargo features:
 //!
 //! * `vapoursynth-functions` for VapourSynth functions (`getVapourSynthAPI()`)
 //! * `vsscript-functions` for VSScript functions (`vsscript_*()`)

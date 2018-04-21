@@ -15,9 +15,11 @@ The primary goal is safety (that is, safe Rust code should not trigger undefined
 
 ## Functionality
 
-Most of the VapourSynth API is covered. It's possible to evaluate `.vpy` scripts, access their properties and output, retrieve frames. A notable exception is API for creating VapourSynth filters, which will come out next.
+Most of the VapourSynth API is covered. It's possible to evaluate `.vpy` scripts, access their properties and output, retrieve frames; enumerate loaded plugins and invoke their functions as well as create VapourSynth filters.
 
 For an example usage see [examples/vspipe.rs](https://github.com/YaLTeR/vapoursynth-rs/blob/master/vapoursynth/examples/vspipe.rs), a complete reimplementation of VapourSynth's [vspipe](https://github.com/vapoursynth/vapoursynth/blob/master/src/vspipe/vspipe.cpp) in safe Rust utilizing this crate.
+
+For a VapourSynth plugin example see [sample-plugin](https://github.com/YaLTeR/vapoursynth-rs/blob/master/sample-plugin) which implements some simple filters.
 
 ## vapoursynth-sys
 
@@ -40,7 +42,7 @@ All VapourSynth and VSScript API versions starting with 3.0 are supported. By de
 * `vsscript-api-31` for VSScript API 3.1
 * `vsscript-api-32` for VSScript API 3.2
 
-To enable linking to VapourSynth or VSScript functions (currently required to do anything useful), enable the following Cargo features:
+To enable linking to VapourSynth or VSScript functions, enable the following Cargo features:
 
 * `vapoursynth-functions` for VapourSynth functions (`getVapourSynthAPI()`)
 * `vsscript-functions` for VSScript functions (`vsscript_*()`)
