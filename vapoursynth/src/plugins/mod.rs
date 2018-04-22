@@ -97,6 +97,9 @@ pub trait FilterFunction: Send + Sync {
 }
 
 /// A filter interface.
+// TODO: perhaps it's possible to figure something out about Send + Sync with specialization? Since
+// there are Node flags which say that the filter will be called strictly by one thread, in which
+// case Sync shouldn't be required.
 pub trait Filter<'core>: Send + Sync {
     /// Returns the parameters of this filter's output node.
     ///

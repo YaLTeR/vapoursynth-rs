@@ -4,6 +4,7 @@ use std::ptr;
 use std::io::Read;
 use std::ops::{Deref, DerefMut};
 use std::path::Path;
+use std::ptr::NonNull;
 use vapoursynth_sys as ffi;
 
 use api::API;
@@ -43,7 +44,7 @@ enum EvaluateScriptArgs<'a> {
 /// A wrapper for the VSScript environment.
 #[derive(Debug)]
 pub struct Environment {
-    handle: *mut ffi::VSScript,
+    handle: NonNull<ffi::VSScript>,
 }
 
 unsafe impl Send for Environment {}
@@ -53,7 +54,7 @@ impl Drop for Environment {
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            ffi::vsscript_freeScript(self.handle);
+            ffi::vsscript_freeScript(self.handle.as_ptr());
         }
     }
 }
@@ -65,7 +66,7 @@ impl Environment {
     /// This function must only be called if an error is present.
     #[inline]
     unsafe fn error(&self) -> CString {
-        let message = ffi::vsscript_getError(self.handle);
+        let message = ffi::vsscript_getError(self.handle.as_ptr());
         CStr::from_ptr(message).to_owned()
     }
 
@@ -78,7 +79,9 @@ impl Environment {
 
         let mut handle = ptr::null_mut();
         let rv = unsafe { call_vsscript!(ffi::vsscript_createScript(&mut handle)) };
-        let environment = Self { handle };
+        let environment = Self {
+            handle: unsafe { NonNull::new_unchecked(handle) },
+        };
 
         if rv != 0 {
             Err(VSScriptError::new(unsafe { environment.error() }).into())
@@ -113,7 +116,7 @@ impl Environment {
 
         let rv = unsafe {
             call_vsscript!(ffi::vsscript_evaluateScript(
-                &mut self.handle,
+                &mut self.handle.as_ptr(),
                 script.as_ptr(),
                 path.as_ref().map(|p| p.as_ptr()).unwrap_or(ptr::null()),
                 flags.ffi_type(),
@@ -159,7 +162,7 @@ impl Environment {
     #[inline]
     pub fn clear(&self) {
         unsafe {
-            ffi::vsscript_clearEnvironment(self.handle);
+            ffi::vsscript_clearEnvironment(self.handle.as_ptr());
         }
     }
 
@@ -171,7 +174,7 @@ impl Environment {
         // Node needs the API.
         API::get().ok_or(Error::NoAPI)?;
 
-        let node_handle = unsafe { ffi::vsscript_getOutput(self.handle, index) };
+        let node_handle = unsafe { ffi::vsscript_getOutput(self.handle.as_ptr(), index) };
         if node_handle.is_null() {
             Err(Error::NoOutput)
         } else {
@@ -190,7 +193,7 @@ impl Environment {
 
         let mut alpha_handle = ptr::null_mut();
         let node_handle =
-            unsafe { ffi::vsscript_getOutput2(self.handle, index, &mut alpha_handle) };
+            unsafe { ffi::vsscript_getOutput2(self.handle.as_ptr(), index, &mut alpha_handle) };
 
         if node_handle.is_null() {
             return Err(Error::NoOutput);
@@ -205,7 +208,7 @@ impl Environment {
     /// Cancels a node set for output. The node will no longer be available to `get_output()`.
     #[inline]
     pub fn clear_output(&self, index: i32) -> Result<()> {
-        let rv = unsafe { ffi::vsscript_clearOutput(self.handle, index) };
+        let rv = unsafe { ffi::vsscript_clearOutput(self.handle.as_ptr(), index) };
         if rv != 0 {
             Err(Error::NoOutput)
         } else {
@@ -220,7 +223,7 @@ impl Environment {
         // CoreRef needs the API.
         API::get().ok_or(Error::NoAPI)?;
 
-        let ptr = unsafe { ffi::vsscript_getCore(self.handle) };
+        let ptr = unsafe { ffi::vsscript_getCore(self.handle.as_ptr()) };
         if ptr.is_null() {
             Err(Error::NoCore)
         } else {
@@ -231,7 +234,9 @@ impl Environment {
     /// Retrieves a variable from the script environment.
     pub fn get_variable(&self, name: &str, map: &mut Map) -> Result<()> {
         let name = CString::new(name)?;
-        let rv = unsafe { ffi::vsscript_getVariable(self.handle, name.as_ptr(), map.deref_mut()) };
+        let rv = unsafe {
+            ffi::vsscript_getVariable(self.handle.as_ptr(), name.as_ptr(), map.deref_mut())
+        };
         if rv != 0 {
             Err(Error::NoSuchVariable)
         } else {
@@ -241,7 +246,7 @@ impl Environment {
 
     /// Sets variables in the script environment.
     pub fn set_variables(&self, variables: &Map) -> Result<()> {
-        let rv = unsafe { ffi::vsscript_setVariable(self.handle, variables.deref()) };
+        let rv = unsafe { ffi::vsscript_setVariable(self.handle.as_ptr(), variables.deref()) };
         if rv != 0 {
             Err(Error::NoSuchVariable)
         } else {
@@ -252,7 +257,7 @@ impl Environment {
     /// Deletes a variable from the script environment.
     pub fn clear_variable(&self, name: &str) -> Result<()> {
         let name = CString::new(name)?;
-        let rv = unsafe { ffi::vsscript_clearVariable(self.handle, name.as_ptr()) };
+        let rv = unsafe { ffi::vsscript_clearVariable(self.handle.as_ptr(), name.as_ptr()) };
         if rv != 0 {
             Err(Error::NoSuchVariable)
         } else {

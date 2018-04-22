@@ -3,6 +3,7 @@
 use std::ffi::{CStr, CString, NulError};
 use std::fmt;
 use std::marker::PhantomData;
+use std::ptr::NonNull;
 use vapoursynth_sys as ffi;
 
 use api::API;
@@ -36,7 +37,7 @@ pub struct Info {
 /// A reference to a VapourSynth core.
 #[derive(Debug, Clone, Copy)]
 pub struct CoreRef<'a> {
-    handle: *mut ffi::VSCore,
+    handle: NonNull<ffi::VSCore>,
     _owner: PhantomData<&'a ()>,
 }
 
@@ -51,7 +52,7 @@ impl<'a> CoreRef<'a> {
     #[inline]
     pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSCore) -> Self {
         Self {
-            handle,
+            handle: NonNull::new_unchecked(handle),
             _owner: PhantomData,
         }
     }
@@ -59,14 +60,14 @@ impl<'a> CoreRef<'a> {
     /// Returns the underlying pointer.
     #[inline]
     pub(crate) fn ptr(&self) -> *mut ffi::VSCore {
-        self.handle
+        self.handle.as_ptr()
     }
 
     /// Returns information about the VapourSynth core.
     pub fn info(self) -> Info {
         let raw_info = unsafe {
             API::get_cached()
-                .get_core_info(self.handle)
+                .get_core_info(self.handle.as_ptr())
                 .as_ref()
                 .unwrap()
         };
@@ -90,7 +91,7 @@ impl<'a> CoreRef<'a> {
     /// registered format, or one of the `PresetFormat`.
     #[inline]
     pub fn get_format(&self, id: FormatID) -> Option<Format<'a>> {
-        let ptr = unsafe { API::get_cached().get_format_preset(id.0, self.handle) };
+        let ptr = unsafe { API::get_cached().get_format_preset(id.0, self.handle.as_ptr()) };
         unsafe { ptr.as_ref().map(|p| Format::from_ptr(p)) }
     }
 
@@ -119,7 +120,7 @@ impl<'a> CoreRef<'a> {
                     i32::from(bits_per_sample),
                     i32::from(sub_sampling_w),
                     i32::from(sub_sampling_h),
-                    self.handle,
+                    self.handle.as_ptr(),
                 )
                 .as_ref()
                 .map(|p| Format::from_ptr(p))
@@ -130,7 +131,7 @@ impl<'a> CoreRef<'a> {
     #[inline]
     pub fn get_plugin_by_id(&self, id: &str) -> Result<Option<Plugin>, NulError> {
         let id = CString::new(id)?;
-        let ptr = unsafe { API::get_cached().get_plugin_by_id(id.as_ptr(), self.handle) };
+        let ptr = unsafe { API::get_cached().get_plugin_by_id(id.as_ptr(), self.handle.as_ptr()) };
         if ptr.is_null() {
             Ok(None)
         } else {
@@ -144,7 +145,8 @@ impl<'a> CoreRef<'a> {
     #[inline]
     pub fn get_plugin_by_namespace(&self, namespace: &str) -> Result<Option<Plugin>, NulError> {
         let namespace = CString::new(namespace)?;
-        let ptr = unsafe { API::get_cached().get_plugin_by_ns(namespace.as_ptr(), self.handle) };
+        let ptr =
+            unsafe { API::get_cached().get_plugin_by_ns(namespace.as_ptr(), self.handle.as_ptr()) };
         if ptr.is_null() {
             Ok(None)
         } else {
@@ -160,7 +162,7 @@ impl<'a> CoreRef<'a> {
     // TODO: parse the values on the crate side and return a nice struct.
     #[inline]
     pub fn plugins(&self) -> OwnedMap {
-        unsafe { OwnedMap::from_ptr(API::get_cached().get_plugins(self.handle)) }
+        unsafe { OwnedMap::from_ptr(API::get_cached().get_plugins(self.handle.as_ptr())) }
     }
 }
 

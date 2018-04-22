@@ -3,6 +3,7 @@
 use std::ffi::{CStr, CString, NulError};
 use std::marker::PhantomData;
 use std::ops::Deref;
+use std::ptr::NonNull;
 use vapoursynth_sys as ffi;
 
 use api::API;
@@ -12,7 +13,7 @@ use plugins::{self, FilterFunction};
 /// A VapourSynth plugin.
 #[derive(Debug, Clone, Copy)]
 pub struct Plugin<'core> {
-    handle: *mut ffi::VSPlugin,
+    handle: NonNull<ffi::VSPlugin>,
     _owner: PhantomData<&'core ()>,
 }
 
@@ -27,7 +28,7 @@ impl<'core> Plugin<'core> {
     #[inline]
     pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSPlugin) -> Self {
         Self {
-            handle,
+            handle: NonNull::new_unchecked(handle),
             _owner: PhantomData,
         }
     }
@@ -40,7 +41,7 @@ impl<'core> Plugin<'core> {
     // TODO: parse the values on the crate side and return a nice struct.
     #[inline]
     pub fn functions(&self) -> OwnedMap<'core> {
-        unsafe { OwnedMap::from_ptr(API::get_cached().get_functions(self.handle)) }
+        unsafe { OwnedMap::from_ptr(API::get_cached().get_functions(self.handle.as_ptr())) }
     }
 
     /// Returns the absolute path to the plugin, including the plugin's file name. This is the real
@@ -50,7 +51,7 @@ impl<'core> Plugin<'core> {
     #[cfg(feature = "gte-vapoursynth-api-31")]
     #[inline]
     pub fn path(&self) -> Option<&'core CStr> {
-        let ptr = unsafe { API::get_cached().get_plugin_path(self.handle) };
+        let ptr = unsafe { API::get_cached().get_plugin_path(self.handle.as_ptr()) };
         if ptr.is_null() {
             None
         } else {
@@ -76,7 +77,11 @@ impl<'core> Plugin<'core> {
     pub fn invoke(&self, name: &str, args: &Map<'core>) -> Result<OwnedMap<'core>, NulError> {
         let name = CString::new(name)?;
         Ok(unsafe {
-            OwnedMap::from_ptr(API::get_cached().invoke(self.handle, name.as_ptr(), args.deref()))
+            OwnedMap::from_ptr(API::get_cached().invoke(
+                self.handle.as_ptr(),
+                name.as_ptr(),
+                args.deref(),
+            ))
         })
     }
 
@@ -98,7 +103,7 @@ impl<'core> Plugin<'core> {
                 args_cstring.as_ptr(),
                 plugins::ffi::create::<F>,
                 Box::into_raw(data) as _,
-                self.handle,
+                self.handle.as_ptr(),
             );
         }
 

@@ -1,8 +1,9 @@
 //! VapourSynth frames.
 
 use std::marker::PhantomData;
-use std::{mem, ptr, slice};
+use std::{mem, slice};
 use std::ops::{Deref, DerefMut};
+use std::ptr::{self, NonNull};
 use vapoursynth_sys as ffi;
 
 use api::API;
@@ -13,7 +14,7 @@ use map::{MapRef, MapRefMut};
 use video_info::Resolution;
 
 /// An error indicating that the frame data has non-zero padding.
-#[derive(Fail, Debug)]
+#[derive(Fail, Debug, Clone, Copy, Eq, PartialEq)]
 #[fail(display = "Frame data has non-zero padding: {}", _0)]
 pub struct NonZeroPadding(usize);
 
@@ -22,7 +23,7 @@ pub struct NonZeroPadding(usize);
 #[derive(Debug)]
 pub struct Frame<'core> {
     // The actual mutability of this depends on whether it's accessed via `&Frame` or `&mut Frame`.
-    handle: *mut ffi::VSFrameRef,
+    handle: NonNull<ffi::VSFrameRef>,
     // The cached frame format for fast access.
     format: Format<'core>,
     _owner: PhantomData<&'core ()>,
@@ -52,7 +53,7 @@ impl<'core> Deref for Frame<'core> {
     // Technically this should return `&'core`.
     #[inline]
     fn deref(&self) -> &Self::Target {
-        unsafe { &*self.handle }
+        unsafe { self.handle.as_ref() }
     }
 }
 
@@ -61,7 +62,7 @@ impl<'core> DerefMut for Frame<'core> {
     // Technically this should return `&'core`.
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { &mut *self.handle }
+        unsafe { self.handle.as_mut() }
     }
 }
 
@@ -199,7 +200,7 @@ impl<'core> Frame<'core> {
     #[inline]
     pub(crate) unsafe fn from_ptr(handle: *const ffi::VSFrameRef) -> Self {
         Self {
-            handle: handle as _,
+            handle: NonNull::new_unchecked(handle as *mut ffi::VSFrameRef),
             format: unsafe {
                 let ptr = API::get_cached().get_frame_format(&*handle);
                 Format::from_ptr(ptr)

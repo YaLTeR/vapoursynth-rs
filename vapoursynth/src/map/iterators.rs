@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use super::*;
 
 /// An iterator over the keys of a map.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Keys<'map, 'elem: 'map> {
     map: &'map Map<'elem>,
     count: usize,
@@ -45,6 +45,7 @@ impl<'map, 'elem> Iterator for Keys<'map, 'elem> {
 impl<'map, 'elem> ExactSizeIterator for Keys<'map, 'elem> {}
 
 /// An iterator over the values associated with a certain key of a map.
+#[derive(Debug, Clone)]
 pub struct ValueIter<'map, 'elem: 'map, 'key, T> {
     map: &'map Map<'elem>,
     key: Cow<'key, CStr>, // Just using this as an enum { owned, borrowed }.
@@ -60,6 +61,7 @@ macro_rules! impl_value_iter {
             ///
             /// # Safety
             /// The caller must ensure `key` is valid.
+            #[inline]
             pub(crate) unsafe fn new(map: &'map Map<'elem>, key: Cow<'key, CStr>) -> Result<Self> {
                 // Check if the value type is correct.
                 match map.value_type_raw_unchecked(&key)? {

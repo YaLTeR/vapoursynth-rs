@@ -5,7 +5,8 @@ use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 use std::os::raw::c_char;
 use std::ops::{Deref, DerefMut};
-use std::{mem, ptr, result, slice};
+use std::{mem, result, slice};
+use std::ptr::{self, NonNull};
 use vapoursynth_sys as ffi;
 
 use api::API;
@@ -29,7 +30,7 @@ pub use self::value::{Value, ValueType};
 #[derive(Debug)]
 pub struct Map<'elem> {
     // The actual mutability of this depends on whether it's accessed via `&Map` or `&mut Map`.
-    handle: *mut ffi::VSMap,
+    handle: NonNull<ffi::VSMap>,
     _elem: PhantomData<&'elem ()>,
 }
 
@@ -65,7 +66,7 @@ impl<'elem> Deref for Map<'elem> {
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        unsafe { &*self.handle }
+        unsafe { self.handle.as_ref() }
     }
 }
 
@@ -73,7 +74,7 @@ impl<'elem> Deref for Map<'elem> {
 impl<'elem> DerefMut for Map<'elem> {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { &mut *self.handle }
+        unsafe { self.handle.as_mut() }
     }
 }
 
@@ -217,7 +218,7 @@ impl<'elem> Map<'elem> {
     #[inline]
     pub(crate) unsafe fn from_ptr(handle: *const ffi::VSMap) -> Self {
         Self {
-            handle: handle as _,
+            handle: NonNull::new_unchecked(handle as *mut ffi::VSMap),
             _elem: PhantomData,
         }
     }

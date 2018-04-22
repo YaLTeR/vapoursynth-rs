@@ -9,7 +9,7 @@ use format::Format;
 use node;
 
 /// Represents video resolution.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Resolution {
     /// Width of the clip, greater than 0.
     pub width: usize,
@@ -19,7 +19,7 @@ pub struct Resolution {
 }
 
 /// Represents video framerate.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Framerate {
     /// FPS numerator, greater than 0.
     pub numerator: u64,
@@ -30,7 +30,7 @@ pub struct Framerate {
 
 /// Represents a property that can be either constant or variable, like the resolution or the
 /// framerate.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum Property<T: Debug + Clone + Copy + Eq + PartialEq> {
     /// This property is variable.
     Variable,
@@ -130,7 +130,6 @@ impl<'core> VideoInfo<'core> {
     }
 
     /// Converts the Rust struct into a C struct.
-    #[inline]
     pub(crate) fn ffi_type(self) -> ffi::VSVideoInfo {
         let format = match self.format {
             Property::Variable => ptr::null(),
@@ -177,6 +176,7 @@ impl<T> From<T> for Property<T>
 where
     T: Debug + Clone + Copy + Eq + PartialEq,
 {
+    #[inline]
     fn from(x: T) -> Self {
         Property::Constant(x)
     }

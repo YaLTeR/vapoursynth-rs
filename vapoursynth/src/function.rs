@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 use std::{mem, panic, process};
 use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
+use std::ptr::NonNull;
 use vapoursynth_sys as ffi;
 
 use api::API;
@@ -13,7 +14,7 @@ use map::{Map, MapRef, MapRefMut};
 /// Holds a reference to a function that may be called.
 #[derive(Debug)]
 pub struct Function<'core> {
-    handle: *mut ffi::VSFuncRef,
+    handle: NonNull<ffi::VSFuncRef>,
     _owner: PhantomData<&'core ()>,
 }
 
@@ -24,7 +25,7 @@ impl<'core> Drop for Function<'core> {
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            API::get_cached().free_func(self.handle);
+            API::get_cached().free_func(self.handle.as_ptr());
         }
     }
 }
@@ -32,9 +33,9 @@ impl<'core> Drop for Function<'core> {
 impl<'core> Clone for Function<'core> {
     #[inline]
     fn clone(&self) -> Self {
-        let handle = unsafe { API::get_cached().clone_func(self.handle) };
+        let handle = unsafe { API::get_cached().clone_func(self.handle.as_ptr()) };
         Self {
-            handle,
+            handle: unsafe { NonNull::new_unchecked(handle) },
             _owner: PhantomData,
         }
     }
@@ -48,7 +49,7 @@ impl<'core> Function<'core> {
     #[inline]
     pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSFuncRef) -> Self {
         Self {
-            handle,
+            handle: NonNull::new_unchecked(handle),
             _owner: PhantomData,
         }
     }
@@ -56,7 +57,7 @@ impl<'core> Function<'core> {
     /// Returns the underlying pointer.
     #[inline]
     pub(crate) fn ptr(&self) -> *mut ffi::VSFuncRef {
-        self.handle
+        self.handle.as_ptr()
     }
 
     /// Creates a new function.
@@ -109,7 +110,7 @@ impl<'core> Function<'core> {
         };
 
         Self {
-            handle,
+            handle: unsafe { NonNull::new_unchecked(handle) },
             _owner: PhantomData,
         }
     }
@@ -117,6 +118,6 @@ impl<'core> Function<'core> {
     /// Calls the function. If the call fails `out` will have an error set.
     #[inline]
     pub fn call(&self, in_: &Map<'core>, out: &mut Map<'core>) {
-        unsafe { API::get_cached().call_func(self.handle, in_.deref(), out.deref_mut()) };
+        unsafe { API::get_cached().call_func(self.handle.as_ptr(), in_.deref(), out.deref_mut()) };
     }
 }

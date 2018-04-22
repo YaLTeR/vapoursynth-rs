@@ -6,6 +6,7 @@ use std::marker::PhantomData;
 use std::{mem, panic};
 use std::os::raw::{c_char, c_void};
 use std::process;
+use std::ptr::NonNull;
 use vapoursynth_sys as ffi;
 
 use api::API;
@@ -45,7 +46,7 @@ impl From<ffi::VSNodeFlags> for Flags {
 /// A reference to a node in the constructed filter graph.
 #[derive(Debug)]
 pub struct Node<'core> {
-    handle: *mut ffi::VSNodeRef,
+    handle: NonNull<ffi::VSNodeRef>,
     _owner: PhantomData<&'core ()>,
 }
 
@@ -56,7 +57,7 @@ impl<'core> Drop for Node<'core> {
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            API::get_cached().free_node(self.handle);
+            API::get_cached().free_node(self.handle.as_ptr());
         }
     }
 }
@@ -64,9 +65,9 @@ impl<'core> Drop for Node<'core> {
 impl<'core> Clone for Node<'core> {
     #[inline]
     fn clone(&self) -> Self {
-        let handle = unsafe { API::get_cached().clone_node(self.handle) };
+        let handle = unsafe { API::get_cached().clone_node(self.handle.as_ptr()) };
         Self {
-            handle,
+            handle: unsafe { NonNull::new_unchecked(handle) },
             _owner: PhantomData,
         }
     }
@@ -80,7 +81,7 @@ impl<'core> Node<'core> {
     #[inline]
     pub(crate) unsafe fn from_ptr(handle: *mut ffi::VSNodeRef) -> Self {
         Self {
-            handle,
+            handle: NonNull::new_unchecked(handle),
             _owner: PhantomData,
         }
     }
@@ -88,7 +89,7 @@ impl<'core> Node<'core> {
     /// Returns the underlying pointer.
     #[inline]
     pub(crate) fn ptr(&self) -> *mut ffi::VSNodeRef {
-        self.handle
+        self.handle.as_ptr()
     }
 
     /// Returns the video info associated with this `Node`.
@@ -97,7 +98,7 @@ impl<'core> Node<'core> {
     #[inline]
     pub fn info(&self) -> VideoInfo<'core> {
         unsafe {
-            let ptr = API::get_cached().get_video_info(self.handle);
+            let ptr = API::get_cached().get_video_info(self.handle.as_ptr());
             VideoInfo::from_ptr(ptr)
         }
     }
@@ -119,7 +120,7 @@ impl<'core> Node<'core> {
         err_buf.resize(ERROR_BUF_CAPACITY, 0);
         let mut err_buf = err_buf.into_boxed_slice();
 
-        let handle = unsafe { API::get_cached().get_frame(n, self.handle, &mut *err_buf) };
+        let handle = unsafe { API::get_cached().get_frame(n, self.handle.as_ptr(), &mut *err_buf) };
 
         if handle.is_null() {
             // TODO: remove this extra allocation by reusing `Box<[c_char]>`.
@@ -222,7 +223,7 @@ impl<'core> Node<'core> {
         unsafe {
             API::get_cached().get_frame_async(
                 n,
-                new_node.handle,
+                new_node.handle.as_ptr(),
                 Some(c_callback),
                 Box::into_raw(user_data) as *mut c_void,
             );
