@@ -5,31 +5,27 @@ extern crate vapoursynth;
 use vapoursynth::prelude::*;
 use vapoursynth::video_info::Framerate;
 
+use std::env::current_exe;
 use std::fmt::Debug;
 use std::io::{stdout, Write};
 
 cfg_if! {
     if #[cfg(windows)] {
-        const EXTENSION: &[u8] = b"dll";
-        const PREFIX: &[u8] = b"";
+        const EXTENSION: &str = "dll";
+        const PREFIX: &str = "";
     } else if #[cfg(target_os = "macos")] {
-        const EXTENSION: &[u8] = b"dylib";
-        const PREFIX: &[u8] = b"lib";
+        const EXTENSION: &str = "dylib";
+        const PREFIX: &str = "lib";
     } else {
-        const EXTENSION: &[u8] = b"so";
-        const PREFIX: &[u8] = b"lib";
+        const EXTENSION: &str = "so";
+        const PREFIX: &str = "lib";
     }
 }
 
 fn plugin_path() -> Vec<u8> {
-    let mut v = Vec::new();
-
-    v.extend(b"../target/debug/");
-    v.extend(PREFIX);
-    v.extend(b"sample_plugin.");
-    v.extend(EXTENSION);
-
-    v
+    let mut path = current_exe().unwrap();
+    path.set_file_name(format!("{}sample_plugin.{}", PREFIX, EXTENSION));
+    path.into_os_string().into_string().unwrap().into_bytes()
 }
 
 fn make_environment() -> Environment {

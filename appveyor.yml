@@ -71,16 +71,16 @@ install:
   - set suffix=%suffix:~0,2%
   - set PATH=%PATH%;C:\Program Files (x86)\VapourSynth\core%suffix%
 
-build_script:
-  # Build with no features.
-  - cargo build --verbose
-
-  # Build with all features.
-  - cargo build --verbose --all-features
+build: off
 
 test_script:
-  # Test with no features.
-  - cargo test --verbose %cargoflags%
-
   # Test with all possible combinations of all features.
-  - cd vapoursynth && C:\Python36-x64\python ..\.travis\run-tests.py
+  - cd vapoursynth
+  - C:\Python36-x64\python ..\.travis\run-tests.py
+  - cd ..
+
+  # Run sample plugin tests.
+  - cd sample-plugin
+  - cargo build --verbose
+  - cargo run --verbose --bin test --features "cfg-if vapoursynth/vapoursynth-functions vapoursynth/vsscript-functions"
+  - cd ..
