@@ -275,7 +275,7 @@ mod need_api_and_vsscript {
         }
     }
 
-    fn verify_pixel_format<T: Component + Debug + Clone + Copy + PartialEq>(
+    fn verify_pixel_format<T: Component + Debug + Copy + PartialEq>(
         env: &Environment,
         index: i32,
         bits_per_sample: u8,
