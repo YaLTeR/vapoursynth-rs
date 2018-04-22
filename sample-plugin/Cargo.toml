@@ -7,6 +7,15 @@ authors = ["Ivan Molodetskikh <yalterz@gmail.com>"]
 crate-type = ["cdylib"]
 
 [dependencies]
+cfg-if = {version = "0.1", optional = true }
 failure = "0.1"
 rand = "0.4"
 vapoursynth = { path = "../vapoursynth" }
+
+[[bin]]
+name = "test"
+required-features = [
+    "cfg-if",
+    "vapoursynth/vapoursynth-functions",
+    "vapoursynth/vsscript-functions"
+]

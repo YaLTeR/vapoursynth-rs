@@ -14,3 +14,10 @@ cp .travis/index.html target/doc/
 
 # Test with all possible combinations of all features.
 cd vapoursynth; python3 ../.travis/run-tests.py
+cd ..
+
+# Run sample plugin tests.
+cd sample-plugin
+cargo build --verbose
+cargo run --verbose --bin test \
+    --features "cfg-if vapoursynth/vapoursynth-functions vapoursynth/vsscript-functions"
