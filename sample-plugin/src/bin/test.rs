@@ -46,7 +46,8 @@ fn make_environment() -> Environment {
 
         map.clear();
         map.set("path", &&plugin_path()[..]).unwrap();
-        std.invoke("LoadPlugin", &map).unwrap();
+        let rv = std.invoke("LoadPlugin", &map).unwrap();
+        assert_eq!(rv.error(), None);
     }
 
     env
