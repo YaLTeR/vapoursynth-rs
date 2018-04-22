@@ -41,7 +41,7 @@ script:
       sh .travis/script.sh;
     else
       docker run --mount type=bind,source=$PWD,target=/vapoursynth-rs
-        -e TARGET_ARCH -e TRAVIS_RUST_VERSION
+        -e TARGET_ARCH -e TRAVIS_RUST_VERSION -e RUST_BACKTRACE
         testing-environment /bin/sh vapoursynth-rs/.travis/script-docker.sh;
     fi
 
