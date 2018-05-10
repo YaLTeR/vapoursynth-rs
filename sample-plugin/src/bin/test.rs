@@ -171,9 +171,23 @@ fn test_make_random_noise() {
     println!(" ok");
 }
 
+fn test_arguments() {
+    print!("Running test_arguments()...");
+    stdout().flush().unwrap();
+
+    let mut env = make_environment();
+
+    // If the evaluation succeeds, the test succeeds.
+    env.eval_file("test-vpy/argument-test.vpy", EvalFlags::Nothing)
+        .unwrap();
+
+    println!(" ok");
+}
+
 fn main() {
     test_passthrough();
     test_invert();
     test_random_noise();
     test_make_random_noise();
+    test_arguments();
 }

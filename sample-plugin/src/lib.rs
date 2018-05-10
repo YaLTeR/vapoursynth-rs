@@ -12,6 +12,7 @@ use failure::{Error, ResultExt};
 use rand::Rng;
 use vapoursynth::core::CoreRef;
 use vapoursynth::format::FormatID;
+use vapoursynth::function::Function;
 use vapoursynth::node::Flags;
 use vapoursynth::plugins::*;
 use vapoursynth::prelude::*;
@@ -336,6 +337,72 @@ make_filter_function! {
     }
 }
 
+// A filter for testing different kinds of argument passing.
+struct ArgumentTestFilter<'core> {
+    clip: Node<'core>,
+}
+
+impl<'core> Filter<'core> for ArgumentTestFilter<'core> {
+    fn video_info(&self, _api: API, _core: CoreRef<'core>) -> Vec<VideoInfo<'core>> {
+        vec![self.clip.info()]
+    }
+
+    fn get_frame_initial(
+        &self,
+        _api: API,
+        _core: CoreRef<'core>,
+        context: FrameContext,
+        n: usize,
+    ) -> Result<Option<FrameRef<'core>>, Error> {
+        self.clip.request_frame_filter(context, n);
+        Ok(None)
+    }
+
+    fn get_frame(
+        &self,
+        _api: API,
+        _core: CoreRef<'core>,
+        context: FrameContext,
+        n: usize,
+    ) -> Result<FrameRef<'core>, Error> {
+        self.clip
+            .get_frame_filter(context, n)
+            .ok_or(format_err!("Couldn't get the source frame"))
+    }
+}
+
+make_filter_function! {
+    ArgumentTestFilterFunction, "ArgumentTest"
+
+    fn create_argument_test<'core>(
+        api: API,
+        _core: CoreRef<'core>,
+        int: i64,
+        float: f64,
+        data: &[u8],
+        node: Node<'core>,
+        frame: FrameRef<'core>,
+        function: Function<'core>,
+    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+        let in_ = OwnedMap::new(api);
+        let mut out = OwnedMap::new(api);
+        function.call(&in_, &mut out);
+
+        ensure!(int == 42, "{} != 42", int);
+        ensure!(float == 1337f64, "{} != 1337", float);
+        ensure!(data == &b"asd"[..], "{:?} != {:?}", data, &b"asd"[..]);
+        ensure!(
+            node.info().num_frames == Property::Constant(1),
+            "{:?} != 1",
+            node.info().num_frames
+        );
+        ensure!(frame.width(0) == 320, "{} != 320", frame.width(0));
+        ensure!(out.get::<i64>("val").map(|x| x == 10).unwrap_or(false), "Incorrect function");
+
+        Ok(Some(Box::new(ArgumentTestFilter { clip: node })))
+    }
+}
+
 export_vapoursynth_plugin! {
     Metadata {
         identifier: PLUGIN_IDENTIFIER,
@@ -348,5 +415,6 @@ export_vapoursynth_plugin! {
         InvertFunction::new(),
         RandomNoiseFunction::new(),
         MakeRandomNoiseFunction::new(),
+        ArgumentTestFilterFunction::new(),
     ]
 }
