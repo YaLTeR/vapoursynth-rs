@@ -83,5 +83,11 @@ test_script:
   # Run sample plugin tests.
   - cd sample-plugin
   - cargo build --verbose
-  - cargo run --verbose --bin test --features "cfg-if vapoursynth/vapoursynth-functions vapoursynth/vsscript-functions"
+
+  # Don't run the plugin tests on i686-pc-windows-gnu as that seems to have issues with function exporting.
+  # https://github.com/rust-lang/rust/issues/50176
+  - if not "%target" == "i686-pc-windows-gnu" (
+      cargo run --verbose --bin test --features "cfg-if vapoursynth/vapoursynth-functions vapoursynth/vsscript-functions"
+    )
+
   - cd ..
