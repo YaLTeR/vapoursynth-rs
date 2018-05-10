@@ -1,10 +1,10 @@
 //! VapourSynth callable functions.
 
 use std::marker::PhantomData;
-use std::{mem, panic, process};
 use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 use std::ptr::NonNull;
+use std::{mem, panic, process};
 use vapoursynth_sys as ffi;
 
 use api::API;

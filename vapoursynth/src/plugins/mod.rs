@@ -142,8 +142,7 @@ pub trait Filter<'core>: Send + Sync {
 }
 
 /// An internal trait representing a filter argument type.
-pub trait FilterArgument<'map, 'elem: 'map>
-    : Value<'map, 'elem> + private::Sealed {
+pub trait FilterArgument<'map, 'elem: 'map>: Value<'map, 'elem> + private::Sealed {
     /// Returns the VapourSynth type name for this argument type.
     fn type_name() -> &'static str;
 }
@@ -254,7 +253,7 @@ where
     }
 }
 
-impl<'map, 'elem: 'map, 'key, T> FilterParameter<'map, 'elem> for ValueIter<'map, 'elem, 'key, T>
+impl<'map, 'elem: 'map, T> FilterParameter<'map, 'elem> for ValueIter<'map, 'elem, T>
 where
     T: FilterArgument<'map, 'elem>,
 {
@@ -276,8 +275,7 @@ where
     }
 }
 
-impl<'map, 'elem: 'map, 'key, T> FilterParameter<'map, 'elem>
-    for Option<ValueIter<'map, 'elem, 'key, T>>
+impl<'map, 'elem: 'map, T> FilterParameter<'map, 'elem> for Option<ValueIter<'map, 'elem, T>>
 where
     T: FilterArgument<'map, 'elem>,
 {
@@ -321,13 +319,13 @@ mod private {
     {
     }
 
-    impl<'map, 'elem: 'map, 'key, T> Sealed for ValueIter<'map, 'elem, 'key, T>
+    impl<'map, 'elem: 'map, T> Sealed for ValueIter<'map, 'elem, T>
     where
         T: FilterArgument<'map, 'elem>,
     {
     }
 
-    impl<'map, 'elem: 'map, 'key, T> Sealed for Option<ValueIter<'map, 'elem, 'key, T>>
+    impl<'map, 'elem: 'map, T> Sealed for Option<ValueIter<'map, 'elem, T>>
     where
         T: FilterArgument<'map, 'elem>,
     {
@@ -376,8 +374,8 @@ mod private {
 ///         int_parameter: i64,
 ///         some_data: &[u8],
 ///         optional_parameter: Option<f64>,
-///         array_parameter: ValueIter<'_, 'core, '_, Node<'core>>,
-///         optional_array_parameter: Option<ValueIter<'_, 'core, '_, FrameRef<'core>>>,
+///         array_parameter: ValueIter<'_, 'core, Node<'core>>,
+///         optional_array_parameter: Option<ValueIter<'_, 'core, FrameRef<'core>>>,
 ///     ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
 ///         let mut array_parameter = array_parameter;
 ///         Ok(Some(Box::new(MyFilter::new(/* ... */))));

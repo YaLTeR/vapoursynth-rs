@@ -1,9 +1,9 @@
 //! VapourSynth frames.
 
 use std::marker::PhantomData;
-use std::{mem, slice};
 use std::ops::{Deref, DerefMut};
 use std::ptr::{self, NonNull};
+use std::{mem, slice};
 use vapoursynth_sys as ffi;
 
 use api::API;

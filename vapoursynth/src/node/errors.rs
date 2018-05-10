@@ -1,7 +1,7 @@
 use std::borrow::Cow;
+use std::error::Error;
 use std::ffi::CStr;
 use std::fmt;
-use std::error::Error;
 
 /// A container for a `get_frame` error.
 #[derive(Debug)]

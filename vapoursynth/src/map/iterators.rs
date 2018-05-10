@@ -46,27 +46,27 @@ impl<'map, 'elem> ExactSizeIterator for Keys<'map, 'elem> {}
 
 /// An iterator over the values associated with a certain key of a map.
 #[derive(Debug, Clone)]
-pub struct ValueIter<'map, 'elem: 'map, 'key, T> {
+pub struct ValueIter<'map, 'elem: 'map, T> {
     map: &'map Map<'elem>,
-    key: Cow<'key, CStr>, // Just using this as an enum { owned, borrowed }.
+    key: CString,
     count: i32,
     index: i32,
     _variance: PhantomData<fn() -> T>,
 }
 
 macro_rules! impl_value_iter {
-    ($value_type:path, $type:ty, $func:ident) => (
-        impl<'map, 'elem, 'key> ValueIter<'map, 'elem, 'key, $type> {
+    ($value_type:path, $type:ty, $func:ident) => {
+        impl<'map, 'elem> ValueIter<'map, 'elem, $type> {
             /// Creates a `ValueIter` from the given `map` and `key`.
             ///
             /// # Safety
             /// The caller must ensure `key` is valid.
             #[inline]
-            pub(crate) unsafe fn new(map: &'map Map<'elem>, key: Cow<'key, CStr>) -> Result<Self> {
+            pub(crate) unsafe fn new(map: &'map Map<'elem>, key: CString) -> Result<Self> {
                 // Check if the value type is correct.
                 match map.value_type_raw_unchecked(&key)? {
-                    $value_type => {},
-                    _ => return Err(Error::WrongValueType)
+                    $value_type => {}
+                    _ => return Err(Error::WrongValueType),
                 };
 
                 let count = map.value_count_raw_unchecked(&key)? as i32;
@@ -80,7 +80,7 @@ macro_rules! impl_value_iter {
             }
         }
 
-        impl<'map, 'elem, 'key> Iterator for ValueIter<'map, 'elem, 'key, $type> {
+        impl<'map, 'elem> Iterator for ValueIter<'map, 'elem, $type> {
             type Item = $type;
 
             #[inline]
@@ -102,8 +102,8 @@ macro_rules! impl_value_iter {
             }
         }
 
-        impl<'map, 'elem, 'key> ExactSizeIterator for ValueIter<'map, 'elem, 'key, $type> {}
-    )
+        impl<'map, 'elem> ExactSizeIterator for ValueIter<'map, 'elem, $type> {}
+    };
 }
 
 impl_value_iter!(ValueType::Int, i64, get_int_raw_unchecked);

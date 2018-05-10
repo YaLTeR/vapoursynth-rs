@@ -20,10 +20,7 @@ pub trait Value<'map, 'elem: 'map>: Sized {
     fn get_from_map(map: &'map Map<'elem>, key: &str) -> Result<Self>;
 
     /// Retrieves an iterator over the values from the map.
-    fn get_iter_from_map<'key>(
-        map: &'map Map<'elem>,
-        key: &str,
-    ) -> Result<ValueIter<'map, 'elem, 'key, Self>>;
+    fn get_iter_from_map(map: &'map Map<'elem>, key: &str) -> Result<ValueIter<'map, 'elem, Self>>;
 
     /// Sets the property value in the map.
     fn store_in_map(map: &'map mut Map<'elem>, key: &str, x: &Self) -> Result<()>;
@@ -39,10 +36,7 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for i64 {
     }
 
     #[inline]
-    fn get_iter_from_map<'key>(
-        map: &'map Map<'elem>,
-        key: &str,
-    ) -> Result<ValueIter<'map, 'elem, 'key, Self>> {
+    fn get_iter_from_map(map: &'map Map<'elem>, key: &str) -> Result<ValueIter<'map, 'elem, Self>> {
         map.get_int_iter(key)
     }
 
@@ -63,10 +57,7 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for f64 {
     }
 
     #[inline]
-    fn get_iter_from_map<'key>(
-        map: &'map Map<'elem>,
-        key: &str,
-    ) -> Result<ValueIter<'map, 'elem, 'key, Self>> {
+    fn get_iter_from_map(map: &'map Map<'elem>, key: &str) -> Result<ValueIter<'map, 'elem, Self>> {
         map.get_float_iter(key)
     }
 
@@ -88,10 +79,7 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for &'map [u8] {
     }
 
     #[inline]
-    fn get_iter_from_map<'key>(
-        map: &'map Map<'elem>,
-        key: &str,
-    ) -> Result<ValueIter<'map, 'elem, 'key, Self>> {
+    fn get_iter_from_map(map: &'map Map<'elem>, key: &str) -> Result<ValueIter<'map, 'elem, Self>> {
         map.get_data_iter(key)
     }
 
@@ -113,10 +101,7 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for Node<'elem> {
     }
 
     #[inline]
-    fn get_iter_from_map<'key>(
-        map: &'map Map<'elem>,
-        key: &str,
-    ) -> Result<ValueIter<'map, 'elem, 'key, Self>> {
+    fn get_iter_from_map(map: &'map Map<'elem>, key: &str) -> Result<ValueIter<'map, 'elem, Self>> {
         map.get_node_iter(key)
     }
 
@@ -138,10 +123,7 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for FrameRef<'elem> {
     }
 
     #[inline]
-    fn get_iter_from_map<'key>(
-        map: &'map Map<'elem>,
-        key: &str,
-    ) -> Result<ValueIter<'map, 'elem, 'key, Self>> {
+    fn get_iter_from_map(map: &'map Map<'elem>, key: &str) -> Result<ValueIter<'map, 'elem, Self>> {
         map.get_frame_iter(key)
     }
 
@@ -163,10 +145,7 @@ impl<'map, 'elem: 'map> Value<'map, 'elem> for Function<'elem> {
     }
 
     #[inline]
-    fn get_iter_from_map<'key>(
-        map: &'map Map<'elem>,
-        key: &str,
-    ) -> Result<ValueIter<'map, 'elem, 'key, Self>> {
+    fn get_iter_from_map(map: &'map Map<'elem>, key: &str) -> Result<ValueIter<'map, 'elem, Self>> {
         map.get_function_iter(key)
     }
 

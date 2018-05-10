@@ -12,8 +12,8 @@ mod need_api_and_vsscript {
     use std::sync::mpsc::channel;
 
     use super::*;
-    use prelude::*;
     use function::Function;
+    use prelude::*;
     use video_info::{Framerate, Resolution};
 
     fn props_test(frame: &Frame, fps_num: i64) {
@@ -671,8 +671,8 @@ mod need_api_and_vsscript {
           all(feature = "vsscript-functions", feature = "gte-vsscript-api-32")))]
 mod need_api {
     use std::ffi::CString;
-    use std::sync::mpsc::{channel, Sender};
     use std::sync::Mutex;
+    use std::sync::mpsc::{channel, Sender};
 
     use super::*;
     use prelude::*;

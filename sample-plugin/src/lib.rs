@@ -10,11 +10,11 @@ use std::ptr;
 
 use failure::{Error, ResultExt};
 use rand::Rng;
-use vapoursynth::prelude::*;
-use vapoursynth::plugins::*;
 use vapoursynth::core::CoreRef;
 use vapoursynth::format::FormatID;
 use vapoursynth::node::Flags;
+use vapoursynth::plugins::*;
+use vapoursynth::prelude::*;
 use vapoursynth::video_info::{Framerate, Resolution, VideoInfo};
 
 const PLUGIN_IDENTIFIER: &str = "com.example.vapoursynth-rs";

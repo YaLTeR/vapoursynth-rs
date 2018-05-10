@@ -1,9 +1,9 @@
 use std::ffi::{CStr, CString};
 use std::fs::File;
-use std::ptr;
 use std::io::Read;
 use std::ops::{Deref, DerefMut};
 use std::path::Path;
+use std::ptr;
 use std::ptr::NonNull;
 use vapoursynth_sys as ffi;
 
@@ -11,8 +11,8 @@ use api::API;
 use core::CoreRef;
 use map::Map;
 use node::Node;
-use vsscript::*;
 use vsscript::errors::Result;
+use vsscript::*;
 
 /// VSScript file evaluation flags.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

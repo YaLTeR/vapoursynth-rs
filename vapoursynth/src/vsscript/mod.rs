@@ -1,8 +1,8 @@
 //! VapourSynth script-related things.
 
-use std::sync::{Once, ONCE_INIT};
 #[cfg(not(feature = "gte-vsscript-api-32"))]
 use std::sync::Mutex;
+use std::sync::{Once, ONCE_INIT};
 use vapoursynth_sys as ffi;
 
 #[cfg(not(feature = "gte-vsscript-api-32"))]
@@ -13,14 +13,14 @@ lazy_static! {
 // Some `vsscript_*` function calls have threading issues. Protect them with a mutex.
 // https://github.com/vapoursynth/vapoursynth/issues/367
 macro_rules! call_vsscript {
-    ($call:expr) => ({
+    ($call:expr) => {{
         // Fixed in VSScript API 3.2.
         // TODO: also not needed when we're running API 3.2 even without a feature.
         #[cfg(not(feature = "gte-vsscript-api-32"))]
         let _lock = FFI_CALL_MUTEX.lock();
 
         $call
-    })
+    }};
 }
 
 /// Ensures `vsscript_init()` has been called at least once.

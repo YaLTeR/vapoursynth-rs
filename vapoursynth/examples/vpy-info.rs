@@ -128,11 +128,13 @@ fn run() -> Result<(), Error> {
             let key = props.key(k);
 
             macro_rules! print_value {
-                ($func:ident) => (
-                    println!("Property: {} => {:?}",
-                             key,
-                             props.$func(key).unwrap().collect::<Vec<_>>())
-                )
+                ($func:ident) => {
+                    println!(
+                        "Property: {} => {:?}",
+                        key,
+                        props.$func(key).unwrap().collect::<Vec<_>>()
+                    )
+                };
             }
 
             match props.value_type(key).unwrap() {

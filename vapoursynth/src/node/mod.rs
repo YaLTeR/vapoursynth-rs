@@ -3,10 +3,10 @@
 use std::borrow::Cow;
 use std::ffi::CStr;
 use std::marker::PhantomData;
-use std::{mem, panic};
 use std::os::raw::{c_char, c_void};
 use std::process;
 use std::ptr::NonNull;
+use std::{mem, panic};
 use vapoursynth_sys as ffi;
 
 use api::API;

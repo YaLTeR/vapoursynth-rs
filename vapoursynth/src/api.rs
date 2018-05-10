@@ -1,10 +1,10 @@
 //! Most general VapourSynth API functions.
 
 use std::ffi::{CStr, CString, NulError};
+use std::os::raw::{c_char, c_int, c_void};
+use std::ptr::{self, NonNull};
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::{mem, panic, process};
-use std::ptr::{self, NonNull};
-use std::os::raw::{c_char, c_int, c_void};
 use vapoursynth_sys as ffi;
 
 /// A wrapper for the VapourSynth API.
