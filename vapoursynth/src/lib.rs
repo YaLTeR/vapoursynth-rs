@@ -50,6 +50,11 @@
 //! the `make_filter_function!` macro. Finally, put `export_vapoursynth_plugin!` at the top level
 //! of `src/lib.rs` to export the functionality.
 //!
+//! **Important note:** due to what seems to be a
+//! [bug](https://github.com/rust-lang/rust/issues/50176) in rustc, it's impossible to make plugins
+//! on the `i686-pc-windows-gnu` target (all other variations of `x86_64` and `i686` do work).
+//! Please use `i686-pc-windows-msvc` for an i686 Windows plugin.
+//!
 //! ## Short plugin example
 //!
 //! ```no_run
