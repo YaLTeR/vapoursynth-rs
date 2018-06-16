@@ -11,7 +11,9 @@ mod bindings;
 pub use bindings::*;
 
 macro_rules! api_version {
-    ($major:expr, $minor:expr) => (($major << 16) | $minor)
+    ($major:expr, $minor:expr) => {
+        ($major << 16) | $minor
+    };
 }
 
 cfg_if! {

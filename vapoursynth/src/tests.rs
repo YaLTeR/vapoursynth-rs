@@ -2,8 +2,12 @@
 use super::*;
 
 // We need the VSScript functions, and either VSScript API 3.2 or the VapourSynth functions.
-#[cfg(all(feature = "vsscript-functions",
-          any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
+#[cfg(
+    all(
+        feature = "vsscript-functions",
+        any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
+    )
+)]
 mod need_api_and_vsscript {
     use std::ffi::CStr;
     use std::fmt::Debug;
@@ -667,12 +671,16 @@ mod need_api_and_vsscript {
 }
 
 // We need either VSScript API 3.2 or the VapourSynth functions.
-#[cfg(any(feature = "vapoursynth-functions",
-          all(feature = "vsscript-functions", feature = "gte-vsscript-api-32")))]
+#[cfg(
+    any(
+        feature = "vapoursynth-functions",
+        all(feature = "vsscript-functions", feature = "gte-vsscript-api-32")
+    )
+)]
 mod need_api {
     use std::ffi::CString;
-    use std::sync::Mutex;
     use std::sync::mpsc::{channel, Sender};
+    use std::sync::Mutex;
 
     use super::*;
     use prelude::*;

@@ -184,8 +184,12 @@ impl Environment {
 
     /// Retrieves a node from the script environment. A node in the script must have been marked
     /// for output with the requested index. The second node, if any, contains the alpha clip.
-    #[cfg(all(feature = "gte-vsscript-api-31",
-              any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
+    #[cfg(
+        all(
+            feature = "gte-vsscript-api-31",
+            any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
+        )
+    )]
     #[inline]
     pub fn get_output(&self, index: i32) -> Result<(Node, Option<Node>)> {
         // Node needs the API.

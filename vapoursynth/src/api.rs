@@ -104,8 +104,12 @@ impl API {
     ///
     /// Returns `None` on error, for example if the requested API version (selected with features,
     /// see the crate-level docs) is not supported.
-    #[cfg(all(feature = "vapoursynth-functions",
-              not(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))))]
+    #[cfg(
+        all(
+            feature = "vapoursynth-functions",
+            not(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))
+        )
+    )]
     #[inline]
     pub fn get() -> Option<Self> {
         // Check if we already have the API.

@@ -6,8 +6,12 @@ extern crate failure;
 
 use failure::{err_msg, Error, ResultExt};
 
-#[cfg(all(feature = "vsscript-functions",
-          any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
+#[cfg(
+    all(
+        feature = "vsscript-functions",
+        any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
+    )
+)]
 mod inner {
     #![cfg_attr(feature = "cargo-clippy", allow(cast_lossless))]
     #![cfg_attr(feature = "cargo-clippy", allow(mutex_atomic))]
@@ -870,8 +874,14 @@ mod inner {
     }
 }
 
-#[cfg(not(all(feature = "vsscript-functions",
-              any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32"))))]
+#[cfg(
+    not(
+        all(
+            feature = "vsscript-functions",
+            any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
+        )
+    )
+)]
 mod inner {
     use super::*;
 
