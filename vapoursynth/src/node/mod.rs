@@ -179,14 +179,16 @@ impl<'core> Node<'core> {
             }
         }
 
-        unsafe extern "system" fn c_callback<'core>(
+        unsafe extern "system" fn c_callback(
             user_data: *mut c_void,
             frame: *const ffi::VSFrameRef,
             n: i32,
             node: *mut ffi::VSNodeRef,
             error_msg: *const c_char,
         ) {
-            let user_data = Box::from_raw(user_data as *mut CallbackData<'core>);
+            // The actual lifetime isn't 'static, it's 'core, but we don't really have a way of
+            // retrieving it.
+            let user_data = Box::from_raw(user_data as *mut CallbackData<'static>);
 
             let closure = panic::AssertUnwindSafe(move || {
                 let frame = if frame.is_null() {

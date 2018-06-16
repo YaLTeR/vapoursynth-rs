@@ -51,7 +51,7 @@ impl<'core> Filter<'core> for Passthrough<'core> {
     ) -> Result<FrameRef<'core>, Error> {
         self.source
             .get_frame_filter(context, n)
-            .ok_or(format_err!("Couldn't get the source frame"))
+            .ok_or_else(|| format_err!("Couldn't get the source frame"))
     }
 }
 
@@ -97,7 +97,7 @@ impl<'core> Filter<'core> for Invert<'core> {
     ) -> Result<FrameRef<'core>, Error> {
         let frame = self.source
             .get_frame_filter(context, n)
-            .ok_or(format_err!("Couldn't get the source frame"))?;
+            .ok_or_else(|| format_err!("Couldn't get the source frame"))?;
 
         if frame.format().sample_type() == SampleType::Float {
             bail!("Floating point formats are not supported");
@@ -240,23 +240,23 @@ make_filter_function! {
     ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
         let format_id = (format as i32).into();
         let format = core.get_format(format_id)
-            .ok_or(format_err!("No such format"))?;
+            .ok_or_else(|| format_err!("No such format"))?;
 
         if format.sample_type() == SampleType::Float {
             bail!("Floating point formats are not supported");
         }
 
-        if width <= 0 || width > i32::max_value() as i64 {
+        if width <= 0 || width > i64::from(i32::max_value()) {
             bail!("Invalid width");
         }
         let width = width as usize;
 
-        if height <= 0 || height > i32::max_value() as i64 {
+        if height <= 0 || height > i64::from(i32::max_value()) {
             bail!("Invalid height");
         }
         let height = height as usize;
 
-        if length <= 0 || length > i32::max_value() as i64 {
+        if length <= 0 || length > i64::from(i32::max_value()) {
             bail!("Invalid length");
         }
         let length = length as usize;
@@ -366,7 +366,7 @@ impl<'core> Filter<'core> for ArgumentTestFilter<'core> {
     ) -> Result<FrameRef<'core>, Error> {
         self.clip
             .get_frame_filter(context, n)
-            .ok_or(format_err!("Couldn't get the source frame"))
+            .ok_or_else(|| format_err!("Couldn't get the source frame"))
     }
 }
 
@@ -392,7 +392,10 @@ make_filter_function! {
         function.call(&in_, &mut out);
 
         ensure!(int == 42, "{} != 42", int);
-        ensure!(float == 1337f64, "{} != 1337", float);
+        #[cfg_attr(feature = "cargo-clippy", allow(float-cmp))]
+        {
+            ensure!(float == 1337f64, "{} != 1337", float);
+        }
         ensure!(data == &b"asd"[..], "{:?} != {:?}", data, &b"asd"[..]);
         ensure!(
             node.info().num_frames == Property::Constant(1),

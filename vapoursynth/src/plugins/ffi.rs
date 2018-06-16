@@ -32,7 +32,7 @@ fn push_backtrace(buf: &mut String, err: &Error) {
 }
 
 /// Sets the video info of the output node of this filter.
-unsafe extern "system" fn init<'core>(
+unsafe extern "system" fn init(
     _in_: *mut ffi::VSMap,
     out: *mut ffi::VSMap,
     instance_data: *mut *mut c_void,
@@ -42,7 +42,9 @@ unsafe extern "system" fn init<'core>(
 ) {
     let closure = move || {
         let core = CoreRef::from_ptr(core);
-        let filter = Box::from_raw(*(instance_data as *mut *mut Box<Filter<'core> + 'core>));
+        // The actual lifetime isn't 'static, it's 'core, but we don't really have a way of
+        // retrieving it.
+        let filter = Box::from_raw(*(instance_data as *mut *mut Box<Filter<'static> + 'static>));
 
         let vi = filter
             .video_info(API::get_cached(), core)
@@ -71,13 +73,15 @@ unsafe extern "system" fn init<'core>(
 }
 
 /// Drops the filter.
-unsafe extern "system" fn free<'core>(
+unsafe extern "system" fn free(
     instance_data: *mut c_void,
     core: *mut ffi::VSCore,
     _vsapi: *const ffi::VSAPI,
 ) {
     let closure = move || {
-        let filter = Box::from_raw(instance_data as *mut Box<Filter<'core> + 'core>);
+        // The actual lifetime isn't 'static, it's 'core, but we don't really have a way of
+        // retrieving it.
+        let filter = Box::from_raw(instance_data as *mut Box<Filter<'static> + 'static>);
         drop(filter);
     };
 
@@ -87,7 +91,7 @@ unsafe extern "system" fn free<'core>(
 }
 
 /// Calls `Filter::get_frame_initial()` and `Filter::get_frame()`.
-unsafe extern "system" fn get_frame<'core>(
+unsafe extern "system" fn get_frame(
     n: i32,
     activation_reason: i32,
     instance_data: *mut *mut c_void,
@@ -101,7 +105,9 @@ unsafe extern "system" fn get_frame<'core>(
         let core = CoreRef::from_ptr(core);
         let context = FrameContext::from_ptr(frame_ctx);
 
-        let filter = Box::from_raw(*(instance_data as *mut *mut Box<Filter<'core> + 'core>));
+        // The actual lifetime isn't 'static, it's 'core, but we don't really have a way of
+        // retrieving it.
+        let filter = Box::from_raw(*(instance_data as *mut *mut Box<Filter<'static> + 'static>));
 
         debug_assert!(n >= 0);
         let n = n as usize;
