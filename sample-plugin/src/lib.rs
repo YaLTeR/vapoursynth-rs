@@ -13,6 +13,7 @@ use rand::Rng;
 use vapoursynth::core::CoreRef;
 use vapoursynth::format::FormatID;
 use vapoursynth::function::Function;
+use vapoursynth::map::ValueIter;
 use vapoursynth::node::Flags;
 use vapoursynth::plugins::*;
 use vapoursynth::prelude::*;
@@ -152,15 +153,13 @@ struct RandomNoise {
 
 impl<'core> Filter<'core> for RandomNoise {
     fn video_info(&self, _api: API, core: CoreRef<'core>) -> Vec<VideoInfo<'core>> {
-        vec![
-            VideoInfo {
-                format: core.get_format(self.format_id).unwrap().into(),
-                resolution: self.resolution.into(),
-                framerate: self.framerate.into(),
-                num_frames: self.length.into(),
-                flags: Flags::empty(),
-            },
-        ]
+        vec![VideoInfo {
+            format: core.get_format(self.format_id).unwrap().into(),
+            resolution: self.resolution.into(),
+            framerate: self.framerate.into(),
+            num_frames: self.length.into(),
+            flags: Flags::empty(),
+        }]
     }
 
     fn get_frame_initial(
@@ -383,6 +382,10 @@ make_filter_function! {
         node: Node<'core>,
         frame: FrameRef<'core>,
         function: Function<'core>,
+        optional_int: Option<i64>,
+        another_optional_int: Option<i64>,
+        frame_array: ValueIter<'_, 'core, FrameRef<'core>>,
+        optional_frame_array: Option<ValueIter<'_, 'core, FrameRef<'core>>>,
     ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
         let in_ = OwnedMap::new(api);
         let mut out = OwnedMap::new(api);
@@ -398,6 +401,18 @@ make_filter_function! {
         );
         ensure!(frame.width(0) == 320, "{} != 320", frame.width(0));
         ensure!(out.get::<i64>("val").map(|x| x == 10).unwrap_or(false), "Incorrect function");
+        ensure!(optional_int.is_some(), "optional_int is missing");
+        ensure!(optional_int.unwrap() == 123, "{} != 123", optional_int.unwrap());
+        ensure!(another_optional_int.is_none(), "another_optional_int was present");
+
+        let mut frame_array = frame_array;
+        ensure!(frame_array.len() == 2, "{} != 2", frame_array.len());
+        let frame = frame_array.next().unwrap();
+        ensure!(frame.width(0) == 256, "{} != 256", frame.width(0));
+        let frame = frame_array.next().unwrap();
+        ensure!(frame.width(0) == 64, "{} != 64", frame.width(0));
+
+        ensure!(optional_frame_array.is_none(), "optional_frame_array was present");
 
         Ok(Some(Box::new(ArgumentTestFilter { clip: node })))
     }
