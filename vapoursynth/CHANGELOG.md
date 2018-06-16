@@ -1,4 +1,4 @@
-## v0.2
+## v0.2 (16th Jun 2018)
 - Added plugin support! That includes:
   - `plugins::{Metadata,Filter,FilterFunction}` types and traits for making plugins;
   - `export_vapoursynth_plugin!` macro for exporting a VapourSynth plugin;
