@@ -15,3 +15,6 @@ cd ..
 # Doc with all features.
 cargo doc --verbose --all-features
 cp .travis/index.html target/doc/
+
+# Remove the lock file that gets left over and screws over Travis deployment.
+rm target/doc/.lock
