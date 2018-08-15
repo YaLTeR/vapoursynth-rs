@@ -393,6 +393,7 @@ impl<'elem> Map<'elem> {
     /// # Safety
     /// The caller must ensure `key` is valid.
     pub(crate) unsafe fn touch_raw_unchecked(&mut self, key: &CStr, value_type: ValueType) {
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         macro_rules! touch_value {
             ($func:ident, $value:expr) => {{
                 let result =

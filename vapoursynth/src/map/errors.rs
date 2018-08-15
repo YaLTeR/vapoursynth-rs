@@ -2,7 +2,6 @@ use std::ffi::NulError;
 use std::result;
 
 /// The error type for `Map` operations.
-#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Fail, Debug, Eq, PartialEq)]
 pub enum Error {
     #[fail(display = "The requested key wasn't found in the map")]

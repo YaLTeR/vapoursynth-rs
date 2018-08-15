@@ -2,7 +2,6 @@ use std::ffi::{CString, NulError};
 use std::{fmt, io, result};
 
 /// The error type for `vsscript` operations.
-#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Fail, Debug)]
 pub enum Error {
     #[fail(display = "Couldn't convert to a CString")]
