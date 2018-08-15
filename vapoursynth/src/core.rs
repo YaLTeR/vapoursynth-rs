@@ -121,8 +121,7 @@ impl<'a> CoreRef<'a> {
                     i32::from(sub_sampling_w),
                     i32::from(sub_sampling_h),
                     self.handle.as_ptr(),
-                )
-                .as_ref()
+                ).as_ref()
                 .map(|p| Format::from_ptr(p))
         }
     }

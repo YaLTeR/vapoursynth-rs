@@ -168,7 +168,10 @@ impl Environment {
 
     /// Retrieves a node from the script environment. A node in the script must have been marked
     /// for output with the requested index.
-    #[cfg(all(not(feature = "gte-vsscript-api-31"), feature = "vapoursynth-functions"))]
+    #[cfg(all(
+        not(feature = "gte-vsscript-api-31"),
+        feature = "vapoursynth-functions"
+    ))]
     #[inline]
     pub fn get_output(&self, index: i32) -> Result<Node> {
         // Node needs the API.
@@ -184,12 +187,13 @@ impl Environment {
 
     /// Retrieves a node from the script environment. A node in the script must have been marked
     /// for output with the requested index. The second node, if any, contains the alpha clip.
-    #[cfg(
-        all(
-            feature = "gte-vsscript-api-31",
-            any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
+    #[cfg(all(
+        feature = "gte-vsscript-api-31",
+        any(
+            feature = "vapoursynth-functions",
+            feature = "gte-vsscript-api-32"
         )
-    )]
+    ))]
     #[inline]
     pub fn get_output(&self, index: i32) -> Result<(Node, Option<Node>)> {
         // Node needs the API.
@@ -222,7 +226,10 @@ impl Environment {
 
     /// Retrieves the VapourSynth core that was created in the script environment. If a VapourSynth
     /// core has not been created yet, it will be created now, with the default options.
-    #[cfg(any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32"))]
+    #[cfg(any(
+        feature = "vapoursynth-functions",
+        feature = "gte-vsscript-api-32"
+    ))]
     pub fn get_core(&self) -> Result<CoreRef> {
         // CoreRef needs the API.
         API::get().ok_or(Error::NoAPI)?;

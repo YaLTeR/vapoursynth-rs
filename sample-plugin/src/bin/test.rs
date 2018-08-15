@@ -40,7 +40,8 @@ fn make_environment() -> Environment {
     // Load the required sample filter.
     {
         let core = env.get_core().unwrap();
-        let std = core.get_plugin_by_id("com.vapoursynth.std")
+        let std = core
+            .get_plugin_by_id("com.vapoursynth.std")
             .unwrap()
             .unwrap();
 

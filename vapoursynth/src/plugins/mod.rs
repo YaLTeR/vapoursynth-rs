@@ -313,23 +313,13 @@ mod private {
     impl<'elem> Sealed for FrameRef<'elem> {}
     impl<'elem> Sealed for Function<'elem> {}
 
-    impl<'map, 'elem: 'map, T> Sealed for Option<T>
-    where
-        T: FilterArgument<'map, 'elem>,
-    {
-    }
+    impl<'map, 'elem: 'map, T> Sealed for Option<T> where T: FilterArgument<'map, 'elem> {}
 
-    impl<'map, 'elem: 'map, T> Sealed for ValueIter<'map, 'elem, T>
-    where
-        T: FilterArgument<'map, 'elem>,
-    {
-    }
+    impl<'map, 'elem: 'map, T> Sealed for ValueIter<'map, 'elem, T> where T: FilterArgument<'map, 'elem> {}
 
-    impl<'map, 'elem: 'map, T> Sealed for Option<ValueIter<'map, 'elem, T>>
-    where
-        T: FilterArgument<'map, 'elem>,
-    {
-    }
+    impl<'map, 'elem: 'map, T> Sealed for Option<ValueIter<'map, 'elem, T>> where
+        T: FilterArgument<'map, 'elem>
+    {}
 }
 
 /// Make a filter function easily and avoid boilerplate.

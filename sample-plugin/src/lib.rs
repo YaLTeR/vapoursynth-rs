@@ -95,7 +95,8 @@ impl<'core> Filter<'core> for Invert<'core> {
         context: FrameContext,
         n: usize,
     ) -> Result<FrameRef<'core>, Error> {
-        let frame = self.source
+        let frame = self
+            .source
             .get_frame_filter(context, n)
             .ok_or_else(|| format_err!("Couldn't get the source frame"))?;
 

@@ -2,12 +2,13 @@
 use super::*;
 
 // We need the VSScript functions, and either VSScript API 3.2 or the VapourSynth functions.
-#[cfg(
-    all(
-        feature = "vsscript-functions",
-        any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
+#[cfg(all(
+    feature = "vsscript-functions",
+    any(
+        feature = "vapoursynth-functions",
+        feature = "gte-vsscript-api-32"
     )
-)]
+))]
 mod need_api_and_vsscript {
     use std::ffi::CStr;
     use std::fmt::Debug;
@@ -406,8 +407,7 @@ mod need_api_and_vsscript {
                     true
                 } else {
                     false
-                })
-                .unwrap_or(false)
+                }).unwrap_or(false)
         );
         assert!(env.clear_output(0).is_ok());
         assert!(
@@ -417,8 +417,7 @@ mod need_api_and_vsscript {
                     true
                 } else {
                     false
-                })
-                .unwrap_or(false)
+                }).unwrap_or(false)
         );
     }
 
@@ -591,9 +590,8 @@ mod need_api_and_vsscript {
                     key,
                     CStr::from_ptr(plugins.get_data(key).unwrap().as_ptr() as _),
                 ).to_str()
-                    .ok()
-            })
-            .filter_map(|id| id.split(';').nth(1))
+                .ok()
+            }).filter_map(|id| id.split(';').nth(1))
             .collect();
         assert!(ids.contains(&"com.vapoursynth.std"));
         assert!(ids.contains(&"com.vapoursynth.resize"));
@@ -612,10 +610,9 @@ mod need_api_and_vsscript {
                     key,
                     CStr::from_ptr(functions.get_data(key).unwrap().as_ptr() as _),
                 ).to_str()
-                    .ok()
-                    .map(|value| (key, value))
-            })
-            .filter_map(|(key, value)| value.split(';').nth(0).map(|name| (key, name)))
+                .ok()
+                .map(|value| (key, value))
+            }).filter_map(|(key, value)| value.split(';').nth(0).map(|name| (key, name)))
             .collect();
         assert!(names.contains(&("CropRel", "CropRel")));
 
@@ -671,12 +668,13 @@ mod need_api_and_vsscript {
 }
 
 // We need either VSScript API 3.2 or the VapourSynth functions.
-#[cfg(
-    any(
-        feature = "vapoursynth-functions",
-        all(feature = "vsscript-functions", feature = "gte-vsscript-api-32")
+#[cfg(any(
+    feature = "vapoursynth-functions",
+    all(
+        feature = "vsscript-functions",
+        feature = "gte-vsscript-api-32"
     )
-)]
+))]
 mod need_api {
     use std::ffi::CString;
     use std::sync::mpsc::{channel, Sender};

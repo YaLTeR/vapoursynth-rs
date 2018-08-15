@@ -17,12 +17,13 @@ fn usage() {
     );
 }
 
-#[cfg(
-    all(
-        feature = "vsscript-functions",
-        any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
+#[cfg(all(
+    feature = "vsscript-functions",
+    any(
+        feature = "vapoursynth-functions",
+        feature = "gte-vsscript-api-32"
     )
-)]
+))]
 fn print_node_info(node: &Node) {
     use std::fmt::Debug;
 
@@ -68,12 +69,13 @@ fn print_node_info(node: &Node) {
     );
 }
 
-#[cfg(
-    all(
-        feature = "vsscript-functions",
-        any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
+#[cfg(all(
+    feature = "vsscript-functions",
+    any(
+        feature = "vapoursynth-functions",
+        feature = "gte-vsscript-api-32"
     )
-)]
+))]
 fn run() -> Result<(), Error> {
     let filename = env::args()
         .nth(1)
@@ -110,7 +112,8 @@ fn run() -> Result<(), Error> {
     }
 
     if let Some(n) = env::args().nth(2) {
-        let n = n.parse::<usize>()
+        let n = n
+            .parse::<usize>()
             .context("Couldn't parse the frame number")?;
         if n > i32::max_value() as usize {
             bail!("Frame number is too big");
@@ -170,14 +173,13 @@ fn run() -> Result<(), Error> {
     Ok(())
 }
 
-#[cfg(
-    not(
-        all(
-            feature = "vsscript-functions",
-            any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
-        )
+#[cfg(not(all(
+    feature = "vsscript-functions",
+    any(
+        feature = "vapoursynth-functions",
+        feature = "gte-vsscript-api-32"
     )
-)]
+)))]
 fn run() -> Result<(), Error> {
     bail!(
         "This example requires the `vsscript-functions` and either `vapoursynth-functions` or \
