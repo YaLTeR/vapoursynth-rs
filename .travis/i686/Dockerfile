@@ -8,7 +8,7 @@ RUN set -ex; \
                          gcc-multilib \
                          python3 \
                          software-properties-common; \
-    add-apt-repository -y ppa:djcj/vapoursynth; \
+    add-apt-repository -y ppa:djcj/hybrid; \
     apt-get update -yqq; \
     apt-get install -yqq vapoursynth:i386; \
     apt-get clean; \

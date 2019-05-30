@@ -6,7 +6,7 @@ RUN set -ex; \
                          curl \
                          python3 \
                          software-properties-common; \
-    add-apt-repository -y ppa:djcj/vapoursynth; \
+    add-apt-repository -y ppa:djcj/hybrid; \
     apt-get update -yqq; \
     apt-get install -yqq vapoursynth; \
     apt-get clean; \
