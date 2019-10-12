@@ -93,7 +93,7 @@ pub trait FilterFunction: Send + Sync {
         api: API,
         core: CoreRef<'core>,
         args: &Map<'core>,
-    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error>;
+    ) -> Result<Option<Box<dyn Filter<'core> + 'core>>, Error>;
 }
 
 /// A filter interface.

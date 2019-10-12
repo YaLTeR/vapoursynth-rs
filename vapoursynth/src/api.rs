@@ -189,7 +189,7 @@ impl API {
         F: FnMut(MessageType, &CStr) + Send + 'static,
     {
         struct CallbackData {
-            callback: Box<FnMut(MessageType, &CStr) + Send + 'static>,
+            callback: Box<dyn FnMut(MessageType, &CStr) + Send + 'static>,
         }
 
         unsafe extern "system" fn c_callback(
@@ -720,7 +720,7 @@ impl API {
     ///
     /// # Safety
     /// The caller must ensure all pointers are valid.
-    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
+    #[allow(clippy::too_many_arguments)]
     #[inline]
     pub(crate) unsafe fn create_filter(
         self,
