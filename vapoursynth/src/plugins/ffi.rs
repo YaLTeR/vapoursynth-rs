@@ -24,7 +24,7 @@ pub(crate) struct FilterFunctionData<F: FilterFunction> {
 
 /// Pushes the error backtrace into the given string.
 fn push_backtrace(buf: &mut String, err: &Error) {
-    for cause in err.iter_chain().skip(1) {
+    for cause in err.iter_causes() {
         buf.push_str(&format!("Caused by: {}", cause));
     }
 
