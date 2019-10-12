@@ -24,7 +24,7 @@ pub(crate) struct FilterFunctionData<F: FilterFunction> {
 
 /// Pushes the error backtrace into the given string.
 fn push_backtrace(buf: &mut String, err: &Error) {
-    for cause in err.causes().skip(1) {
+    for cause in err.iter_causes() {
         buf.push_str(&format!("Caused by: {}", cause));
     }
 
@@ -44,7 +44,7 @@ unsafe extern "system" fn init(
         let core = CoreRef::from_ptr(core);
         // The actual lifetime isn't 'static, it's 'core, but we don't really have a way of
         // retrieving it.
-        let filter = Box::from_raw(*(instance_data as *mut *mut Box<Filter<'static> + 'static>));
+        let filter = Box::from_raw(*(instance_data as *mut *mut Box<dyn Filter<'static> + 'static>));
 
         let vi = filter
             .video_info(API::get_cached(), core)
@@ -81,7 +81,7 @@ unsafe extern "system" fn free(
     let closure = move || {
         // The actual lifetime isn't 'static, it's 'core, but we don't really have a way of
         // retrieving it.
-        let filter = Box::from_raw(instance_data as *mut Box<Filter<'static> + 'static>);
+        let filter = Box::from_raw(instance_data as *mut Box<dyn Filter<'static> + 'static>);
         drop(filter);
     };
 
@@ -107,7 +107,7 @@ unsafe extern "system" fn get_frame(
 
         // The actual lifetime isn't 'static, it's 'core, but we don't really have a way of
         // retrieving it.
-        let filter = Box::from_raw(*(instance_data as *mut *mut Box<Filter<'static> + 'static>));
+        let filter = Box::from_raw(*(instance_data as *mut *mut Box<dyn Filter<'static> + 'static>));
 
         debug_assert!(n >= 0);
         let n = n as usize;
@@ -125,7 +125,7 @@ unsafe extern "system" fn get_frame(
                     Err(err) => {
                         let mut buf = String::new();
 
-                        buf += &format!("Error in Filter::get_frame_initial(): {}", err.cause());
+                        buf += &format!("Error in Filter::get_frame_initial(): {}", err.as_fail());
 
                         push_backtrace(&mut buf, &err);
 
@@ -147,7 +147,7 @@ unsafe extern "system" fn get_frame(
                     Err(err) => {
                         let mut buf = String::new();
 
-                        buf += &format!("{}", err.cause());
+                        buf += &format!("{}", err.as_fail());
 
                         push_backtrace(&mut buf, &err);
 
@@ -197,7 +197,7 @@ pub(crate) unsafe extern "system" fn create<F: FilterFunction>(
                 buf += &format!(
                     "Error in Filter::create() of {}: {}",
                     data.name.to_str().unwrap(),
-                    err.cause()
+                    err.as_fail()
                 );
 
                 push_backtrace(&mut buf, &err);

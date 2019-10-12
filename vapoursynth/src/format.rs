@@ -20,7 +20,7 @@ pub struct Format<'core> {
 /// The compat formats are the only packed formats in VapourSynth. Everything else is planar. They
 /// exist for compatibility with Avisynth plugins. They are not to be implemented in native
 /// VapourSynth plugins.
-#[cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
+#[allow(clippy::unreadable_literal)]
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum PresetFormat {

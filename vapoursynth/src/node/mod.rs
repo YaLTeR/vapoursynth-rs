@@ -116,8 +116,7 @@ impl<'core> Node<'core> {
         // Kinda arbitrary. Same value as used in vsvfw.
         const ERROR_BUF_CAPACITY: usize = 32 * 1024;
 
-        let mut err_buf = Vec::with_capacity(ERROR_BUF_CAPACITY);
-        err_buf.resize(ERROR_BUF_CAPACITY, 0);
+        let mut err_buf = vec![0; ERROR_BUF_CAPACITY];
         let mut err_buf = err_buf.into_boxed_slice();
 
         let handle = unsafe { API::get_cached().get_frame(n, self.handle.as_ptr(), &mut *err_buf) };
@@ -151,7 +150,7 @@ impl<'core> Node<'core> {
         F: FnOnce(Result<FrameRef<'core>, GetFrameError>, usize, Node<'core>) + Send + 'core,
     {
         struct CallbackData<'core> {
-            callback: Box<CallbackFn<'core> + 'core>,
+            callback: Box<dyn CallbackFn<'core> + 'core>,
         }
 
         // A little bit of magic for Box<FnOnce>.
@@ -168,7 +167,7 @@ impl<'core> Node<'core> {
         where
             F: FnOnce(Result<FrameRef<'core>, GetFrameError>, usize, Node<'core>),
         {
-            #[cfg_attr(feature = "cargo-clippy", allow(boxed_local))]
+            #[allow(clippy::boxed_local)]
             fn call(
                 self: Box<Self>,
                 frame: Result<FrameRef<'core>, GetFrameError>,

@@ -21,7 +21,7 @@ pub type Result<T> = result::Result<T, Error>;
 
 /// An error indicating the map key is invalid.
 #[derive(Fail, Debug, Eq, PartialEq)]
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 pub enum InvalidKeyError {
     #[fail(display = "The key is empty")]
     EmptyKey,
