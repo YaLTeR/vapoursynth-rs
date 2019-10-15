@@ -36,15 +36,15 @@ pub struct Info {
 
 /// A reference to a VapourSynth core.
 #[derive(Debug, Clone, Copy)]
-pub struct CoreRef<'a> {
+pub struct CoreRef<'core> {
     handle: NonNull<ffi::VSCore>,
-    _owner: PhantomData<&'a ()>,
+    _owner: PhantomData<&'core ()>,
 }
 
-unsafe impl<'a> Send for CoreRef<'a> {}
-unsafe impl<'a> Sync for CoreRef<'a> {}
+unsafe impl<'core> Send for CoreRef<'core> {}
+unsafe impl<'core> Sync for CoreRef<'core> {}
 
-impl<'a> CoreRef<'a> {
+impl<'core> CoreRef<'core> {
     /// Wraps `handle` in a `CoreRef`.
     ///
     /// # Safety
@@ -90,7 +90,7 @@ impl<'a> CoreRef<'a> {
     /// Retrieves a registered or preset `Format` by its id. The id can be of a previously
     /// registered format, or one of the `PresetFormat`.
     #[inline]
-    pub fn get_format(&self, id: FormatID) -> Option<Format<'a>> {
+    pub fn get_format(&self, id: FormatID) -> Option<Format<'core>> {
         let ptr = unsafe { API::get_cached().get_format_preset(id.0, self.handle.as_ptr()) };
         unsafe { ptr.as_ref().map(|p| Format::from_ptr(p)) }
     }
@@ -111,7 +111,7 @@ impl<'a> CoreRef<'a> {
         bits_per_sample: u8,
         sub_sampling_w: u8,
         sub_sampling_h: u8,
-    ) -> Option<Format<'a>> {
+    ) -> Option<Format<'core>> {
         unsafe {
             API::get_cached()
                 .register_format(
@@ -128,7 +128,7 @@ impl<'a> CoreRef<'a> {
 
     /// Returns a plugin with the given identifier.
     #[inline]
-    pub fn get_plugin_by_id(&self, id: &str) -> Result<Option<Plugin>, NulError> {
+    pub fn get_plugin_by_id(&self, id: &str) -> Result<Option<Plugin<'core>>, NulError> {
         let id = CString::new(id)?;
         let ptr = unsafe { API::get_cached().get_plugin_by_id(id.as_ptr(), self.handle.as_ptr()) };
         if ptr.is_null() {
@@ -142,7 +142,7 @@ impl<'a> CoreRef<'a> {
     ///
     /// `get_plugin_by_id()` should be used instead.
     #[inline]
-    pub fn get_plugin_by_namespace(&self, namespace: &str) -> Result<Option<Plugin>, NulError> {
+    pub fn get_plugin_by_namespace(&self, namespace: &str) -> Result<Option<Plugin<'core>>, NulError> {
         let namespace = CString::new(namespace)?;
         let ptr =
             unsafe { API::get_cached().get_plugin_by_ns(namespace.as_ptr(), self.handle.as_ptr()) };
@@ -160,7 +160,7 @@ impl<'a> CoreRef<'a> {
     /// Values: namespace, identifier, and full name, separated by semicolons.
     // TODO: parse the values on the crate side and return a nice struct.
     #[inline]
-    pub fn plugins(&self) -> OwnedMap {
+    pub fn plugins(&self) -> OwnedMap<'core> {
         unsafe { OwnedMap::from_ptr(API::get_cached().get_plugins(self.handle.as_ptr())) }
     }
 }
