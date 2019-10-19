@@ -274,11 +274,20 @@ pub type VSFrameDoneCallback = Option<
 >;
 pub type VSMessageHandler =
     Option<unsafe extern "system" fn(msgType: c_int, msg: *const c_char, userData: *mut c_void)>;
+#[cfg(feature = "gte-vapoursynth-api-36")]
+pub type VSMessageHandlerFree =
+    Option<unsafe extern "system" fn(userData: *mut c_void)>;
+#[cfg(feature = "gte-vapoursynth-api-36")]
+pub type VSMessageHandlerId = c_int;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct VSAPI {
     pub createCore: unsafe extern "system" fn(threads: c_int) -> *mut VSCore,
     pub freeCore: unsafe extern "system" fn(core: *mut VSCore),
+    #[cfg_attr(
+        feature = "gte-vapoursynth-api-36",
+        deprecated(note = "use `getCoreInfo2` instead")
+    )]
     pub getCoreInfo: unsafe extern "system" fn(core: *mut VSCore) -> *const VSCoreInfo,
     pub cloneFrameRef: unsafe extern "system" fn(f: *const VSFrameRef) -> *const VSFrameRef,
     pub cloneNodeRef: unsafe extern "system" fn(node: *mut VSNodeRef) -> *mut VSNodeRef,
@@ -480,6 +489,10 @@ pub struct VSAPI {
         propSrc: *const VSFrameRef,
         core: *mut VSCore,
     ) -> *mut VSFrameRef,
+    #[cfg_attr(
+        feature = "gte-vapoursynth-api-36",
+        deprecated(note = "use `addMessageHandler` and `removeMessageHandler` instead")
+    )]
     pub setMessageHandler:
         unsafe extern "system" fn(handler: VSMessageHandler, userData: *mut c_void),
     pub setThreadCount: unsafe extern "system" fn(threads: c_int, core: *mut VSCore) -> c_int,
@@ -503,6 +516,16 @@ pub struct VSAPI {
             -> c_int,
     #[cfg(feature = "gte-vapoursynth-api-34")]
     pub logMessage: unsafe extern "system" fn(msgType: c_int, msg: *const c_char),
+    #[cfg(feature = "gte-vapoursynth-api-36")]
+    pub addMessageHandler: unsafe extern "system" fn(
+        handler: VSMessageHandler,
+        free: VSMessageHandlerFree,
+        userData: *mut c_void,
+    ) -> VSMessageHandlerId,
+    #[cfg(feature = "gte-vapoursynth-api-36")]
+    pub removeMessageHandler: unsafe extern "system" fn(id: VSMessageHandlerId) -> c_int,
+    #[cfg(feature = "gte-vapoursynth-api-36")]
+    pub getCoreInfo2: unsafe extern "system" fn(core: *mut VSCore, info: *mut VSCoreInfo),
 }
 
 #[cfg(feature = "vapoursynth-functions")]

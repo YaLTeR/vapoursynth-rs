@@ -63,6 +63,15 @@ vapoursynth-api-35 = [
     "gte-vapoursynth-api-34",
     "gte-vapoursynth-api-35"
 ]
+vapoursynth-api-36 = [
+    "vapoursynth-sys/vapoursynth-api-36",
+    "gte-vapoursynth-api-31",
+    "gte-vapoursynth-api-32",
+    "gte-vapoursynth-api-33",
+    "gte-vapoursynth-api-34",
+    "gte-vapoursynth-api-35",
+    "gte-vapoursynth-api-36"
+]
 
 vsscript-api-31 = [
     "vapoursynth-sys/vsscript-api-31",
@@ -84,16 +93,17 @@ gte-vapoursynth-api-32 = []
 gte-vapoursynth-api-33 = []
 gte-vapoursynth-api-34 = []
 gte-vapoursynth-api-35 = []
+gte-vapoursynth-api-36 = []
 
 gte-vsscript-api-31 = []
 gte-vsscript-api-32 = []
 
 # For development.
-#default = ["vapoursynth-api-35", "vsscript-api-32", "vapoursynth-functions", "vsscript-functions"]
+#default = ["vapoursynth-api-36", "vsscript-api-32", "vapoursynth-functions", "vsscript-functions"]
 
 [package.metadata.docs.rs]
 features = [
-    "vapoursynth-api-35",
+    "vapoursynth-api-36",
     "vsscript-api-32",
     "vapoursynth-functions",
     "vsscript-functions",

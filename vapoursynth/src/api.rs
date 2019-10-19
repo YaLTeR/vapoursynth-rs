@@ -62,6 +62,13 @@ macro_rules! prop_set_something {
     )
 }
 
+#[cfg(feature = "gte-vapoursynth-api-36")]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+/// Wraps a message handler ID,
+/// which is used by Vapoursynth to represent
+/// a unique, registered message handler.
+pub struct MessageHandlerId(ffi::VSMessageHandlerId);
+
 impl API {
     /// Retrieves the VapourSynth API.
     ///
@@ -184,6 +191,7 @@ impl API {
     /// This function allocates to store the callback, this memory is leaked if the message handler
     /// is subsequently changed.
     #[inline]
+    #[cfg_attr(feature = "gte-vapoursynth-api-36", deprecated(note = "use `add_message_handler` and `remove_message_handler` instead"))]
     pub fn set_message_handler<F>(self, callback: F)
     where
         F: FnMut(MessageType, &CStr) + Send + 'static,
@@ -230,6 +238,68 @@ impl API {
 
     /// Installs a custom handler for the various error messages VapourSynth emits. The message
     /// handler is currently global, i.e. per process, not per VSCore instance.
+    /// Returns a unique id for the handler.
+    ///
+    /// If no error handler is installed the messages are sent to the standard error stream.
+    ///
+    /// The callback arguments are the message type and the message itself. If the callback panics,
+    /// the process is aborted.
+    #[inline]
+    #[cfg(feature = "gte-vapoursynth-api-36")]
+    pub fn add_message_handler<F>(self, callback: F) -> VSMessageHandlerId
+        where
+            F: FnMut(MessageType, &CStr) + Send + 'static,
+    {
+        struct CallbackData {
+            callback: Box<dyn FnMut(MessageType, &CStr) + Send + 'static>,
+        }
+
+        unsafe extern "system" fn c_callback(
+            msg_type: c_int,
+            msg: *const c_char,
+            user_data: *mut c_void,
+        ) {
+            let mut user_data = Box::from_raw(user_data as *mut CallbackData);
+
+            {
+                let closure = panic::AssertUnwindSafe(|| {
+                    let message_type = MessageType::from_ffi_type(msg_type).unwrap();
+                    let message = CStr::from_ptr(msg);
+
+                    (user_data.callback)(message_type, message);
+                });
+
+                if panic::catch_unwind(closure).is_err() {
+                    process::abort();
+                }
+            }
+
+            // Don't drop user_data, we're not done using it.
+            mem::forget(user_data);
+        }
+
+        unsafe extern "system" fn c_free_callback(
+            user_data: *mut c_void,
+        ) {
+            let user_data = Box::from_raw(user_data as *mut CallbackData);
+            drop(user_data);
+        }
+
+        let user_data = Box::new(CallbackData {
+            callback: Box::new(callback),
+        });
+
+        unsafe {
+            (self.handle.as_ref().addMessageHandler)(
+                Some(c_callback),
+                Some(c_free_callback),
+                Box::into_raw(user_data) as *mut c_void,
+            )
+        }
+    }
+
+    /// Installs a custom handler for the various error messages VapourSynth emits. The message
+    /// handler is currently global, i.e. per process, not per VSCore instance.
     ///
     /// The default message handler simply sends the messages to the standard error stream.
     ///
@@ -239,6 +309,7 @@ impl API {
     /// This version does not allocate at the cost of accepting a function pointer rather than an
     /// arbitrary closure. It can, however, be used with simple closures.
     #[inline]
+    #[cfg_attr(feature = "gte-vapoursynth-api-36", deprecated(note = "use `add_message_handler_trivial` and `remove_message_handler` instead"))]
     pub fn set_message_handler_trivial(self, callback: fn(MessageType, &CStr)) {
         unsafe extern "system" fn c_callback(
             msg_type: c_int,
@@ -265,11 +336,62 @@ impl API {
         }
     }
 
+    /// Installs a custom handler for the various error messages VapourSynth emits. The message
+    /// handler is currently global, i.e. per process, not per VSCore instance.
+    /// Returns a unique id for the handler.
+    ///
+    /// If no error handler is installed the messages are sent to the standard error stream.
+    ///
+    /// The callback arguments are the message type and the message itself. If the callback panics,
+    /// the process is aborted.
+    ///
+    /// This version does not allocate at the cost of accepting a function pointer rather than an
+    /// arbitrary closure. It can, however, be used with simple closures.
+    #[inline]
+    #[cfg(feature = "gte-vapoursynth-api-36")]
+    pub fn add_message_handler_trivial(self, callback: fn(MessageType, &CStr)) -> MessageHandlerId {
+        unsafe extern "system" fn c_callback(
+            msg_type: c_int,
+            msg: *const c_char,
+            user_data: *mut c_void,
+        ) {
+            let closure = panic::AssertUnwindSafe(|| {
+                let message_type = MessageType::from_ffi_type(msg_type).unwrap();
+                let message = CStr::from_ptr(msg);
+
+                // Is there a better way of casting this?
+                let callback = *(&user_data as *const _ as *const fn(MessageType, &CStr));
+                (callback)(message_type, message);
+            });
+
+            if panic::catch_unwind(closure).is_err() {
+                eprintln!("panic in the set_message_handler_trivial() callback, aborting");
+                process::abort();
+            }
+        }
+
+        unsafe {
+            (self.handle.as_ref().addMessageHandler)(Some(c_callback), None, callback as *mut c_void)
+        }
+    }
+
     /// Clears any custom message handler, restoring the default one.
     #[inline]
+    #[cfg_attr(feature = "gte-vapoursynth-api-36", deprecated(note = "use `add_message_handler` and `remove_message_handler` instead"))]
     pub fn clear_message_handler(self) {
         unsafe {
             (self.handle.as_ref().setMessageHandler)(None, ptr::null_mut());
+        }
+    }
+
+    /// Clears a custom message handler.
+    ///
+    /// If this is the only custom message handler, this will restore the default one.
+    #[inline]
+    #[cfg(feature = "gte-vapoursynth-api-36")]
+    pub fn remove_message_handler(self, handler_id: MessageHandlerId) {
+        unsafe {
+            (self.handle.as_ref().removeMessageHandler)(handler_id);
         }
     }
 
@@ -675,8 +797,23 @@ impl API {
     /// # Safety
     /// The caller must ensure `core` is valid.
     #[inline]
+    #[cfg(not(feature = "gte-vapoursynth-api-36"))]
     pub(crate) unsafe fn get_core_info(self, core: *mut ffi::VSCore) -> *const ffi::VSCoreInfo {
         (self.handle.as_ref().getCoreInfo)(core)
+    }
+
+    /// Returns information about the VapourSynth core.
+    ///
+    /// # Safety
+    /// The caller must ensure `core` is valid.
+    #[inline]
+    #[cfg(feature = "gte-vapoursynth-api-36")]
+    pub(crate) unsafe fn get_core_info(self, core: *mut ffi::VSCore) -> ffi::VSCoreInfo {
+        use std::mem::MaybeUninit;
+
+        let mut core_info = MaybeUninit::uninit();
+        (self.handle.as_ref().getCoreInfo2)(core, core_info.as_mut_ptr());
+        core_info.assume_init()
     }
 
     /// Returns a VSFormat structure from a video format identifier.

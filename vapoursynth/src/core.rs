@@ -65,11 +65,17 @@ impl<'core> CoreRef<'core> {
 
     /// Returns information about the VapourSynth core.
     pub fn info(self) -> Info {
+        #[cfg(not(feature = "gte-vapoursynth-api-36"))]
         let raw_info = unsafe {
             API::get_cached()
                 .get_core_info(self.handle.as_ptr())
                 .as_ref()
                 .unwrap()
+        };
+        #[cfg(feature = "gte-vapoursynth-api-36")]
+        let raw_info = unsafe {
+            &API::get_cached()
+                .get_core_info(self.handle.as_ptr())
         };
 
         let version_string = unsafe { CStr::from_ptr(raw_info.versionString).to_str().unwrap() };

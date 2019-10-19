@@ -17,7 +17,9 @@ macro_rules! api_version {
 }
 
 cfg_if! {
-    if #[cfg(feature="vapoursynth-api-35")] {
+    if #[cfg(feature="vapoursynth-api-36")] {
+        pub const VAPOURSYNTH_API_VERSION: i32 = api_version!(3, 6);
+    } else if #[cfg(feature="vapoursynth-api-35")] {
         pub const VAPOURSYNTH_API_VERSION: i32 = api_version!(3, 5);
     } else if #[cfg(feature="vapoursynth-api-34")] {
         pub const VAPOURSYNTH_API_VERSION: i32 = api_version!(3, 4);
