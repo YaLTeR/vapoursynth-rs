@@ -808,14 +808,114 @@ mod need_api {
         );
     }
 
-    #[cfg(feature = "gte-vapoursynth-api-34")]
+    // This test is commented out because it currently deadlocks due to
+    // https://github.com/vapoursynth/vapoursynth/issues/507
+    //
+    // Uncomment when that's fixed.
+    //
+    // #[cfg(feature = "gte-vapoursynth-api-34")]
+    // #[test]
+    // fn message_handler() {
+    //     let api = API::get().unwrap();
+    //     let (tx, rx) = channel();
+    //
+    //     // Hopefully no one logs anything here and breaks the test.
+    //     api.set_message_handler(move |message_type, message| {
+    //         assert_eq!(tx.send((message_type, message.to_owned())), Ok(()));
+    //     });
+    //
+    //     assert_eq!(
+    //         api.log(MessageType::Warning, "test warning message"),
+    //         Ok(())
+    //     );
+    //     assert_eq!(
+    //         rx.recv(),
+    //         Ok((
+    //             MessageType::Warning,
+    //             CString::new("test warning message").unwrap()
+    //         ))
+    //     );
+    //
+    //     assert_eq!(api.log(MessageType::Debug, "test debug message"), Ok(()));
+    //     assert_eq!(
+    //         rx.recv(),
+    //         Ok((
+    //             MessageType::Debug,
+    //             CString::new("test debug message").unwrap()
+    //         ))
+    //     );
+    //
+    //     assert_eq!(
+    //         api.log(MessageType::Critical, "test critical message"),
+    //         Ok(())
+    //     );
+    //     assert_eq!(
+    //         rx.recv(),
+    //         Ok((
+    //             MessageType::Critical,
+    //             CString::new("test critical message").unwrap()
+    //         ))
+    //     );
+    //
+    //     {
+    //         lazy_static! {
+    //             static ref SENDER: Mutex<Option<Sender<(MessageType, CString)>>> = Mutex::new(None);
+    //         }
+    //
+    //         let (tx, rx) = channel();
+    //         *SENDER.lock().unwrap() = Some(tx);
+    //
+    //         api.set_message_handler_trivial(|message_type, message| {
+    //             let guard = SENDER.lock().unwrap();
+    //             let tx = guard.as_ref().unwrap();
+    //             assert_eq!(tx.send((message_type, message.to_owned())), Ok(()));
+    //         });
+    //
+    //         assert_eq!(
+    //             api.log(MessageType::Warning, "test warning message"),
+    //             Ok(())
+    //         );
+    //         assert_eq!(
+    //             rx.recv(),
+    //             Ok((
+    //                 MessageType::Warning,
+    //                 CString::new("test warning message").unwrap()
+    //             ))
+    //         );
+    //
+    //         assert_eq!(api.log(MessageType::Debug, "test debug message"), Ok(()));
+    //         assert_eq!(
+    //             rx.recv(),
+    //             Ok((
+    //                 MessageType::Debug,
+    //                 CString::new("test debug message").unwrap()
+    //             ))
+    //         );
+    //
+    //         assert_eq!(
+    //             api.log(MessageType::Critical, "test critical message"),
+    //             Ok(())
+    //         );
+    //         assert_eq!(
+    //             rx.recv(),
+    //             Ok((
+    //                 MessageType::Critical,
+    //                 CString::new("test critical message").unwrap()
+    //             ))
+    //         );
+    //     }
+    //
+    //     api.clear_message_handler();
+    // }
+
+    #[cfg(feature = "gte-vapoursynth-api-36")]
     #[test]
-    fn message_handler() {
+    fn add_message_handler() {
         let api = API::get().unwrap();
         let (tx, rx) = channel();
 
         // Hopefully no one logs anything here and breaks the test.
-        api.set_message_handler(move |message_type, message| {
+        let id = api.add_message_handler(move |message_type, message| {
             assert_eq!(tx.send((message_type, message.to_owned())), Ok(()));
         });
 
@@ -852,6 +952,8 @@ mod need_api {
             ))
         );
 
+        api.remove_message_handler(id);
+
         {
             lazy_static! {
                 static ref SENDER: Mutex<Option<Sender<(MessageType, CString)>>> = Mutex::new(None);
@@ -860,7 +962,7 @@ mod need_api {
             let (tx, rx) = channel();
             *SENDER.lock().unwrap() = Some(tx);
 
-            api.set_message_handler_trivial(|message_type, message| {
+            api.add_message_handler_trivial(|message_type, message| {
                 let guard = SENDER.lock().unwrap();
                 let tx = guard.as_ref().unwrap();
                 assert_eq!(tx.send((message_type, message.to_owned())), Ok(()));

@@ -62,11 +62,16 @@ macro_rules! prop_set_something {
     )
 }
 
+/// ID of a unique, registered VapourSynth message handler.
+///
+/// This ID is returned from [`add_message_handler`] and [`add_message_handler_trivial`] and can be
+/// used to remove the message handler using [`remove_message_handler`].
+///
+/// [`add_message_handler`]: struct.API.html#method.add_message_handler
+/// [`add_message_handler_trivial`]: struct.API.html#method.add_message_handler_trivial
+/// [`remove_message_handler`]: struct.API.html#method.remove_message_handler
 #[cfg(feature = "gte-vapoursynth-api-36")]
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-/// Wraps a message handler ID,
-/// which is used by Vapoursynth to represent
-/// a unique, registered message handler.
 pub struct MessageHandlerId(ffi::VSMessageHandlerId);
 
 impl API {
@@ -238,15 +243,19 @@ impl API {
 
     /// Installs a custom handler for the various error messages VapourSynth emits. The message
     /// handler is currently global, i.e. per process, not per VSCore instance.
-    /// Returns a unique id for the handler.
+    ///
+    /// The unique ID for the handler is returned, which can be used to remove it using
+    /// [`remove_message_handler`].
     ///
     /// If no error handler is installed the messages are sent to the standard error stream.
     ///
     /// The callback arguments are the message type and the message itself. If the callback panics,
     /// the process is aborted.
+    ///
+    /// [`remove_message_handler`]: #method.remove_message_handler
     #[inline]
     #[cfg(feature = "gte-vapoursynth-api-36")]
-    pub fn add_message_handler<F>(self, callback: F) -> VSMessageHandlerId
+    pub fn add_message_handler<F>(self, callback: F) -> MessageHandlerId
         where
             F: FnMut(MessageType, &CStr) + Send + 'static,
     {
@@ -289,13 +298,14 @@ impl API {
             callback: Box::new(callback),
         });
 
-        unsafe {
+        let id = unsafe {
             (self.handle.as_ref().addMessageHandler)(
                 Some(c_callback),
                 Some(c_free_callback),
                 Box::into_raw(user_data) as *mut c_void,
             )
-        }
+        };
+        MessageHandlerId(id)
     }
 
     /// Installs a custom handler for the various error messages VapourSynth emits. The message
@@ -338,7 +348,9 @@ impl API {
 
     /// Installs a custom handler for the various error messages VapourSynth emits. The message
     /// handler is currently global, i.e. per process, not per VSCore instance.
-    /// Returns a unique id for the handler.
+    ///
+    /// The unique ID for the handler is returned, which can be used to remove it using
+    /// [`remove_message_handler`].
     ///
     /// If no error handler is installed the messages are sent to the standard error stream.
     ///
@@ -347,6 +359,8 @@ impl API {
     ///
     /// This version does not allocate at the cost of accepting a function pointer rather than an
     /// arbitrary closure. It can, however, be used with simple closures.
+    ///
+    /// [`remove_message_handler`]: #method.remove_message_handler
     #[inline]
     #[cfg(feature = "gte-vapoursynth-api-36")]
     pub fn add_message_handler_trivial(self, callback: fn(MessageType, &CStr)) -> MessageHandlerId {
@@ -370,9 +384,10 @@ impl API {
             }
         }
 
-        unsafe {
+        let id = unsafe {
             (self.handle.as_ref().addMessageHandler)(Some(c_callback), None, callback as *mut c_void)
-        }
+        };
+        MessageHandlerId(id)
     }
 
     /// Clears any custom message handler, restoring the default one.
@@ -391,7 +406,7 @@ impl API {
     #[cfg(feature = "gte-vapoursynth-api-36")]
     pub fn remove_message_handler(self, handler_id: MessageHandlerId) {
         unsafe {
-            (self.handle.as_ref().removeMessageHandler)(handler_id);
+            (self.handle.as_ref().removeMessageHandler)(handler_id.0);
         }
     }
 
