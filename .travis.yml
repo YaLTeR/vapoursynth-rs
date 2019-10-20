@@ -26,6 +26,11 @@ matrix:
       env: TARGET_ARCH=i686
   allow_failures:
     - rust: nightly
+  include:
+    - name: Code Formatting
+      before_install: rustup component add rustfmt
+      script: cargo fmt --all -- --check
+      after_success: export DEPLOY=0
 
 cache: cargo
 
