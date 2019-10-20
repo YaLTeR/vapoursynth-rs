@@ -133,7 +133,8 @@ fn test_random_noise() {
         Framerate {
             numerator: 60,
             denominator: 1,
-        }.into()
+        }
+        .into()
     );
 
     let frame = node.get_frame(0).unwrap();
@@ -160,7 +161,8 @@ fn test_make_random_noise() {
         Framerate {
             numerator: 60,
             denominator: 1,
-        }.into()
+        }
+        .into()
     );
 
     let frame = node.get_frame(0).unwrap();

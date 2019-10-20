@@ -114,15 +114,21 @@ impl<'core> Filter<'core> for Invert<'core> {
                 let bytes_per_sample = frame.format().bytes_per_sample();
 
                 match bytes_per_sample {
-                    1 => for pixel in frame.plane_row_mut::<u8>(plane, row) {
-                        *pixel = 255 - *pixel;
-                    },
-                    2 => for pixel in frame.plane_row_mut::<u16>(plane, row) {
-                        *pixel = ((1u64 << bits_per_sample) - 1) as u16 - *pixel;
-                    },
-                    4 => for pixel in frame.plane_row_mut::<u32>(plane, row) {
-                        *pixel = ((1u64 << bits_per_sample) - 1) as u32 - *pixel;
-                    },
+                    1 => {
+                        for pixel in frame.plane_row_mut::<u8>(plane, row) {
+                            *pixel = 255 - *pixel;
+                        }
+                    }
+                    2 => {
+                        for pixel in frame.plane_row_mut::<u16>(plane, row) {
+                            *pixel = ((1u64 << bits_per_sample) - 1) as u16 - *pixel;
+                        }
+                    }
+                    4 => {
+                        for pixel in frame.plane_row_mut::<u32>(plane, row) {
+                            *pixel = ((1u64 << bits_per_sample) - 1) as u32 - *pixel;
+                        }
+                    }
                     _ => unreachable!(),
                 }
             }

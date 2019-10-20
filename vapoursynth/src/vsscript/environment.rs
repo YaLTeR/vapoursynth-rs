@@ -189,10 +189,7 @@ impl Environment {
     /// for output with the requested index. The second node, if any, contains the alpha clip.
     #[cfg(all(
         feature = "gte-vsscript-api-31",
-        any(
-            feature = "vapoursynth-functions",
-            feature = "gte-vsscript-api-32"
-        )
+        any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
     ))]
     #[inline]
     pub fn get_output(&self, index: i32) -> Result<(Node, Option<Node>)> {
@@ -226,10 +223,7 @@ impl Environment {
 
     /// Retrieves the VapourSynth core that was created in the script environment. If a VapourSynth
     /// core has not been created yet, it will be created now, with the default options.
-    #[cfg(any(
-        feature = "vapoursynth-functions",
-        feature = "gte-vsscript-api-32"
-    ))]
+    #[cfg(any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32"))]
     pub fn get_core(&self) -> Result<CoreRef> {
         // CoreRef needs the API.
         API::get().ok_or(Error::NoAPI)?;
