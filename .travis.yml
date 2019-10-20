@@ -1,11 +1,11 @@
 sudo: required
 language: rust
 
-services:
-  - docker
+# services:
+#   - docker
 
 os:
-  - linux
+  # - linux
   - osx
 
 rust:
@@ -46,7 +46,7 @@ script:
     fi
 
 after_success:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$TARGET_ARCH" = "x86_64" ]; then
+  - if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$TARGET_ARCH" = "x86_64" ]; then
       export DEPLOY=1;
     else
       export DEPLOY=0;
