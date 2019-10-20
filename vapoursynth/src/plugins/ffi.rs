@@ -44,7 +44,8 @@ unsafe extern "system" fn init(
         let core = CoreRef::from_ptr(core);
         // The actual lifetime isn't 'static, it's 'core, but we don't really have a way of
         // retrieving it.
-        let filter = Box::from_raw(*(instance_data as *mut *mut Box<dyn Filter<'static> + 'static>));
+        let filter =
+            Box::from_raw(*(instance_data as *mut *mut Box<dyn Filter<'static> + 'static>));
 
         let vi = filter
             .video_info(API::get_cached(), core)
@@ -107,7 +108,8 @@ unsafe extern "system" fn get_frame(
 
         // The actual lifetime isn't 'static, it's 'core, but we don't really have a way of
         // retrieving it.
-        let filter = Box::from_raw(*(instance_data as *mut *mut Box<dyn Filter<'static> + 'static>));
+        let filter =
+            Box::from_raw(*(instance_data as *mut *mut Box<dyn Filter<'static> + 'static>));
 
         debug_assert!(n >= 0);
         let n = n as usize;

@@ -80,10 +80,7 @@ impl API {
     /// Returns `None` on error, for example if the requested API version (selected with features,
     /// see the crate-level docs) is not supported.
     // If we're linking to VSScript anyway, use the VSScript function.
-    #[cfg(all(
-        feature = "vsscript-functions",
-        feature = "gte-vsscript-api-32"
-    ))]
+    #[cfg(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))]
     #[inline]
     pub fn get() -> Option<Self> {
         use vsscript;
@@ -121,10 +118,7 @@ impl API {
     /// see the crate-level docs) is not supported.
     #[cfg(all(
         feature = "vapoursynth-functions",
-        not(all(
-            feature = "vsscript-functions",
-            feature = "gte-vsscript-api-32"
-        ))
+        not(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))
     ))]
     #[inline]
     pub fn get() -> Option<Self> {
@@ -196,7 +190,10 @@ impl API {
     /// This function allocates to store the callback, this memory is leaked if the message handler
     /// is subsequently changed.
     #[inline]
-    #[cfg_attr(feature = "gte-vapoursynth-api-36", deprecated(note = "use `add_message_handler` and `remove_message_handler` instead"))]
+    #[cfg_attr(
+        feature = "gte-vapoursynth-api-36",
+        deprecated(note = "use `add_message_handler` and `remove_message_handler` instead")
+    )]
     pub fn set_message_handler<F>(self, callback: F)
     where
         F: FnMut(MessageType, &CStr) + Send + 'static,
@@ -257,8 +254,8 @@ impl API {
     #[inline]
     #[cfg(feature = "gte-vapoursynth-api-36")]
     pub fn add_message_handler<F>(self, callback: F) -> MessageHandlerId
-        where
-            F: FnMut(MessageType, &CStr) + Send + 'static,
+    where
+        F: FnMut(MessageType, &CStr) + Send + 'static,
     {
         struct CallbackData {
             callback: Box<dyn FnMut(MessageType, &CStr) + Send + 'static>,
@@ -288,9 +285,7 @@ impl API {
             mem::forget(user_data);
         }
 
-        unsafe extern "system" fn c_free_callback(
-            user_data: *mut c_void,
-        ) {
+        unsafe extern "system" fn c_free_callback(user_data: *mut c_void) {
             let user_data = Box::from_raw(user_data as *mut CallbackData);
             drop(user_data);
         }
@@ -320,7 +315,12 @@ impl API {
     /// This version does not allocate at the cost of accepting a function pointer rather than an
     /// arbitrary closure. It can, however, be used with simple closures.
     #[inline]
-    #[cfg_attr(feature = "gte-vapoursynth-api-36", deprecated(note = "use `add_message_handler_trivial` and `remove_message_handler` instead"))]
+    #[cfg_attr(
+        feature = "gte-vapoursynth-api-36",
+        deprecated(
+            note = "use `add_message_handler_trivial` and `remove_message_handler` instead"
+        )
+    )]
     pub fn set_message_handler_trivial(self, callback: fn(MessageType, &CStr)) {
         unsafe extern "system" fn c_callback(
             msg_type: c_int,
@@ -387,14 +387,21 @@ impl API {
         }
 
         let id = unsafe {
-            (self.handle.as_ref().addMessageHandler)(Some(c_callback), None, callback as *mut c_void)
+            (self.handle.as_ref().addMessageHandler)(
+                Some(c_callback),
+                None,
+                callback as *mut c_void,
+            )
         };
         MessageHandlerId(id)
     }
 
     /// Clears any custom message handler, restoring the default one.
     #[inline]
-    #[cfg_attr(feature = "gte-vapoursynth-api-36", deprecated(note = "use `add_message_handler` and `remove_message_handler` instead"))]
+    #[cfg_attr(
+        feature = "gte-vapoursynth-api-36",
+        deprecated(note = "use `add_message_handler` and `remove_message_handler` instead")
+    )]
     pub fn clear_message_handler(self) {
         unsafe {
             #[allow(deprecated)]

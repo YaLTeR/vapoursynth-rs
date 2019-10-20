@@ -19,10 +19,7 @@ fn usage() {
 
 #[cfg(all(
     feature = "vsscript-functions",
-    any(
-        feature = "vapoursynth-functions",
-        feature = "gte-vsscript-api-32"
-    )
+    any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
 ))]
 fn print_node_info(node: &Node) {
     use std::fmt::Debug;
@@ -71,10 +68,7 @@ fn print_node_info(node: &Node) {
 
 #[cfg(all(
     feature = "vsscript-functions",
-    any(
-        feature = "vapoursynth-functions",
-        feature = "gte-vsscript-api-32"
-    )
+    any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
 ))]
 fn run() -> Result<(), Error> {
     let filename = env::args()
@@ -161,11 +155,7 @@ fn run() -> Result<(), Error> {
         for plane in 0..format.plane_count() {
             println!();
             println!("Plane #{}", plane);
-            println!(
-                "Resolution: {}×{}",
-                frame.width(plane),
-                frame.height(plane)
-            );
+            println!("Resolution: {}×{}", frame.width(plane), frame.height(plane));
             println!("Stride: {}", frame.stride(plane));
         }
     }
@@ -175,10 +165,7 @@ fn run() -> Result<(), Error> {
 
 #[cfg(not(all(
     feature = "vsscript-functions",
-    any(
-        feature = "vapoursynth-functions",
-        feature = "gte-vsscript-api-32"
-    )
+    any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
 )))]
 fn run() -> Result<(), Error> {
     bail!(

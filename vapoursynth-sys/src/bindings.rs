@@ -275,8 +275,7 @@ pub type VSFrameDoneCallback = Option<
 pub type VSMessageHandler =
     Option<unsafe extern "system" fn(msgType: c_int, msg: *const c_char, userData: *mut c_void)>;
 #[cfg(feature = "gte-vapoursynth-api-36")]
-pub type VSMessageHandlerFree =
-    Option<unsafe extern "system" fn(userData: *mut c_void)>;
+pub type VSMessageHandlerFree = Option<unsafe extern "system" fn(userData: *mut c_void)>;
 #[cfg(feature = "gte-vapoursynth-api-36")]
 pub type VSMessageHandlerId = c_int;
 #[repr(C)]
@@ -336,9 +335,11 @@ pub struct VSAPI {
     pub getError: unsafe extern "system" fn(map: *const VSMap) -> *const c_char,
     pub setFilterError:
         unsafe extern "system" fn(errorMessage: *const c_char, frameCtx: *mut VSFrameContext),
-    pub invoke:
-        unsafe extern "system" fn(plugin: *mut VSPlugin, name: *const c_char, args: *const VSMap)
-            -> *mut VSMap,
+    pub invoke: unsafe extern "system" fn(
+        plugin: *mut VSPlugin,
+        name: *const c_char,
+        args: *const VSMap,
+    ) -> *mut VSMap,
     pub getFormatPreset: unsafe extern "system" fn(id: c_int, core: *mut VSCore) -> *const VSFormat,
     pub registerFormat: unsafe extern "system" fn(
         colorFamily: c_int,
@@ -360,9 +361,11 @@ pub struct VSAPI {
         callback: VSFrameDoneCallback,
         userData: *mut c_void,
     ),
-    pub getFrameFilter:
-        unsafe extern "system" fn(n: c_int, node: *mut VSNodeRef, frameCtx: *mut VSFrameContext)
-            -> *const VSFrameRef,
+    pub getFrameFilter: unsafe extern "system" fn(
+        n: c_int,
+        node: *mut VSNodeRef,
+        frameCtx: *mut VSFrameContext,
+    ) -> *const VSFrameRef,
     pub requestFrameFilter:
         unsafe extern "system" fn(n: c_int, node: *mut VSNodeRef, frameCtx: *mut VSFrameContext),
     pub queryCompletedFrame: unsafe extern "system" fn(
@@ -447,12 +450,18 @@ pub struct VSAPI {
         error: *mut c_int,
     ) -> *mut VSFuncRef,
     pub propDeleteKey: unsafe extern "system" fn(map: *mut VSMap, key: *const c_char) -> c_int,
-    pub propSetInt:
-        unsafe extern "system" fn(map: *mut VSMap, key: *const c_char, i: i64, append: c_int)
-            -> c_int,
-    pub propSetFloat:
-        unsafe extern "system" fn(map: *mut VSMap, key: *const c_char, d: f64, append: c_int)
-            -> c_int,
+    pub propSetInt: unsafe extern "system" fn(
+        map: *mut VSMap,
+        key: *const c_char,
+        i: i64,
+        append: c_int,
+    ) -> c_int,
+    pub propSetFloat: unsafe extern "system" fn(
+        map: *mut VSMap,
+        key: *const c_char,
+        d: f64,
+        append: c_int,
+    ) -> c_int,
     pub propSetData: unsafe extern "system" fn(
         map: *mut VSMap,
         key: *const c_char,
@@ -499,21 +508,31 @@ pub struct VSAPI {
     pub getPluginPath: unsafe extern "system" fn(plugin: *const VSPlugin) -> *const c_char,
 
     #[cfg(feature = "gte-vapoursynth-api-31")]
-    pub propGetIntArray:
-        unsafe extern "system" fn(map: *const VSMap, key: *const c_char, error: *mut c_int)
-            -> *const i64,
+    pub propGetIntArray: unsafe extern "system" fn(
+        map: *const VSMap,
+        key: *const c_char,
+        error: *mut c_int,
+    ) -> *const i64,
     #[cfg(feature = "gte-vapoursynth-api-31")]
-    pub propGetFloatArray:
-        unsafe extern "system" fn(map: *const VSMap, key: *const c_char, error: *mut c_int)
-            -> *const f64,
+    pub propGetFloatArray: unsafe extern "system" fn(
+        map: *const VSMap,
+        key: *const c_char,
+        error: *mut c_int,
+    ) -> *const f64,
     #[cfg(feature = "gte-vapoursynth-api-31")]
-    pub propSetIntArray:
-        unsafe extern "system" fn(map: *mut VSMap, key: *const c_char, i: *const i64, size: c_int)
-            -> c_int,
+    pub propSetIntArray: unsafe extern "system" fn(
+        map: *mut VSMap,
+        key: *const c_char,
+        i: *const i64,
+        size: c_int,
+    ) -> c_int,
     #[cfg(feature = "gte-vapoursynth-api-31")]
-    pub propSetFloatArray:
-        unsafe extern "system" fn(map: *mut VSMap, key: *const c_char, d: *const f64, size: c_int)
-            -> c_int,
+    pub propSetFloatArray: unsafe extern "system" fn(
+        map: *mut VSMap,
+        key: *const c_char,
+        d: *const f64,
+        size: c_int,
+    ) -> c_int,
     #[cfg(feature = "gte-vapoursynth-api-34")]
     pub logMessage: unsafe extern "system" fn(msgType: c_int, msg: *const c_char),
     #[cfg(feature = "gte-vapoursynth-api-36")]

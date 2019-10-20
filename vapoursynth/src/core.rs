@@ -73,10 +73,7 @@ impl<'core> CoreRef<'core> {
                 .unwrap()
         };
         #[cfg(feature = "gte-vapoursynth-api-36")]
-        let raw_info = unsafe {
-            &API::get_cached()
-                .get_core_info(self.handle.as_ptr())
-        };
+        let raw_info = unsafe { &API::get_cached().get_core_info(self.handle.as_ptr()) };
 
         let version_string = unsafe { CStr::from_ptr(raw_info.versionString).to_str().unwrap() };
         debug_assert!(raw_info.numThreads >= 0);
@@ -127,7 +124,8 @@ impl<'core> CoreRef<'core> {
                     i32::from(sub_sampling_w),
                     i32::from(sub_sampling_h),
                     self.handle.as_ptr(),
-                ).as_ref()
+                )
+                .as_ref()
                 .map(|p| Format::from_ptr(p))
         }
     }
@@ -148,7 +146,10 @@ impl<'core> CoreRef<'core> {
     ///
     /// `get_plugin_by_id()` should be used instead.
     #[inline]
-    pub fn get_plugin_by_namespace(&self, namespace: &str) -> Result<Option<Plugin<'core>>, NulError> {
+    pub fn get_plugin_by_namespace(
+        &self,
+        namespace: &str,
+    ) -> Result<Option<Plugin<'core>>, NulError> {
         let namespace = CString::new(namespace)?;
         let ptr =
             unsafe { API::get_cached().get_plugin_by_ns(namespace.as_ptr(), self.handle.as_ptr()) };

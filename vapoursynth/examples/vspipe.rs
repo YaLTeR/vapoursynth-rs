@@ -8,10 +8,7 @@ use failure::{err_msg, Error, ResultExt};
 
 #[cfg(all(
     feature = "vsscript-functions",
-    any(
-        feature = "vapoursynth-functions",
-        feature = "gte-vsscript-api-32"
-    )
+    any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
 ))]
 mod inner {
     #![cfg_attr(feature = "cargo-clippy", allow(cast_lossless))]
@@ -436,11 +433,13 @@ mod inner {
                             .context("Couldn't output the timecode")
                         {
                             Err(error) => state.error = Some((n, error.into())),
-                            Ok(()) => if let Err(error) = update_timecodes(&frame, &mut state)
-                                .context("Couldn't update the timecodes")
-                            {
-                                state.error = Some((n, error.into()));
-                            },
+                            Ok(()) => {
+                                if let Err(error) = update_timecodes(&frame, &mut state)
+                                    .context("Couldn't update the timecodes")
+                                {
+                                    state.error = Some((n, error.into()));
+                                }
+                            }
                         }
                     }
 
@@ -591,7 +590,8 @@ mod inner {
                          a key with this name and value (bytes typed) \
                          will be set in the globals dict",
                     ),
-            ).arg(
+            )
+            .arg(
                 Arg::with_name("start")
                     .short("s")
                     .long("start")
@@ -599,7 +599,8 @@ mod inner {
                     .value_name("N")
                     .display_order(2)
                     .help("First frame to output"),
-            ).arg(
+            )
+            .arg(
                 Arg::with_name("end")
                     .short("e")
                     .long("end")
@@ -607,7 +608,8 @@ mod inner {
                     .value_name("N")
                     .display_order(3)
                     .help("Last frame to output"),
-            ).arg(
+            )
+            .arg(
                 Arg::with_name("outputindex")
                     .short("o")
                     .long("outputindex")
@@ -615,7 +617,8 @@ mod inner {
                     .value_name("N")
                     .display_order(4)
                     .help("Output index"),
-            ).arg(
+            )
+            .arg(
                 Arg::with_name("requests")
                     .short("r")
                     .long("requests")
@@ -623,12 +626,14 @@ mod inner {
                     .value_name("N")
                     .display_order(5)
                     .help("Number of concurrent frame requests"),
-            ).arg(
+            )
+            .arg(
                 Arg::with_name("y4m")
                     .short("y")
                     .long("y4m")
                     .help("Add YUV4MPEG headers to output"),
-            ).arg(
+            )
+            .arg(
                 Arg::with_name("timecodes")
                     .short("t")
                     .long("timecodes")
@@ -636,17 +641,20 @@ mod inner {
                     .value_name("FILE")
                     .display_order(6)
                     .help("Write timecodes v2 file"),
-            ).arg(
+            )
+            .arg(
                 Arg::with_name("progress")
                     .short("p")
                     .long("progress")
                     .help("Print progress to stderr"),
-            ).arg(
+            )
+            .arg(
                 Arg::with_name("info")
                     .short("i")
                     .long("info")
                     .help("Show video info and exit"),
-            ).arg(
+            )
+            .arg(
                 Arg::with_name("version")
                     .short("v")
                     .long("version")
@@ -664,12 +672,14 @@ mod inner {
                         "script",
                         "outfile",
                     ]),
-            ).arg(
+            )
+            .arg(
                 Arg::with_name("script")
                     .required_unless("version")
                     .index(1)
                     .help("Input .vpy file"),
-            ).arg(
+            )
+            .arg(
                 Arg::with_name("outfile")
                     .required_unless("version")
                     .index(2)
@@ -678,7 +688,8 @@ mod inner {
                         "Output file, use hyphen `-` for stdout \
                          or dot `.` for suppressing any output",
                     ),
-            ).get_matches();
+            )
+            .get_matches();
 
         // Check --version.
         if matches.is_present("version") {
@@ -729,7 +740,8 @@ mod inner {
             .eval_file(
                 matches.value_of("script").unwrap(),
                 EvalFlags::SetWorkingDir,
-            ).context("Script evaluation failed")?;
+            )
+            .context("Script evaluation failed")?;
 
         // Get the output node.
         let output_index = matches
@@ -849,7 +861,8 @@ mod inner {
                     y4m,
                     progress,
                 },
-            ).context("Couldn't output the frames")?;
+            )
+            .context("Couldn't output the frames")?;
 
             // This is still not a very valid comparison since vspipe does all argument validation
             // before it starts the time.
@@ -864,10 +877,7 @@ mod inner {
 
 #[cfg(not(all(
     feature = "vsscript-functions",
-    any(
-        feature = "vapoursynth-functions",
-        feature = "gte-vsscript-api-32"
-    )
+    any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
 )))]
 mod inner {
     use super::*;

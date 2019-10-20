@@ -4,10 +4,7 @@ use super::*;
 // We need the VSScript functions, and either VSScript API 3.2 or the VapourSynth functions.
 #[cfg(all(
     feature = "vsscript-functions",
-    any(
-        feature = "vapoursynth-functions",
-        feature = "gte-vsscript-api-32"
-    )
+    any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")
 ))]
 mod need_api_and_vsscript {
     use std::ffi::CStr;
@@ -326,7 +323,8 @@ mod need_api_and_vsscript {
         let env = vsscript::Environment::from_file(
             "test-vpy/pixel-formats.vpy",
             vsscript::EvalFlags::Nothing,
-        ).unwrap();
+        )
+        .unwrap();
 
         verify_pixel_format(&env, 0, 10, [789u16, 123u16, 456u16]);
         verify_pixel_format(&env, 1, 32, [5f32, 42f32, 0.25f32]);
@@ -353,7 +351,8 @@ mod need_api_and_vsscript {
         let env = vsscript::Environment::from_file(
             "test-vpy/pixel-formats.vpy",
             vsscript::EvalFlags::Nothing,
-        ).unwrap();
+        )
+        .unwrap();
 
         #[cfg(feature = "gte-vsscript-api-31")]
         let node = env.get_output(0).unwrap().0;
@@ -400,25 +399,25 @@ mod need_api_and_vsscript {
     fn clear_output() {
         let env =
             vsscript::Environment::from_script(include_str!("../test-vpy/green.vpy")).unwrap();
-        assert!(
-            env.clear_output(1)
-                .err()
-                .map(|e| if let vsscript::Error::NoOutput = e {
-                    true
-                } else {
-                    false
-                }).unwrap_or(false)
-        );
+        assert!(env
+            .clear_output(1)
+            .err()
+            .map(|e| if let vsscript::Error::NoOutput = e {
+                true
+            } else {
+                false
+            })
+            .unwrap_or(false));
         assert!(env.clear_output(0).is_ok());
-        assert!(
-            env.clear_output(0)
-                .err()
-                .map(|e| if let vsscript::Error::NoOutput = e {
-                    true
-                } else {
-                    false
-                }).unwrap_or(false)
-        );
+        assert!(env
+            .clear_output(0)
+            .err()
+            .map(|e| if let vsscript::Error::NoOutput = e {
+                true
+            } else {
+                false
+            })
+            .unwrap_or(false));
     }
 
     #[test]
@@ -589,9 +588,11 @@ mod need_api_and_vsscript {
                 bind(
                     key,
                     CStr::from_ptr(plugins.get_data(key).unwrap().as_ptr() as _),
-                ).to_str()
+                )
+                .to_str()
                 .ok()
-            }).filter_map(|id| id.split(';').nth(1))
+            })
+            .filter_map(|id| id.split(';').nth(1))
             .collect();
         assert!(ids.contains(&"com.vapoursynth.std"));
         assert!(ids.contains(&"com.vapoursynth.resize"));
@@ -609,10 +610,12 @@ mod need_api_and_vsscript {
                 bind(
                     key,
                     CStr::from_ptr(functions.get_data(key).unwrap().as_ptr() as _),
-                ).to_str()
+                )
+                .to_str()
                 .ok()
                 .map(|value| (key, value))
-            }).filter_map(|(key, value)| value.split(';').nth(0).map(|name| (key, name)))
+            })
+            .filter_map(|(key, value)| value.split(';').nth(0).map(|name| (key, name)))
             .collect();
         assert!(names.contains(&("CropRel", "CropRel")));
 
@@ -670,10 +673,7 @@ mod need_api_and_vsscript {
 // We need either VSScript API 3.2 or the VapourSynth functions.
 #[cfg(any(
     feature = "vapoursynth-functions",
-    all(
-        feature = "vsscript-functions",
-        feature = "gte-vsscript-api-32"
-    )
+    all(feature = "vsscript-functions", feature = "gte-vsscript-api-32")
 ))]
 mod need_api {
     use std::ffi::CString;
