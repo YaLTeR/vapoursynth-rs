@@ -120,7 +120,7 @@ mod inner {
         }
     }
 
-    fn print_info(writer: &mut Write, node: &Node, alpha: Option<&Node>) -> Result<(), Error> {
+    fn print_info(writer: &mut dyn Write, node: &Node, alpha: Option<&Node>) -> Result<(), Error> {
         let info = node.info();
 
         writeln!(
@@ -882,9 +882,9 @@ mod inner {
 
 fn main() {
     if let Err(err) = inner::run() {
-        eprintln!("Error: {}", err.cause());
+        eprintln!("Error: {}", err.as_fail());
 
-        for cause in err.causes().skip(1) {
+        for cause in err.iter_causes() {
             eprintln!("Caused by: {}", cause);
         }
 

@@ -234,6 +234,7 @@ impl API {
         });
 
         unsafe {
+            #[allow(deprecated)]
             (self.handle.as_ref().setMessageHandler)(
                 Some(c_callback),
                 Box::into_raw(user_data) as *mut c_void,
@@ -342,6 +343,7 @@ impl API {
         }
 
         unsafe {
+            #[allow(deprecated)]
             (self.handle.as_ref().setMessageHandler)(Some(c_callback), callback as *mut c_void);
         }
     }
@@ -395,6 +397,7 @@ impl API {
     #[cfg_attr(feature = "gte-vapoursynth-api-36", deprecated(note = "use `add_message_handler` and `remove_message_handler` instead"))]
     pub fn clear_message_handler(self) {
         unsafe {
+            #[allow(deprecated)]
             (self.handle.as_ref().setMessageHandler)(None, ptr::null_mut());
         }
     }
