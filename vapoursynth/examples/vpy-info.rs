@@ -189,9 +189,9 @@ fn run() -> Result<(), Error> {
 
 fn main() {
     if let Err(err) = run() {
-        eprintln!("Error: {}", err.cause());
+        eprintln!("Error: {}", err.as_fail());
 
-        for cause in err.causes().skip(1) {
+        for cause in err.iter_causes() {
             eprintln!("Caused by: {}", cause);
         }
 

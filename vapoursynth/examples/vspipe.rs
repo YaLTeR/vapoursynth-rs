@@ -14,8 +14,7 @@ use failure::{err_msg, Error, ResultExt};
     )
 ))]
 mod inner {
-    #![cfg_attr(feature = "cargo-clippy", allow(cast_lossless))]
-    #![cfg_attr(feature = "cargo-clippy", allow(mutex_atomic))]
+    #![allow(clippy::cast_lossless, clippy::mutex_atomic)]
     extern crate clap;
     extern crate num_rational;
     extern crate vapoursynth;
@@ -120,7 +119,7 @@ mod inner {
         }
     }
 
-    fn print_info(writer: &mut Write, node: &Node, alpha: Option<&Node>) -> Result<(), Error> {
+    fn print_info(writer: &mut dyn Write, node: &Node, alpha: Option<&Node>) -> Result<(), Error> {
         let info = node.info();
 
         writeln!(
@@ -252,7 +251,7 @@ mod inner {
                 }
             };
 
-            write!(writer, " Ip A0:0 XLENGTH={}\n", num_frames)?;
+            writeln!(writer, " Ip A0:0 XLENGTH={}", num_frames)?;
 
             Ok(())
         } else {
@@ -269,7 +268,7 @@ mod inner {
         const RGB_REMAP: [usize; 3] = [1, 2, 0];
 
         let format = frame.format();
-        #[cfg_attr(feature = "cargo-clippy", allow(needless_range_loop))]
+        #[allow(clippy::needless_range_loop)]
         for plane in 0..format.plane_count() {
             let plane = if format.color_family() == ColorFamily::RGB {
                 RGB_REMAP[plane]
@@ -296,7 +295,7 @@ mod inner {
         alpha_frame: Option<&Frame>,
     ) -> Result<(), Error> {
         if parameters.y4m {
-            write!(writer, "FRAME\n").context("Couldn't output the frame header")?;
+            writeln!(writer, "FRAME").context("Couldn't output the frame header")?;
         }
 
         print_frame(writer, frame).context("Couldn't output the frame")?;
@@ -882,9 +881,9 @@ mod inner {
 
 fn main() {
     if let Err(err) = inner::run() {
-        eprintln!("Error: {}", err.cause());
+        eprintln!("Error: {}", err.as_fail());
 
-        for cause in err.causes().skip(1) {
+        for cause in err.iter_causes() {
             eprintln!("Caused by: {}", cause);
         }
 

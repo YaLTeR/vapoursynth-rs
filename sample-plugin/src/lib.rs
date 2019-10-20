@@ -62,7 +62,7 @@ make_filter_function! {
         _api: API,
         _core: CoreRef<'core>,
         clip: Node<'core>,
-    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+    ) -> Result<Option<Box<dyn Filter<'core> + 'core>>, Error> {
         Ok(Some(Box::new(Passthrough { source: clip })))
     }
 }
@@ -139,7 +139,7 @@ make_filter_function! {
         _api: API,
         _core: CoreRef<'core>,
         clip: Node<'core>,
-    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+    ) -> Result<Option<Box<dyn Filter<'core> + 'core>>, Error> {
         Ok(Some(Box::new(Invert { source: clip })))
     }
 }
@@ -184,26 +184,26 @@ impl<'core> Filter<'core> for RandomNoise {
 
                 match bytes_per_sample {
                     1 => {
-                        let mut data = frame.plane_row_mut::<u8>(plane, row);
+                        let data = frame.plane_row_mut::<u8>(plane, row);
                         for col in 0..data.len() {
                             unsafe {
-                                ptr::write(data.as_mut_ptr().offset(col as isize), rng.gen());
+                                ptr::write(data.as_mut_ptr().add(col), rng.gen());
                             }
                         }
                     }
                     2 => {
-                        let mut data = frame.plane_row_mut::<u16>(plane, row);
+                        let data = frame.plane_row_mut::<u16>(plane, row);
                         for col in 0..data.len() {
                             unsafe {
-                                ptr::write(data.as_mut_ptr().offset(col as isize), rng.gen());
+                                ptr::write(data.as_mut_ptr().add(col), rng.gen());
                             }
                         }
                     }
                     4 => {
-                        let mut data = frame.plane_row_mut::<u32>(plane, row);
+                        let data = frame.plane_row_mut::<u32>(plane, row);
                         for col in 0..data.len() {
                             unsafe {
-                                ptr::write(data.as_mut_ptr().offset(col as isize), rng.gen());
+                                ptr::write(data.as_mut_ptr().add(col), rng.gen());
                             }
                         }
                     }
@@ -238,7 +238,7 @@ make_filter_function! {
         length: i64,
         fpsnum: i64,
         fpsden: i64,
-    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+    ) -> Result<Option<Box<dyn Filter<'core> + 'core>>, Error> {
         let format_id = (format as i32).into();
         let format = core.get_format(format_id)
             .ok_or_else(|| format_err!("No such format"))?;
@@ -306,7 +306,7 @@ impl FilterFunction for VariableNameRandomNoiseFunction {
         api: API,
         core: CoreRef<'core>,
         args: &Map<'core>,
-    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+    ) -> Result<Option<Box<dyn Filter<'core> + 'core>>, Error> {
         self.underlying_function.create(api, core, args)
     }
 }
@@ -319,7 +319,7 @@ make_filter_function! {
         _api: API,
         core: CoreRef<'core>,
         name: &[u8],
-    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+    ) -> Result<Option<Box<dyn Filter<'core> + 'core>>, Error> {
         let name = unsafe { CStr::from_ptr(name.as_ptr() as _) };
         let name = name.to_str()
             .context("name contains invalid UTF-8")?
@@ -387,13 +387,13 @@ make_filter_function! {
         another_optional_int: Option<i64>,
         frame_array: ValueIter<'_, 'core, FrameRef<'core>>,
         optional_frame_array: Option<ValueIter<'_, 'core, FrameRef<'core>>>,
-    ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+    ) -> Result<Option<Box<dyn Filter<'core> + 'core>>, Error> {
         let in_ = OwnedMap::new(api);
         let mut out = OwnedMap::new(api);
         function.call(&in_, &mut out);
 
         ensure!(int == 42, "{} != 42", int);
-        #[cfg_attr(feature = "cargo-clippy", allow(float-cmp))]
+        #[allow(clippy::float_cmp)]
         {
             ensure!(float == 1337f64, "{} != 1337", float);
         }

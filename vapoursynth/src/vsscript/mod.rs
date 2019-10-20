@@ -2,7 +2,7 @@
 
 #[cfg(not(feature = "gte-vsscript-api-32"))]
 use std::sync::Mutex;
-use std::sync::{Once, ONCE_INIT};
+use std::sync::Once;
 use vapoursynth_sys as ffi;
 
 #[cfg(not(feature = "gte-vsscript-api-32"))]
@@ -31,7 +31,7 @@ macro_rules! call_vsscript {
 // having to store its lifetime everywhere and potentially pass it around the threads.
 #[inline]
 pub(crate) fn maybe_initialize() {
-    static ONCE: Once = ONCE_INIT;
+    static ONCE: Once = Once::new();
 
     ONCE.call_once(|| unsafe {
         ffi::vsscript_init();

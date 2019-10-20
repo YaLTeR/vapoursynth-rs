@@ -811,7 +811,7 @@ mod need_api {
     // This test is commented out because it currently deadlocks due to
     // https://github.com/vapoursynth/vapoursynth/issues/507
     //
-    // Uncomment when that's fixed.
+    // Uncomment when R48 comes out (that's where this is fixed).
     //
     // #[cfg(feature = "gte-vapoursynth-api-34")]
     // #[test]
@@ -1002,6 +1002,7 @@ mod need_api {
             );
         }
 
+        #[allow(deprecated)]
         api.clear_message_handler();
     }
 }
