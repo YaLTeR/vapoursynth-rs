@@ -2,7 +2,7 @@
 import itertools, os, subprocess, sys
 
 if __name__ == '__main__':
-    VS_API_VERSIONS = ["vapoursynth-api-" + str(v) for v in range(31, 36)]
+    VS_API_VERSIONS = ["vapoursynth-api-" + str(v) for v in range(31, 37)]
     VSSCRIPT_API_VERSIONS = ["vsscript-api-" + str(v) for v in range(31, 33)]
     VAPOURSYNTH_FUNCTIONS = ["vapoursynth-functions"]
     VSSCRIPT_FUNCTIONS = ["vsscript-functions"]
