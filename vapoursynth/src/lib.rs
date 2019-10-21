@@ -164,7 +164,8 @@
 
 #![doc(html_root_url = "https://docs.rs/vapoursynth/0.2.0")]
 // Preventing all those warnings with #[cfg] directives would be really diffucult.
-#![allow(unused, dead_code, clippy::trivially_copy_pass_by_ref)]
+#![allow(unused, dead_code)]
+#![allow(clippy::trivially_copy_pass_by_ref)]
 
 #[macro_use]
 extern crate bitflags;
