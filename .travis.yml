@@ -32,7 +32,12 @@ matrix:
       script: cargo fmt --all -- --check
       after_success: export DEPLOY=0
 
-cache: cargo
+cache:
+  directories:
+    - /home/travis/.cargo
+
+before_cache:
+  - rm -rf /home/travis/.cargo/registry
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
