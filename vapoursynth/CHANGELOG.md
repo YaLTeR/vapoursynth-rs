@@ -3,6 +3,8 @@
   * `API::{add,remove}_message_handler` deprecate `API::set_message_handler`.
   * `CoreRef::info()` is implemented via the thread-safe `getCoreInfo2`
     automatically when using the `vapoursynth-api-36` feature.
+  * Added `CoreRef::set_{max_cache_size,thread_count}`, which can now be
+    implemented safely.
 * Added more default VapourSynth .lib folders on Windows: the automatic
   detection should now work with R46 and above in various configurations.
 * Changed some Clippy and Rustfmt attributes into their newer versions, fixed
