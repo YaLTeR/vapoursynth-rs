@@ -1138,6 +1138,31 @@ impl API {
     ) {
         (self.handle.as_ref().registerFunction)(name, args, args_func, function_data, plugin);
     }
+
+    /// Sets the maximum size of the framebuffer cache. Returns the new maximum size.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid. On VapourSynth API below 3.6, the caller
+    /// must ensure there are no concurrent accesses to the core info.
+    #[inline]
+    pub(crate) unsafe fn set_max_cache_size(self, bytes: i64, core: *mut ffi::VSCore) -> i64 {
+        (self.handle.as_ref().setMaxCacheSize)(bytes, core)
+    }
+
+    /// Sets the number of worker threads for the given core.
+    ///
+    /// If the requested number of threads is zero or lower, the number of hardware threads will be
+    /// detected and used.
+    ///
+    /// Returns the new thread count.
+    ///
+    /// # Safety
+    /// The caller must ensure all pointers are valid. On VapourSynth API below 3.6, the caller
+    /// must ensure there are no concurrent accesses to the core info.
+    #[inline]
+    pub(crate) unsafe fn set_thread_count(self, threads: c_int, core: *mut ffi::VSCore) -> c_int {
+        (self.handle.as_ref().setThreadCount)(threads, core)
+    }
 }
 
 impl MessageType {

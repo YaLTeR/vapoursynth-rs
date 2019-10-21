@@ -170,6 +170,25 @@ impl<'core> CoreRef<'core> {
     pub fn plugins(&self) -> OwnedMap<'core> {
         unsafe { OwnedMap::from_ptr(API::get_cached().get_plugins(self.handle.as_ptr())) }
     }
+
+    /// Sets the maximum size of the framebuffer cache. Returns the new maximum size.
+    #[cfg(feature = "gte-vapoursynth-api-36")]
+    #[inline]
+    pub fn set_max_cache_size(&self, bytes: i64) -> i64 {
+        unsafe { API::get_cached().set_max_cache_size(bytes, self.handle.as_ptr()) }
+    }
+
+    /// Sets the number of worker threads for the given core.
+    ///
+    /// If the requested number of threads is zero or lower, the number of hardware threads will be
+    /// detected and used.
+    ///
+    /// Returns the new thread count.
+    #[cfg(feature = "gte-vapoursynth-api-36")]
+    #[inline]
+    pub fn set_thread_count(&self, threads: i32) -> i32 {
+        unsafe { API::get_cached().set_thread_count(threads, self.handle.as_ptr()) }
+    }
 }
 
 impl fmt::Display for Info {
