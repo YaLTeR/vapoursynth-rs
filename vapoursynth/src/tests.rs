@@ -1013,4 +1013,37 @@ mod need_api {
         #[allow(deprecated)]
         api.clear_message_handler();
     }
+
+    #[test]
+    fn create_core() {
+        let api = API::get().unwrap();
+        let core = api.create_core(4);
+        assert_eq!(core.info().num_threads, 4);
+
+        let yuv420p8 = core.get_format(PresetFormat::YUV420P8.into());
+        assert!(yuv420p8.is_some());
+        let yuv420p8 = yuv420p8.unwrap();
+
+        assert_eq!(yuv420p8.id(), PresetFormat::YUV420P8.into());
+        assert_eq!(yuv420p8.name(), "YUV420P8");
+        assert_eq!(yuv420p8.plane_count(), 3);
+        assert_eq!(yuv420p8.color_family(), ColorFamily::YUV);
+        assert_eq!(yuv420p8.sample_type(), SampleType::Integer);
+        assert_eq!(yuv420p8.bits_per_sample(), 8);
+        assert_eq!(yuv420p8.bytes_per_sample(), 1);
+        assert_eq!(yuv420p8.sub_sampling_w(), 1);
+        assert_eq!(yuv420p8.sub_sampling_h(), 1);
+
+        let yuv422p8 = core.get_format(PresetFormat::YUV422P8.into()).unwrap();
+        assert_eq!(yuv422p8.sub_sampling_w(), 1);
+        assert_eq!(yuv422p8.sub_sampling_h(), 0);
+
+        #[cfg(feature = "gte-vapoursynth-api-36")]
+        {
+            assert_eq!(core.set_max_cache_size(1337), 1337);
+            assert_eq!(core.set_thread_count(3), 3);
+            assert_eq!(core.info().max_framebuffer_size, 1337);
+            assert_eq!(core.info().num_threads, 3);
+        }
+    }
 }
