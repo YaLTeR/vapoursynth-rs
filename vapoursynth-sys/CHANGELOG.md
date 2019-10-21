@@ -1,3 +1,9 @@
+## Unreleased
+* Added support for VapourSynth API 3.6 (R47)
+* Added more default VapourSynth .lib folders on Windows: the automatic
+  detection should now work with R46 and above in various configurations
+* Changed some Clippy attributes into their newer versions (bumps minimum Rust)
+
 ### v0.2.1 (16th Jun 2018)
 - Added missing plugin-related types
 - Silenced some clippy warnings
