@@ -7,6 +7,8 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 use std::{mem, panic, process};
 use vapoursynth_sys as ffi;
 
+use core::CoreRef;
+
 /// A wrapper for the VapourSynth API.
 #[derive(Debug, Clone, Copy)]
 pub struct API {
@@ -1162,6 +1164,20 @@ impl API {
     #[inline]
     pub(crate) unsafe fn set_thread_count(self, threads: c_int, core: *mut ffi::VSCore) -> c_int {
         (self.handle.as_ref().setThreadCount)(threads, core)
+    }
+
+    /// Creates and returns a new core.
+    ///
+    /// Note that there's currently no safe way of freeing the returned core, and the lifetime is
+    /// unbounded, because it can live for an arbitrary long time. You may use the (unsafe)
+    /// `vapoursynth_sys::VSAPI::freeCore()` after ensuring that all frame requests have completed
+    /// and all objects belonging to the core have been released.
+    #[inline]
+    pub fn create_core<'core>(self, threads: i32) -> CoreRef<'core> {
+        unsafe {
+            let handle = (self.handle.as_ref().createCore)(threads);
+            CoreRef::from_ptr(handle)
+        }
     }
 }
 
