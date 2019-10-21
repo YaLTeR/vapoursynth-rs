@@ -1,3 +1,15 @@
+## Unreleased
+* Added support for VapourSynth API 3.6 (R47):
+  * `API::{add,remove}_message_handler` deprecate `API::set_message_handler`.
+  * `CoreRef::info()` is implemented via the thread-safe `getCoreInfo2`
+    automatically when using the `vapoursynth-api-36` feature.
+* Added more default VapourSynth .lib folders on Windows: the automatic
+  detection should now work with R46 and above in various configurations.
+* Changed some Clippy and Rustfmt attributes into their newer versions, fixed
+  deprecation warnings (bumps minimum Rust).
+* Fixed the lifetimes on the return values of
+  `CoreRef::{get_plugin_by_id,get_plugin_by_namespace,plugins}`.
+
 ## v0.2 (16th Jun 2018)
 - Added plugin support! That includes:
   - `plugins::{Metadata,Filter,FilterFunction}` types and traits for making plugins;
