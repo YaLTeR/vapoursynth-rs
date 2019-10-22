@@ -17,8 +17,14 @@ fn main() {
     };
 
     // Library directory override or the default dir on windows.
-    if let Some(dir) = env::var(LIBRARY_DIR_VARIABLE).ok().or(default_library_dir) {
+    if let Some(dir) = env::var(LIBRARY_DIR_VARIABLE).ok() {
         println!("cargo:rustc-link-search=native={}", dir);
+    } else {
+        if let Some(default_library_dir) = default_library_dir {
+            for dir in default_library_dir {
+                println!("cargo:rustc-link-search=native={}", dir);
+            }
+        }
     }
 
     // Handle linking to VapourSynth libs.
@@ -37,9 +43,9 @@ fn main() {
     }
 }
 
-// Returns the default library dir on Windows.
+// Returns the default library dirs on Windows.
 // The default dir is where the VapourSynth installer puts the libraries.
-fn get_default_library_dir() -> Option<String> {
+fn get_default_library_dir() -> Option<impl Iterator<Item = String>> {
     let host = env::var("HOST").ok()?;
 
     // If the host isn't Windows we don't have %programfiles%.
@@ -47,11 +53,15 @@ fn get_default_library_dir() -> Option<String> {
         return None;
     }
 
-    let programfiles = if host.starts_with("i686") {
-        env::var("programfiles")
+    let programfiles = env::var("programfiles").into_iter();
+
+    // Add Program Files from the other bitness. This would be Program Files (x86) with a 64-bit
+    // host and regular Program Files with a 32-bit host running on a 64-bit system.
+    let programfiles = programfiles.chain(env::var(if host.starts_with("i686") {
+        "programw6432"
     } else {
-        env::var("programfiles(x86)")
-    };
+        "programfiles(x86)"
+    }));
 
     let suffix = if env::var("TARGET").ok()?.starts_with("i686") {
         "lib32"
@@ -59,9 +69,16 @@ fn get_default_library_dir() -> Option<String> {
         "lib64"
     };
 
-    let mut path = PathBuf::from(programfiles.ok()?);
-    path.push("VapourSynth");
-    path.push("sdk");
-    path.push(suffix);
-    path.to_str().map(|s| s.to_owned())
+    Some(programfiles.flat_map(move |programfiles| {
+        // Use both VapourSynth and VapourSynth-32 folder names.
+        ["", "-32"]
+            .into_iter()
+            .filter_map(move |vapoursynth_suffix| {
+                let mut path = PathBuf::from(&programfiles);
+                path.push(format!("VapourSynth{}", vapoursynth_suffix));
+                path.push("sdk");
+                path.push(suffix);
+                path.to_str().map(|s| s.to_owned())
+            })
+    }))
 }
