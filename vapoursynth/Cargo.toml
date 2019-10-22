@@ -26,7 +26,11 @@ vapoursynth-sys = { version = "0.2", path = "../vapoursynth-sys" }
 [dev-dependencies]
 clap = "2"
 lazy_static = "1"
-num-rational = { version = "0.1", default-features = false }
+
+[dev-dependencies.num-rational]
+version = "0.2"
+default-features = false
+features = ["std"]
 
 [features]
 # Enable the half::f16 type to be used for frame pixel data.

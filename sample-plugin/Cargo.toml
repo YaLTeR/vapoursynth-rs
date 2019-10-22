@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 [dependencies]
 cfg-if = {version = "0.1", optional = true }
 failure = "0.1"
-rand = "0.4"
+rand = "0.7"
 vapoursynth = { path = "../vapoursynth" }
 
 [[bin]]
