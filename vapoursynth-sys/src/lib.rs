@@ -1,5 +1,5 @@
 //! Raw bindings to [VapourSynth](https://github.com/vapoursynth/vapoursynth).
-#![doc(html_root_url = "https://docs.rs/vapoursynth-sys/0.2.2")]
+#![doc(html_root_url = "https://docs.rs/vapoursynth-sys/0.3")]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]

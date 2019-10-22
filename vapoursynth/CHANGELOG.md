@@ -1,4 +1,4 @@
-## Unreleased
+## v0.3 (22nd Oct 2019)
 * Added support for VapourSynth API 3.6 (R47):
   * `API::{add,remove}_message_handler` deprecate `API::set_message_handler`.
   * `CoreRef::info()` is implemented via the thread-safe `getCoreInfo2`
