@@ -654,6 +654,12 @@ mod inner {
                     .help("Show video info and exit"),
             )
             .arg(
+                Arg::with_name("preserve-cwd")
+                    .short("c")
+                    .long("preserve-cwd")
+                    .help("Don't temporarily change the working directory the script path"),
+            )
+            .arg(
                 Arg::with_name("version")
                     .short("v")
                     .long("version")
@@ -738,7 +744,11 @@ mod inner {
         environment
             .eval_file(
                 matches.value_of("script").unwrap(),
-                EvalFlags::SetWorkingDir,
+                if matches.is_present("preserve-cwd") {
+                    EvalFlags::Nothing
+                } else {
+                    EvalFlags::SetWorkingDir
+                },
             )
             .context("Script evaluation failed")?;
 
