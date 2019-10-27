@@ -2,8 +2,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/vapoursynth.svg)](https://crates.io/crates/vapoursynth)
 [![Documentation](https://docs.rs/vapoursynth/badge.svg)](https://docs.rs/vapoursynth)
-[![Travis Build Status](https://api.travis-ci.org/YaLTeR/vapoursynth-rs.svg?branch=master)](https://travis-ci.org/YaLTeR/vapoursynth-rs)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/kwyhlamoqje8tsqc?svg=true)](https://ci.appveyor.com/project/YaLTeR/vapoursynth-rs)
+[![Actions Status](https://github.com/YaLTeR/vapoursynth-rs/workflows/vapoursynth/badge.svg)](https://github.com/YaLTeR/vapoursynth-rs/actions)
 
 [ChangeLog](https://github.com/YaLTeR/vapoursynth-rs/blob/master/vapoursynth/CHANGELOG.md)
 

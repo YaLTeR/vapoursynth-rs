@@ -1,0 +1,158 @@
+name: vapoursynth
+
+on: [push, pull_request]
+
+jobs:
+  clippy-rustfmt:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+        components: clippy, rustfmt
+    - name: Run rustfmt
+      uses: actions-rs/cargo@v1
+      with:
+        command: fmt
+        args: --all -- --check
+    - name: Run clippy on all tests
+      uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --all --all-targets --all-features --exclude sample-plugin
+    - name: Run clippy on the sample-plugin
+      uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --all-targets --package sample-plugin
+
+  unix-tests:
+    strategy:
+      matrix:
+        toolchain:
+         - stable-x86_64-apple-darwin
+         - stable-x86_64-unknown-linux-gnu
+         - stable-i686-unknown-linux-gnu
+        include:
+         - toolchain: stable-x86_64-apple-darwin
+           os: macOS-latest
+         - toolchain: stable-x86_64-unknown-linux-gnu
+           os: ubuntu-latest
+         - toolchain: stable-i686-unknown-linux-gnu
+           os: ubuntu-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install VapourSynth on MacOS
+      if: matrix.os == 'macOS-latest'
+      run: |
+        brew install vapoursynth
+    - name: Install VapourSynth on Ubuntu 64-bit
+      if: matrix.toolchain == 'stable-x86_64-unknown-linux-gnu'
+      run: |
+        build/script.sh
+    - name: Install VapourSynth on Ubuntu 32-bit
+      if: matrix.toolchain == 'stable-i686-unknown-linux-gnu'
+      run: |
+        build/script.sh i686
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: ${{ matrix.toolchain }}
+        override: true
+    - name: Run tests
+      run: |
+        cd vapoursynth
+        python3 ../build/run-tests.py
+    - name: Run sample-plugin tests
+      run: |
+        cd sample-plugin
+        cargo build --verbose
+        cargo run --verbose --bin test --features cfg-if \
+                  vapoursynth/vapoursynth-functions \
+                  vapoursynth/vsscript-functions
+    - name: Run doc
+      uses: actions-rs/cargo@v1
+      with:
+        command: doc
+        args: --all-features --verbose
+    - name: Copy index into the target directory
+      if: matrix.toolchain == 'stable-x86_64-unknown-linux-gnu'
+      run: |
+        cp build/index.html target/doc
+    - name: Deploy documentation
+      if: matrix.toolchain == 'stable-x86_64-unknown-linux-gnu'
+      uses: JamesIves/github-pages-deploy-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BASE_BRANCH: master
+        BRANCH: gh-pages
+        FOLDER: target/doc
+
+  windows-tests:
+    strategy:
+      matrix:
+        toolchain:
+         - stable-x86_64-pc-windows-msvc
+         - stable-x86_64-pc-windows-gnu
+         - stable-i686-pc-windows-msvc
+         - stable-i686-pc-windows-gnu
+        include:
+         - toolchain: stable-x86_64-pc-windows-msvc
+           arch: x86_64
+         - toolchain: stable-x86_64-pc-windows-gnu
+           arch: x86_64
+         - toolchain: stable-i686-pc-windows-msvc
+           arch: i686
+         - toolchain: stable-i686-pc-windows-gnu
+           arch: i686
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install VapourSynth for Windows 64-bit
+      if: matrix.arch == 'x86_64'
+      run: |
+        build/windows-script.ps1
+    - name: Install VapourSynth for Windows 32-bit
+      if: matrix.arch == 'i686'
+      run: |
+        build/windows-script.ps1 -arch i686
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: ${{ matrix.toolchain }}
+        override: true
+    - name: Run tests
+      run: |
+        $Env:Path += ";C:\Program Files\VapourSynth;"
+        cd vapoursynth
+        python ../build/run-tests.py
+    - name: Build sample-plugin
+      run: |
+        $Env:Path += ";C:\Program Files\VapourSynth;"
+        cd sample-plugin
+        cargo build --verbose
+    - name: Run sample-plugin tests
+      # https://github.com/rust-lang/rust/issues/50176
+      if: matrix.toolchain != 'stable-i686-pc-windows-gnu'
+      run: |
+        $Env:Path += ";C:\Program Files\VapourSynth;"
+        cd sample-plugin
+        cargo run --verbose --bin test --features "cfg-if `
+                  vapoursynth/vapoursynth-functions `
+                  vapoursynth/vsscript-functions"
+    - name: Run doc
+      uses: actions-rs/cargo@v1
+      with:
+        command: doc
+        args: --all-features --verbose
