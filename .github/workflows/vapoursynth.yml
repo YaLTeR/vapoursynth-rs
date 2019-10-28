@@ -29,6 +29,7 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         args: --all-targets --package sample-plugin
+        name: sample-plugin
 
   unix-tests:
     strategy:
