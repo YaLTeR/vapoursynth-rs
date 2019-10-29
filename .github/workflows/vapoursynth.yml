@@ -89,7 +89,9 @@ jobs:
       run: |
         cp build/index.html target/doc
     - name: Deploy documentation
-      if: matrix.toolchain == 'stable-x86_64-unknown-linux-gnu'
+      if: >
+        matrix.toolchain == 'stable-x86_64-unknown-linux-gnu' &&
+        github.event_name == 'push'
       uses: JamesIves/github-pages-deploy-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
