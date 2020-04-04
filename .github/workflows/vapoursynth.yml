@@ -36,15 +36,28 @@ jobs:
       matrix:
         toolchain:
          - stable-x86_64-apple-darwin
+         - beta-x86_64-apple-darwin
          - stable-x86_64-unknown-linux-gnu
          - stable-i686-unknown-linux-gnu
+         - beta-x86_64-unknown-linux-gnu
+         - beta-i686-unknown-linux-gnu
         include:
          - toolchain: stable-x86_64-apple-darwin
            os: macOS-latest
+         - toolchain: beta-x86_64-apple-darwin
+           os: macOS-latest
          - toolchain: stable-x86_64-unknown-linux-gnu
            os: ubuntu-latest
+           arch: x86_64
          - toolchain: stable-i686-unknown-linux-gnu
            os: ubuntu-latest
+           arch: i686
+         - toolchain: beta-x86_64-unknown-linux-gnu
+           os: ubuntu-latest
+           arch: x86_64
+         - toolchain: beta-i686-unknown-linux-gnu
+           os: ubuntu-latest
+           arch: i686
 
     runs-on: ${{ matrix.os }}
 
@@ -55,11 +68,11 @@ jobs:
       run: |
         brew install vapoursynth
     - name: Install VapourSynth on Ubuntu 64-bit
-      if: matrix.toolchain == 'stable-x86_64-unknown-linux-gnu'
+      if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x86_64'
       run: |
         build/script.sh
     - name: Install VapourSynth on Ubuntu 32-bit
-      if: matrix.toolchain == 'stable-i686-unknown-linux-gnu'
+      if: matrix.os == 'ubuntu-latest' && matrix.arch == 'i686'
       run: |
         build/script.sh i686
     - name: Install Rust
@@ -107,14 +120,26 @@ jobs:
          - stable-x86_64-pc-windows-gnu
          - stable-i686-pc-windows-msvc
          - stable-i686-pc-windows-gnu
+         - beta-x86_64-pc-windows-msvc
+         - beta-x86_64-pc-windows-gnu
+         - beta-i686-pc-windows-msvc
+         - beta-i686-pc-windows-gnu
         include:
          - toolchain: stable-x86_64-pc-windows-msvc
            arch: x86_64
          - toolchain: stable-x86_64-pc-windows-gnu
            arch: x86_64
+         - toolchain: beta-x86_64-pc-windows-msvc
+           arch: x86_64
+         - toolchain: beta-x86_64-pc-windows-gnu
+           arch: x86_64
          - toolchain: stable-i686-pc-windows-msvc
            arch: i686
          - toolchain: stable-i686-pc-windows-gnu
+           arch: i686
+         - toolchain: beta-i686-pc-windows-msvc
+           arch: i686
+         - toolchain: beta-i686-pc-windows-gnu
            arch: i686
 
     runs-on: windows-latest
@@ -147,7 +172,7 @@ jobs:
         cargo build --verbose
     - name: Run sample-plugin tests
       # https://github.com/rust-lang/rust/issues/50176
-      if: matrix.toolchain != 'stable-i686-pc-windows-gnu'
+      if: matrix.toolchain != 'stable-i686-pc-windows-gnu' && matrix.toolchain != 'beta-i686-pc-windows-gnu'
       run: |
         $Env:Path += ";C:\Program Files\VapourSynth;"
         cd sample-plugin
