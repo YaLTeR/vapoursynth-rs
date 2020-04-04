@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["CoreRef","A reference to a VapourSynth core."],["Info","Contains information about a VapourSynth core."]]});

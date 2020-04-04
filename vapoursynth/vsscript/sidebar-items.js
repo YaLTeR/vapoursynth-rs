@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","The error type for `vsscript` operations."],["EvalFlags","VSScript file evaluation flags."]],"struct":[["Environment","A wrapper for the VSScript environment."],["VSScriptError","A container for a VSScript error."]]});

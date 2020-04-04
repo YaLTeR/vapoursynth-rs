@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["EXTENSION",""],["PREFIX",""]],"fn":[["main",""],["make_environment",""],["plugin_path",""],["test_arguments",""],["test_invert",""],["test_make_random_noise",""],["test_passthrough",""],["test_random_noise",""],["verify_pixels",""]]});

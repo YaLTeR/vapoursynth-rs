@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Plugin","A VapourSynth plugin."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["EvalFlags","VSScript file evaluation flags."],["ValueType","An enumeration of all possible value types."]],"struct":[["Environment","A wrapper for the VSScript environment."],["GetFrameError","A container for a `get_frame` error."]]});

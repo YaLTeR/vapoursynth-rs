@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ColorFamily","Format color families."],["PresetFormat","Preset VapourSynth formats."],["SampleType","Format sample types."]],"struct":[["Format","Contains information about a video format."],["FormatID","A unique format identifier."]]});

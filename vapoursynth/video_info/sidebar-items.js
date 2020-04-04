@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Property","Represents a property that can be either constant or variable, like the resolution or the framerate."]],"struct":[["Framerate","Represents video framerate."],["Resolution","Represents video resolution."],["VideoInfo","Contains information about a video clip."]]});

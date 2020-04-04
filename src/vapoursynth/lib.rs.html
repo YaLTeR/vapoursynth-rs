@@ -1,0 +1,431 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `vapoursynth/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../vapoursynth/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+</pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//!  A safe wrapper for [VapourSynth](https://github.com/vapoursynth/vapoursynth), written in Rust.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The primary goal is safety (that is, safe Rust code should not trigger undefined behavior), and</span>
+<span class="doccomment">//! secondary goals include performance and ease of use.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Functionality</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Most of the VapourSynth API is covered. It&#39;s possible to evaluate `.vpy` scripts, access their</span>
+<span class="doccomment">//! properties and output, retrieve frames; enumerate loaded plugins and invoke their functions as</span>
+<span class="doccomment">//! well as create VapourSynth filters.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! For an example usage see</span>
+<span class="doccomment">//! [examples/vspipe.rs](https://github.com/YaLTeR/vapoursynth-rs/blob/master/vapoursynth/examples/vspipe.rs),</span>
+<span class="doccomment">//! a complete reimplementation of VapourSynth&#39;s</span>
+<span class="doccomment">//! [vspipe](https://github.com/vapoursynth/vapoursynth/blob/master/src/vspipe/vspipe.cpp) in safe</span>
+<span class="doccomment">//! Rust utilizing this crate.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! For a VapourSynth plugin example see</span>
+<span class="doccomment">//! [sample-plugin](https://github.com/YaLTeR/vapoursynth-rs/blob/master/sample-plugin) which</span>
+<span class="doccomment">//! implements some simple filters.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Short example</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```no_run</span>
+<span class="doccomment">//! # extern crate failure;</span>
+<span class="doccomment">//! # extern crate vapoursynth;</span>
+<span class="doccomment">//! # use failure::Error;</span>
+<span class="doccomment">//! # #[cfg(all(feature = &quot;vsscript-functions&quot;,</span>
+<span class="doccomment">//! #           feature = &quot;gte-vsscript-api-31&quot;,</span>
+<span class="doccomment">//! #           any(feature = &quot;vapoursynth-functions&quot;, feature = &quot;gte-vsscript-api-32&quot;)))]</span>
+<span class="doccomment">//! # fn foo() -&gt; Result&lt;(), Error&gt; {</span>
+<span class="doccomment">//! use vapoursynth::prelude::*;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! let env = Environment::from_file(&quot;test.vpy&quot;, EvalFlags::SetWorkingDir)?;</span>
+<span class="doccomment">//! let node = env.get_output(0)?.0; // Without `.0` for VSScript API 3.0</span>
+<span class="doccomment">//! let frame = node.get_frame(0)?;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! println!(&quot;Resolution: {}×{}&quot;, frame.width(0), frame.height(0));</span>
+<span class="doccomment">//! # Ok(())</span>
+<span class="doccomment">//! # }</span>
+<span class="doccomment">//! # fn main() {</span>
+<span class="doccomment">//! # }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Plugins</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To make a VapourSynth plugin, start by creating a new Rust library with</span>
+<span class="doccomment">//! `crate-type = [&quot;cdylib&quot;]`. Then add filters by implementing the `plugins::Filter` trait. Bind</span>
+<span class="doccomment">//! them to functions by implementing `plugins::FilterFunction`, which is much more easily done via</span>
+<span class="doccomment">//! the `make_filter_function!` macro. Finally, put `export_vapoursynth_plugin!` at the top level</span>
+<span class="doccomment">//! of `src/lib.rs` to export the functionality.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! **Important note:** due to what seems to be a</span>
+<span class="doccomment">//! [bug](https://github.com/rust-lang/rust/issues/50176) in rustc, it&#39;s impossible to make plugins</span>
+<span class="doccomment">//! on the `i686-pc-windows-gnu` target (all other variations of `x86_64` and `i686` do work).</span>
+<span class="doccomment">//! Please use `i686-pc-windows-msvc` for an i686 Windows plugin.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Short plugin example</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```no_run</span>
+<span class="doccomment">//! #[macro_use]</span>
+<span class="doccomment">//! extern crate failure;</span>
+<span class="doccomment">//! #[macro_use]</span>
+<span class="doccomment">//! extern crate vapoursynth;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! use failure::Error;</span>
+<span class="doccomment">//! use vapoursynth::prelude::*;</span>
+<span class="doccomment">//! use vapoursynth::core::CoreRef;</span>
+<span class="doccomment">//! use vapoursynth::plugins::{Filter, FilterArgument, FrameContext, Metadata};</span>
+<span class="doccomment">//! use vapoursynth::video_info::VideoInfo;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! // A simple filter that passes the frames through unchanged.</span>
+<span class="doccomment">//! struct Passthrough&lt;&#39;core&gt; {</span>
+<span class="doccomment">//!     source: Node&lt;&#39;core&gt;,</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! impl&lt;&#39;core&gt; Filter&lt;&#39;core&gt; for Passthrough&lt;&#39;core&gt; {</span>
+<span class="doccomment">//!     fn video_info(&amp;self, _api: API, _core: CoreRef&lt;&#39;core&gt;) -&gt; Vec&lt;VideoInfo&lt;&#39;core&gt;&gt; {</span>
+<span class="doccomment">//!         vec![self.source.info()]</span>
+<span class="doccomment">//!     }</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     fn get_frame_initial(</span>
+<span class="doccomment">//!         &amp;self,</span>
+<span class="doccomment">//!         _api: API,</span>
+<span class="doccomment">//!         _core: CoreRef&lt;&#39;core&gt;,</span>
+<span class="doccomment">//!         context: FrameContext,</span>
+<span class="doccomment">//!         n: usize,</span>
+<span class="doccomment">//!     ) -&gt; Result&lt;Option&lt;FrameRef&lt;&#39;core&gt;&gt;, Error&gt; {</span>
+<span class="doccomment">//!         self.source.request_frame_filter(context, n);</span>
+<span class="doccomment">//!         Ok(None)</span>
+<span class="doccomment">//!     }</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     fn get_frame(</span>
+<span class="doccomment">//!         &amp;self,</span>
+<span class="doccomment">//!         _api: API,</span>
+<span class="doccomment">//!         _core: CoreRef&lt;&#39;core&gt;,</span>
+<span class="doccomment">//!         context: FrameContext,</span>
+<span class="doccomment">//!         n: usize,</span>
+<span class="doccomment">//!     ) -&gt; Result&lt;FrameRef&lt;&#39;core&gt;, Error&gt; {</span>
+<span class="doccomment">//!         self.source</span>
+<span class="doccomment">//!             .get_frame_filter(context, n)</span>
+<span class="doccomment">//!             .ok_or(format_err!(&quot;Couldn&#39;t get the source frame&quot;))</span>
+<span class="doccomment">//!     }</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! make_filter_function! {</span>
+<span class="doccomment">//!     PassthroughFunction, &quot;Passthrough&quot;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     fn create_passthrough&lt;&#39;core&gt;(</span>
+<span class="doccomment">//!         _api: API,</span>
+<span class="doccomment">//!         _core: CoreRef&lt;&#39;core&gt;,</span>
+<span class="doccomment">//!         clip: Node&lt;&#39;core&gt;,</span>
+<span class="doccomment">//!     ) -&gt; Result&lt;Option&lt;Box&lt;Filter&lt;&#39;core&gt; + &#39;core&gt;&gt;, Error&gt; {</span>
+<span class="doccomment">//!         Ok(Some(Box::new(Passthrough { source: clip })))</span>
+<span class="doccomment">//!     }</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! export_vapoursynth_plugin! {</span>
+<span class="doccomment">//!     Metadata {</span>
+<span class="doccomment">//!         identifier: &quot;com.example.passthrough&quot;,</span>
+<span class="doccomment">//!         namespace: &quot;passthrough&quot;,</span>
+<span class="doccomment">//!         name: &quot;Example Plugin&quot;,</span>
+<span class="doccomment">//!         read_only: true,</span>
+<span class="doccomment">//!     },</span>
+<span class="doccomment">//!     [PassthroughFunction::new()]</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//! # fn main() {</span>
+<span class="doccomment">//! # }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Check [sample-plugin](https://github.com/YaLTeR/vapoursynth-rs/blob/master/sample-plugin) for</span>
+<span class="doccomment">//! an example plugin which exports some simple filters.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Supported Versions</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! All VapourSynth and VSScript API versions starting with 3.0 are supported. By default the</span>
+<span class="doccomment">//! crates use the 3.0 feature set. To enable higher API version support, enable one of the</span>
+<span class="doccomment">//! following Cargo features:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * `vapoursynth-api-31` for VapourSynth API 3.1</span>
+<span class="doccomment">//! * `vapoursynth-api-32` for VapourSynth API 3.2</span>
+<span class="doccomment">//! * `vapoursynth-api-33` for VapourSynth API 3.3</span>
+<span class="doccomment">//! * `vapoursynth-api-34` for VapourSynth API 3.4</span>
+<span class="doccomment">//! * `vapoursynth-api-35` for VapourSynth API 3.5</span>
+<span class="doccomment">//! * `vsscript-api-31` for VSScript API 3.1</span>
+<span class="doccomment">//! * `vsscript-api-32` for VSScript API 3.2</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To enable linking to VapourSynth or VSScript functions, enable the following Cargo features:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * `vapoursynth-functions` for VapourSynth functions (`getVapourSynthAPI()`)</span>
+<span class="doccomment">//! * `vsscript-functions` for VSScript functions (`vsscript_*()`)</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Building</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Make sure you have the corresponding libraries available if you enable the linking features.</span>
+<span class="doccomment">//! You can use the `VAPOURSYNTH_LIB_DIR` environment variable to specify a custom directory with</span>
+<span class="doccomment">//! the library files.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! On Windows the easiest way is to use the VapourSynth installer (make sure the VapourSynth SDK</span>
+<span class="doccomment">//! is checked). The crate should pick up the library directory automatically. If it doesn&#39;t or if</span>
+<span class="doccomment">//! you&#39;re cross-compiling, set `VAPOURSYNTH_LIB_DIR` to</span>
+<span class="doccomment">//! `&lt;path to the VapourSynth installation&gt;\sdk\lib64` or `&lt;...&gt;\lib32`, depending on the target</span>
+<span class="doccomment">//! bitness.</span>
+
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_root_url</span> <span class="op">=</span> <span class="string">&quot;https://docs.rs/vapoursynth/0.3.0&quot;</span>)]</span>
+<span class="comment">// Preventing all those warnings with #[cfg] directives would be really diffucult.</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused</span>, <span class="ident">dead_code</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">trivially_copy_pass_by_ref</span>)]</span>
+
+<span class="attribute">#[<span class="ident">macro_use</span>]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">bitflags</span>;
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">failure</span>;
+<span class="attribute">#[<span class="ident">macro_use</span>]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">failure_derive</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;f16-pixel-type&quot;</span>)]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">half</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gte-vsscript-api-32&quot;</span>), <span class="ident">test</span>))]</span>
+<span class="attribute">#[<span class="ident">macro_use</span>]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">lazy_static</span>;
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">vapoursynth_sys</span>;
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;vsscript-functions&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">vsscript</span>;
+
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">api</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">component</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">core</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">format</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">frame</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">function</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">map</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">node</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">plugin</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">plugins</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">video_info</span>;
+
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">prelude</span> {
+    <span class="doccomment">//! The VapourSynth prelude.</span>
+    <span class="doccomment">//!</span>
+    <span class="doccomment">//! Contains the types you most likely want to import anyway.</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">api</span>::{<span class="ident">MessageType</span>, <span class="ident">API</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">component</span>::<span class="ident">Component</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">format</span>::{<span class="ident">ColorFamily</span>, <span class="ident">PresetFormat</span>, <span class="ident">SampleType</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">frame</span>::{<span class="ident">Frame</span>, <span class="ident">FrameRef</span>, <span class="ident">FrameRefMut</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">map</span>::{<span class="ident">Map</span>, <span class="ident">OwnedMap</span>, <span class="ident">ValueType</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">node</span>::{<span class="ident">GetFrameError</span>, <span class="ident">Node</span>};
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">plugin</span>::<span class="ident">Plugin</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">video_info</span>::<span class="ident">Property</span>;
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;vsscript-functions&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vsscript</span>::{<span class="self">self</span>, <span class="ident">Environment</span>, <span class="ident">EvalFlags</span>};
+}
+
+<span class="kw">mod</span> <span class="ident">tests</span>;
+</pre></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "vapoursynth";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
