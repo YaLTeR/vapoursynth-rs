@@ -93,9 +93,9 @@ jobs:
       run: |
         cd sample-plugin
         cargo build --verbose
-        cargo run --verbose --bin test --features cfg-if \
-                  vapoursynth/vapoursynth-functions \
-                  vapoursynth/vsscript-functions
+        cargo run --verbose --bin test --features 'cfg-if
+                  vapoursynth/vapoursynth-functions
+                  vapoursynth/vsscript-functions'
     - name: Run doc
       uses: actions-rs/cargo@v1
       with:
