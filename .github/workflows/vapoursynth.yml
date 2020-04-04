@@ -34,6 +34,8 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         args: --all-targets --package sample-plugin
         name: sample-plugin
+      env:
+        actions_step_debug: ${{ secrets.ACTIONS_STEP_DEBUG }}
 
   unix-tests:
     strategy:
