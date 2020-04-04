@@ -37,6 +37,7 @@ jobs:
 
   unix-tests:
     strategy:
+      fail-fast: false
       matrix:
         toolchain:
          - stable-x86_64-apple-darwin
@@ -118,6 +119,7 @@ jobs:
 
   windows-tests:
     strategy:
+      fail-fast: false
       matrix:
         toolchain:
          - stable-x86_64-pc-windows-msvc
