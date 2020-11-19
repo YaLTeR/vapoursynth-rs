@@ -254,3 +254,9 @@ impl From<i32> for FormatID {
         FormatID(x)
     }
 }
+
+impl From<FormatID> for i32 {
+    fn from(x: FormatID) -> Self {
+        x.0
+    }
+}
