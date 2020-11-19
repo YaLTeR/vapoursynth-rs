@@ -64,11 +64,11 @@ pub enum PresetFormat {
 /// Format color families.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum ColorFamily {
-    Gray,
-    RGB,
-    YUV,
-    YCoCg,
-    Compat,
+    Gray = 1000000,
+    RGB = 2000000,
+    YUV = 3000000,
+    YCoCg = 4000000,
+    Compat = 9000000,
 }
 
 /// Format sample types.
