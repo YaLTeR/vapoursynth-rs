@@ -35,7 +35,7 @@ pub enum MessageType {
 
 // Macros for implementing repetitive functions.
 macro_rules! prop_get_something {
-    ($name:ident, $func:ident, $rv:ty) => (
+    ($name:ident, $func:ident, $rv:ty) => {
         #[inline]
         pub(crate) unsafe fn $name(
             self,
@@ -46,11 +46,11 @@ macro_rules! prop_get_something {
         ) -> $rv {
             (self.handle.as_ref().$func)(map, key, index, error)
         }
-    )
+    };
 }
 
 macro_rules! prop_set_something {
-    ($name:ident, $func:ident, $type:ty) => (
+    ($name:ident, $func:ident, $type:ty) => {
         #[inline]
         pub(crate) unsafe fn $name(
             self,
@@ -61,7 +61,7 @@ macro_rules! prop_set_something {
         ) -> i32 {
             (self.handle.as_ref().$func)(map, key, value, append as i32)
         }
-    )
+    };
 }
 
 /// ID of a unique, registered VapourSynth message handler.
