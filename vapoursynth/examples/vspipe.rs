@@ -417,7 +417,7 @@ mod inner {
                             &mut state.output_target,
                             parameters,
                             &frame,
-                            alpha_frame.as_ref().map(Deref::deref),
+                            alpha_frame.as_deref(),
                         ) {
                             state.error = Some((n, error));
                         }
@@ -429,12 +429,12 @@ mod inner {
                         match writeln!(state.timecodes_file.as_mut().unwrap(), "{:.6}", timecode)
                             .context("Couldn't output the timecode")
                         {
-                            Err(error) => state.error = Some((n, error.into())),
+                            Err(error) => state.error = Some((n, error)),
                             Ok(()) => {
                                 if let Err(error) = update_timecodes(&frame, &mut state)
                                     .context("Couldn't update the timecodes")
                                 {
-                                    state.error = Some((n, error.into()));
+                                    state.error = Some((n, error));
                                 }
                             }
                         }

@@ -85,14 +85,12 @@ impl API {
     #[cfg(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))]
     #[inline]
     pub fn get() -> Option<Self> {
-        use vsscript;
-
         // Check if we already have the API.
         let handle = RAW_API.load(Ordering::Relaxed);
 
         let handle = if handle.is_null() {
             // Attempt retrieving it otherwise.
-            vsscript::maybe_initialize();
+            crate::vsscript::maybe_initialize();
             let handle =
                 unsafe { ffi::vsscript_getVSApi2(ffi::VAPOURSYNTH_API_VERSION) } as *mut ffi::VSAPI;
 
