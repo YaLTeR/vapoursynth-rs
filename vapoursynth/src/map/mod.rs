@@ -9,10 +9,10 @@ use std::ptr::{self, NonNull};
 use std::{mem, result, slice};
 use vapoursynth_sys as ffi;
 
-use api::API;
-use frame::{Frame, FrameRef};
-use function::Function;
-use node::Node;
+use crate::api::API;
+use crate::frame::{Frame, FrameRef};
+use crate::function::Function;
+use crate::node::Node;
 
 mod errors;
 pub use self::errors::{Error, InvalidKeyError, Result};

@@ -6,16 +6,18 @@ use std::ptr::{self, NonNull};
 use std::{mem, slice};
 use vapoursynth_sys as ffi;
 
-use api::API;
-use component::Component;
-use core::CoreRef;
-use format::Format;
-use map::{MapRef, MapRefMut};
-use video_info::Resolution;
+use thiserror::Error;
+
+use crate::api::API;
+use crate::component::Component;
+use crate::core::CoreRef;
+use crate::format::Format;
+use crate::map::{MapRef, MapRefMut};
+use crate::video_info::Resolution;
 
 /// An error indicating that the frame data has non-zero padding.
-#[derive(Fail, Debug, Clone, Copy, Eq, PartialEq)]
-#[fail(display = "Frame data has non-zero padding: {}", _0)]
+#[derive(Error, Debug, Clone, Copy, Eq, PartialEq)]
+#[error("Frame data has non-zero padding: {}", _0)]
 pub struct NonZeroPadding(usize);
 
 /// One frame of a clip.
@@ -70,7 +72,7 @@ impl<'core> Drop for Frame<'core> {
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            API::get_cached().free_frame(&self);
+            API::get_cached().free_frame(self);
         }
     }
 }

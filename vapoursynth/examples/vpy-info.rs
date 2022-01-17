@@ -1,9 +1,9 @@
 #![allow(unused)]
 #[macro_use]
-extern crate failure;
 extern crate vapoursynth;
 
-use failure::{err_msg, Error, ResultExt};
+use anyhow::{anyhow, bail, Context, Error};
+
 use std::env;
 use vapoursynth::prelude::*;
 
@@ -73,7 +73,7 @@ fn print_node_info(node: &Node) {
 fn run() -> Result<(), Error> {
     let filename = env::args()
         .nth(1)
-        .ok_or_else(|| err_msg("The filename argument is missing"))?;
+        .ok_or_else(|| anyhow!("The filename argument is missing"))?;
     let environment =
         vsscript::Environment::from_file(filename, vsscript::EvalFlags::SetWorkingDir)
             .context("Couldn't create the VSScript environment")?;
@@ -174,16 +174,6 @@ fn run() -> Result<(), Error> {
     )
 }
 
-fn main() {
-    if let Err(err) = run() {
-        eprintln!("Error: {}", err.as_fail());
-
-        for cause in err.iter_causes() {
-            eprintln!("Caused by: {}", cause);
-        }
-
-        eprintln!("{}", err.backtrace());
-
-        usage();
-    }
+fn main() -> anyhow::Result<()> {
+    run()
 }

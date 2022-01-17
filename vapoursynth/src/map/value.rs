@@ -1,7 +1,7 @@
-use frame::FrameRef;
-use function::Function;
-use map::{Map, Result, ValueIter};
-use node::Node;
+use crate::frame::FrameRef;
+use crate::function::Function;
+use crate::map::{Map, Result, ValueIter};
+use crate::node::Node;
 
 /// An enumeration of all possible value types.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]

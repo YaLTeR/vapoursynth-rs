@@ -1,13 +1,14 @@
 //! Things related to making VapourSynth plugins.
-use failure::Error;
 
-use api::API;
-use core::CoreRef;
-use frame::FrameRef;
-use function::Function;
-use map::{self, Map, Value, ValueIter};
-use node::Node;
-use video_info::VideoInfo;
+use anyhow::Error;
+
+use crate::api::API;
+use crate::core::CoreRef;
+use crate::frame::FrameRef;
+use crate::function::Function;
+use crate::map::{self, Map, Value, ValueIter};
+use crate::node::Node;
+use crate::video_info::VideoInfo;
 
 mod frame_context;
 pub use self::frame_context::FrameContext;
@@ -439,7 +440,7 @@ macro_rules! make_filter_function {
                 api: API,
                 core: CoreRef<'core>,
                 args: &Map<'core>,
-            ) -> Result<Option<Box<$crate::plugins::Filter<'core> + 'core>>, Error> {
+            ) -> Result<Option<Box<dyn $crate::plugins::Filter<'core> + 'core>>, Error> {
                 $create_fn_name(
                     api,
                     core,

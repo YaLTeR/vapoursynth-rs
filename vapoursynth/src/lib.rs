@@ -22,9 +22,8 @@
 //! ## Short example
 //!
 //! ```no_run
-//! # extern crate failure;
 //! # extern crate vapoursynth;
-//! # use failure::Error;
+//! # use anyhow::Error;
 //! # #[cfg(all(feature = "vsscript-functions",
 //! #           feature = "gte-vsscript-api-31",
 //! #           any(feature = "vapoursynth-functions", feature = "gte-vsscript-api-32")))]
@@ -59,11 +58,9 @@
 //!
 //! ```no_run
 //! #[macro_use]
-//! extern crate failure;
-//! #[macro_use]
 //! extern crate vapoursynth;
 //!
-//! use failure::Error;
+//! use anyhow::{anyhow, Error};
 //! use vapoursynth::prelude::*;
 //! use vapoursynth::core::CoreRef;
 //! use vapoursynth::plugins::{Filter, FilterArgument, FrameContext, Metadata};
@@ -99,7 +96,7 @@
 //!     ) -> Result<FrameRef<'core>, Error> {
 //!         self.source
 //!             .get_frame_filter(context, n)
-//!             .ok_or(format_err!("Couldn't get the source frame"))
+//!             .ok_or(anyhow!("Couldn't get the source frame"))
 //!     }
 //! }
 //!
@@ -110,7 +107,7 @@
 //!         _api: API,
 //!         _core: CoreRef<'core>,
 //!         clip: Node<'core>,
-//!     ) -> Result<Option<Box<Filter<'core> + 'core>>, Error> {
+//!     ) -> Result<Option<Box<dyn Filter<'core> + 'core>>, Error> {
 //!         Ok(Some(Box::new(Passthrough { source: clip })))
 //!     }
 //! }
@@ -169,9 +166,6 @@
 
 #[macro_use]
 extern crate bitflags;
-extern crate failure;
-#[macro_use]
-extern crate failure_derive;
 #[cfg(feature = "f16-pixel-type")]
 extern crate half;
 #[cfg(any(not(feature = "gte-vsscript-api-32"), test))]

@@ -7,9 +7,9 @@ use std::ptr::NonNull;
 use std::{mem, panic, process};
 use vapoursynth_sys as ffi;
 
-use api::API;
-use core::CoreRef;
-use map::{Map, MapRef, MapRefMut};
+use crate::api::API;
+use crate::core::CoreRef;
+use crate::map::{Map, MapRef, MapRefMut};
 
 /// Holds a reference to a function that may be called.
 #[derive(Debug)]

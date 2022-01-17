@@ -8,7 +8,7 @@
 extern crate cfg_if;
 
 mod bindings;
-pub use bindings::*;
+pub use crate::bindings::*;
 
 macro_rules! api_version {
     ($major:expr, $minor:expr) => {

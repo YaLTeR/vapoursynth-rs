@@ -1,6 +1,7 @@
 [package]
 name = "vapoursynth"
-version = "0.3.0" # remember to update html_root_url
+edition = "2021"
+version = "0.3.0"                                               # remember to update html_root_url
 authors = ["Ivan Molodetskikh <yalterz@gmail.com>"]
 description = "Safe Rust wrapper for VapourSynth and VSScript."
 license = "MIT/Apache-2.0"
@@ -17,18 +18,18 @@ appveyor = { repository = "YaLTeR/vapoursynth-rs" }
 
 [dependencies]
 bitflags = "1"
-failure = "0.1"
-failure_derive = "0.1"
 half = { version = "1", optional = true }
+anyhow = "1.0.52"
+thiserror = "1.0.30"
 lazy_static = "1"
 vapoursynth-sys = { version = "0.3", path = "../vapoursynth-sys" }
 
 [dev-dependencies]
-clap = "2"
+clap = "3"
 lazy_static = "1"
 
 [dev-dependencies.num-rational]
-version = "0.2"
+version = "0.4.0"
 default-features = false
 features = ["std"]
 
@@ -39,25 +40,25 @@ f16-pixel-type = ["half"]
 # Features for enabling higher API versions.
 vapoursynth-api-31 = [
     "vapoursynth-sys/vapoursynth-api-31",
-    "gte-vapoursynth-api-31"
+    "gte-vapoursynth-api-31",
 ]
 vapoursynth-api-32 = [
     "vapoursynth-sys/vapoursynth-api-32",
     "gte-vapoursynth-api-31",
-    "gte-vapoursynth-api-32"
+    "gte-vapoursynth-api-32",
 ]
 vapoursynth-api-33 = [
     "vapoursynth-sys/vapoursynth-api-33",
     "gte-vapoursynth-api-31",
     "gte-vapoursynth-api-32",
-    "gte-vapoursynth-api-33"
+    "gte-vapoursynth-api-33",
 ]
 vapoursynth-api-34 = [
     "vapoursynth-sys/vapoursynth-api-34",
     "gte-vapoursynth-api-31",
     "gte-vapoursynth-api-32",
     "gte-vapoursynth-api-33",
-    "gte-vapoursynth-api-34"
+    "gte-vapoursynth-api-34",
 ]
 vapoursynth-api-35 = [
     "vapoursynth-sys/vapoursynth-api-35",
@@ -65,7 +66,7 @@ vapoursynth-api-35 = [
     "gte-vapoursynth-api-32",
     "gte-vapoursynth-api-33",
     "gte-vapoursynth-api-34",
-    "gte-vapoursynth-api-35"
+    "gte-vapoursynth-api-35",
 ]
 vapoursynth-api-36 = [
     "vapoursynth-sys/vapoursynth-api-36",
@@ -74,17 +75,14 @@ vapoursynth-api-36 = [
     "gte-vapoursynth-api-33",
     "gte-vapoursynth-api-34",
     "gte-vapoursynth-api-35",
-    "gte-vapoursynth-api-36"
+    "gte-vapoursynth-api-36",
 ]
 
-vsscript-api-31 = [
-    "vapoursynth-sys/vsscript-api-31",
-    "gte-vsscript-api-31"
-]
+vsscript-api-31 = ["vapoursynth-sys/vsscript-api-31", "gte-vsscript-api-31"]
 vsscript-api-32 = [
     "vapoursynth-sys/vsscript-api-32",
     "gte-vsscript-api-31",
-    "gte-vsscript-api-32"
+    "gte-vsscript-api-32",
 ]
 
 # Features for linking to certain functions.
@@ -111,5 +109,5 @@ features = [
     "vsscript-api-32",
     "vapoursynth-functions",
     "vsscript-functions",
-    "f16-pixel-type"
+    "f16-pixel-type",
 ]

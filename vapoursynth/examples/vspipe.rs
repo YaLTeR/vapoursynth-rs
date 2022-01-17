@@ -1,10 +1,6 @@
 // This is a mostly drop-in reimplementation of vspipe.
 // The main difference is what the errors look like.
 #![allow(unused)]
-#[macro_use]
-extern crate failure;
-
-use failure::{err_msg, Error, ResultExt};
 
 #[cfg(all(
     feature = "vsscript-functions",
@@ -25,6 +21,8 @@ mod inner {
     use std::ops::Deref;
     use std::sync::{Arc, Condvar, Mutex};
     use std::time::Instant;
+
+    use anyhow::{anyhow, bail, ensure, Context, Error};
 
     use self::clap::{App, Arg};
     use self::num_rational::Ratio;
@@ -101,7 +99,7 @@ mod inner {
         arg.find('=')
             .map(|index| arg.split_at(index))
             .map(|(k, v)| (k, &v[1..]))
-            .ok_or_else(|| format_err!("No value specified for argument: {}", arg))
+            .ok_or_else(|| anyhow!("No value specified for argument: {}", arg))
     }
 
     // Returns "Variable" or the value of the property passed through a function.
@@ -361,7 +359,7 @@ mod inner {
                 if state.error.is_none() {
                     state.error = Some((
                         n,
-                        err_msg(error.into_inner().to_string_lossy().into_owned()),
+                        anyhow!(error.into_inner().to_string_lossy().into_owned()),
                     ))
                 }
             }
@@ -570,16 +568,16 @@ mod inner {
         Ok(())
     }
 
-    pub fn run() -> Result<(), Error> {
+    pub fn run() -> anyhow::Result<()> {
         let matches = App::new("vspipe-rs")
             .about("A Rust implementation of vspipe")
             .author("Ivan M. <yalterz@gmail.com>")
             .arg(
-                Arg::with_name("arg")
-                    .short("a")
+                Arg::new("arg")
+                    .short('a')
                     .long("arg")
                     .takes_value(true)
-                    .multiple(true)
+                    .multiple_occurrences(true)
                     .number_of_values(1)
                     .value_name("key=value")
                     .display_order(1)
@@ -591,8 +589,8 @@ mod inner {
                     ),
             )
             .arg(
-                Arg::with_name("start")
-                    .short("s")
+                Arg::new("start")
+                    .short('s')
                     .long("start")
                     .takes_value(true)
                     .value_name("N")
@@ -600,8 +598,8 @@ mod inner {
                     .help("First frame to output"),
             )
             .arg(
-                Arg::with_name("end")
-                    .short("e")
+                Arg::new("end")
+                    .short('e')
                     .long("end")
                     .takes_value(true)
                     .value_name("N")
@@ -609,8 +607,8 @@ mod inner {
                     .help("Last frame to output"),
             )
             .arg(
-                Arg::with_name("outputindex")
-                    .short("o")
+                Arg::new("outputindex")
+                    .short('o')
                     .long("outputindex")
                     .takes_value(true)
                     .value_name("N")
@@ -618,8 +616,8 @@ mod inner {
                     .help("Output index"),
             )
             .arg(
-                Arg::with_name("requests")
-                    .short("r")
+                Arg::new("requests")
+                    .short('r')
                     .long("requests")
                     .takes_value(true)
                     .value_name("N")
@@ -627,14 +625,14 @@ mod inner {
                     .help("Number of concurrent frame requests"),
             )
             .arg(
-                Arg::with_name("y4m")
-                    .short("y")
+                Arg::new("y4m")
+                    .short('y')
                     .long("y4m")
                     .help("Add YUV4MPEG headers to output"),
             )
             .arg(
-                Arg::with_name("timecodes")
-                    .short("t")
+                Arg::new("timecodes")
+                    .short('t')
                     .long("timecodes")
                     .takes_value(true)
                     .value_name("FILE")
@@ -642,26 +640,26 @@ mod inner {
                     .help("Write timecodes v2 file"),
             )
             .arg(
-                Arg::with_name("progress")
-                    .short("p")
+                Arg::new("progress")
+                    .short('p')
                     .long("progress")
                     .help("Print progress to stderr"),
             )
             .arg(
-                Arg::with_name("info")
-                    .short("i")
+                Arg::new("info")
+                    .short('i')
                     .long("info")
                     .help("Show video info and exit"),
             )
             .arg(
-                Arg::with_name("preserve-cwd")
-                    .short("c")
+                Arg::new("preserve-cwd")
+                    .short('c')
                     .long("preserve-cwd")
                     .help("Don't temporarily change the working directory the script path"),
             )
             .arg(
-                Arg::with_name("version")
-                    .short("v")
+                Arg::new("version")
+                    .short('v')
                     .long("version")
                     .help("Show version info and exit")
                     .conflicts_with_all(&[
@@ -679,14 +677,14 @@ mod inner {
                     ]),
             )
             .arg(
-                Arg::with_name("script")
-                    .required_unless("version")
+                Arg::new("script")
+                    .required_unless_present("version")
                     .index(1)
                     .help("Input .vpy file"),
             )
             .arg(
-                Arg::with_name("outfile")
-                    .required_unless("version")
+                Arg::new("outfile")
+                    .required_unless_present("version")
                     .index(2)
                     .help("Output file")
                     .long_help(
@@ -891,22 +889,14 @@ mod inner {
 mod inner {
     use super::*;
 
-    pub fn run() -> Result<(), Error> {
-        bail!(
+    pub fn run() -> Result<(), anyhow::Error> {
+        anyhow::bail!(
             "This example requires the `vsscript-functions` and either `vapoursynth-functions` or \
              `vsscript-api-32` features."
         )
     }
 }
 
-fn main() {
-    if let Err(err) = inner::run() {
-        eprintln!("Error: {}", err.as_fail());
-
-        for cause in err.iter_causes() {
-            eprintln!("Caused by: {}", cause);
-        }
-
-        eprintln!("{}", err.backtrace());
-    }
+fn main() -> anyhow::Result<()> {
+    inner::run()
 }

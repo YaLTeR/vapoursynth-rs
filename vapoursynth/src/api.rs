@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 use std::{mem, panic, process};
 use vapoursynth_sys as ffi;
 
-use core::CoreRef;
+use crate::core::CoreRef;
 
 /// A wrapper for the VapourSynth API.
 #[derive(Debug, Clone, Copy)]

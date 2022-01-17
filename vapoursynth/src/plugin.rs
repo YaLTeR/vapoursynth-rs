@@ -6,9 +6,9 @@ use std::ops::Deref;
 use std::ptr::NonNull;
 use vapoursynth_sys as ffi;
 
-use api::API;
-use map::{Map, OwnedMap};
-use plugins::{self, FilterFunction};
+use crate::api::API;
+use crate::map::{Map, OwnedMap};
+use crate::plugins::{self, FilterFunction};
 
 /// A VapourSynth plugin.
 #[derive(Debug, Clone, Copy)]

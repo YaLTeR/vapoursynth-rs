@@ -5,8 +5,8 @@ use std::ops::Deref;
 use std::ptr;
 use vapoursynth_sys as ffi;
 
-use format::Format;
-use node;
+use crate::format::Format;
+use crate::node;
 
 /// Represents video resolution.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
