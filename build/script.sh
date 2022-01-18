@@ -23,7 +23,7 @@ else
 fi
 
 # Install zimg
-git clone --depth 1 https://github.com/sekrit-twc/zimg.git
+git clone --depth 1 --branch release-3.0.3 https://github.com/sekrit-twc/zimg.git
 cd zimg
 ./autogen.sh
 ./configure $CONFIGURE_ARGS
@@ -32,7 +32,7 @@ sudo make install
 cd ..
 
 # Install VapourSynth
-git clone --depth 1 https://github.com/vapoursynth/vapoursynth.git vs-dir
+git clone --depth 1 --branch R57 https://github.com/vapoursynth/vapoursynth.git vs-dir
 cd vs-dir
 ./autogen.sh
 ./configure $CONFIGURE_ARGS
