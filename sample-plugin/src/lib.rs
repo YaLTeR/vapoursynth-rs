@@ -1,6 +1,4 @@
 ///! A sample VapourSynth plugin.
-#[macro_use]
-extern crate failure;
 extern crate rand;
 #[macro_use]
 extern crate vapoursynth;
@@ -8,7 +6,8 @@ extern crate vapoursynth;
 use std::ffi::CStr;
 use std::ptr;
 
-use failure::{Error, ResultExt};
+use anyhow::{anyhow, bail, ensure, Context, Error};
+
 use rand::Rng;
 use vapoursynth::core::CoreRef;
 use vapoursynth::format::FormatID;
@@ -51,7 +50,7 @@ impl<'core> Filter<'core> for Passthrough<'core> {
     ) -> Result<FrameRef<'core>, Error> {
         self.source
             .get_frame_filter(context, n)
-            .ok_or_else(|| format_err!("Couldn't get the source frame"))
+            .ok_or_else(|| anyhow!("Couldn't get the source frame"))
     }
 }
 
@@ -98,7 +97,7 @@ impl<'core> Filter<'core> for Invert<'core> {
         let frame = self
             .source
             .get_frame_filter(context, n)
-            .ok_or_else(|| format_err!("Couldn't get the source frame"))?;
+            .ok_or_else(|| anyhow!("Couldn't get the source frame"))?;
 
         if frame.format().sample_type() == SampleType::Float {
             bail!("Floating point formats are not supported");
@@ -247,7 +246,7 @@ make_filter_function! {
     ) -> Result<Option<Box<dyn Filter<'core> + 'core>>, Error> {
         let format_id = (format as i32).into();
         let format = core.get_format(format_id)
-            .ok_or_else(|| format_err!("No such format"))?;
+            .ok_or_else(|| anyhow!("No such format"))?;
 
         if format.sample_type() == SampleType::Float {
             bail!("Floating point formats are not supported");
@@ -373,7 +372,7 @@ impl<'core> Filter<'core> for ArgumentTestFilter<'core> {
     ) -> Result<FrameRef<'core>, Error> {
         self.clip
             .get_frame_filter(context, n)
-            .ok_or_else(|| format_err!("Couldn't get the source frame"))
+            .ok_or_else(|| anyhow!("Couldn't get the source frame"))
     }
 }
 

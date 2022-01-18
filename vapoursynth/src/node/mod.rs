@@ -9,10 +9,10 @@ use std::ptr::NonNull;
 use std::{mem, panic};
 use vapoursynth_sys as ffi;
 
-use api::API;
-use frame::FrameRef;
-use plugins::FrameContext;
-use video_info::VideoInfo;
+use crate::api::API;
+use crate::frame::FrameRef;
+use crate::plugins::FrameContext;
+use crate::video_info::VideoInfo;
 
 mod errors;
 pub use self::errors::GetFrameError;

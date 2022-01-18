@@ -17,7 +17,7 @@ macro_rules! call_vsscript {
         // Fixed in VSScript API 3.2.
         // TODO: also not needed when we're running API 3.2 even without a feature.
         #[cfg(not(feature = "gte-vsscript-api-32"))]
-        let _lock = FFI_CALL_MUTEX.lock();
+        let _lock = crate::vsscript::FFI_CALL_MUTEX.lock();
 
         $call
     }};

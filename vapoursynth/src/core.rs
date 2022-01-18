@@ -6,10 +6,10 @@ use std::marker::PhantomData;
 use std::ptr::NonNull;
 use vapoursynth_sys as ffi;
 
-use api::API;
-use format::{ColorFamily, Format, FormatID, SampleType};
-use map::OwnedMap;
-use plugin::Plugin;
+use crate::api::API;
+use crate::format::{ColorFamily, Format, FormatID, SampleType};
+use crate::map::OwnedMap;
+use crate::plugin::Plugin;
 
 /// Contains information about a VapourSynth core.
 #[derive(Debug, Clone, Copy, Hash)]

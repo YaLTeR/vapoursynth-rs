@@ -3,7 +3,7 @@
 #[cfg(feature = "f16-pixel-type")]
 use half::f16;
 
-use format::{Format, SampleType};
+use crate::format::{Format, SampleType};
 
 /// A trait for possible pixel components.
 ///

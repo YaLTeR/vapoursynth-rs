@@ -1,18 +1,21 @@
 //! Internal stuff for plugin FFI handling.
-use failure::Error;
 use std::ffi::CString;
+use std::fmt::Write;
 use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 use std::ptr::{self, NonNull};
 use std::{mem, panic, process};
+
 use vapoursynth_sys as ffi;
 
-use api::API;
-use core::CoreRef;
-use frame::FrameRef;
-use map::{Map, MapRef, MapRefMut};
-use plugins::{Filter, FilterFunction, FrameContext, Metadata};
-use video_info::VideoInfo;
+use thiserror::Error;
+
+use crate::api::API;
+use crate::core::CoreRef;
+use crate::frame::FrameRef;
+use crate::map::{Map, MapRef, MapRefMut};
+use crate::plugins::{Filter, FilterFunction, FrameContext, Metadata};
+use crate::video_info::VideoInfo;
 
 /// Container for the internal filter function data.
 pub(crate) struct FilterFunctionData<F: FilterFunction> {
@@ -20,15 +23,6 @@ pub(crate) struct FilterFunctionData<F: FilterFunction> {
     // Store the name since it's supposed to be the same between two invocations (register and
     // create_filter).
     pub name: CString,
-}
-
-/// Pushes the error backtrace into the given string.
-fn push_backtrace(buf: &mut String, err: &Error) {
-    for cause in err.iter_causes() {
-        buf.push_str(&format!("Caused by: {}", cause));
-    }
-
-    buf.push_str(&format!("{}", err.backtrace()));
 }
 
 /// Sets the video info of the output node of this filter.
@@ -125,11 +119,11 @@ unsafe extern "system" fn get_frame(
                     }
                     Ok(None) => ptr::null(),
                     Err(err) => {
-                        let mut buf = String::new();
+                        let mut buf = String::with_capacity(64);
 
-                        buf += &format!("Error in Filter::get_frame_initial(): {}", err.as_fail());
+                        write!(buf, "Error in Filter::get_frame_initial(): {}", err);
 
-                        push_backtrace(&mut buf, &err);
+                        write!(buf, "{}", err);
 
                         let buf = CString::new(buf.replace('\0', "\\0")).unwrap();
                         api.set_filter_error(buf.as_ptr(), frame_ctx);
@@ -149,9 +143,7 @@ unsafe extern "system" fn get_frame(
                     Err(err) => {
                         let mut buf = String::new();
 
-                        buf += &format!("{}", err.as_fail());
-
-                        push_backtrace(&mut buf, &err);
+                        buf += &format!("{}", err);
 
                         let buf = CString::new(buf.replace('\0', "\\0")).unwrap();
                         api.set_filter_error(buf.as_ptr(), frame_ctx);
@@ -194,15 +186,16 @@ pub(crate) unsafe extern "system" fn create<F: FilterFunction>(
             Ok(Some(filter)) => Some(Box::new(filter)),
             Ok(None) => None,
             Err(err) => {
-                let mut buf = String::new();
+                let mut buf = String::with_capacity(64);
 
-                buf += &format!(
+                write!(
+                    buf,
                     "Error in Filter::create() of {}: {}",
                     data.name.to_str().unwrap(),
-                    err.as_fail()
+                    err
                 );
 
-                push_backtrace(&mut buf, &err);
+                write!(buf, "{}", err);
 
                 out.set_error(&buf.replace('\0', "\\0")).unwrap();
                 None

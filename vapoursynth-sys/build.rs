@@ -17,13 +17,11 @@ fn main() {
     };
 
     // Library directory override or the default dir on windows.
-    if let Some(dir) = env::var(LIBRARY_DIR_VARIABLE).ok() {
+    if let Ok(dir) = env::var(LIBRARY_DIR_VARIABLE) {
         println!("cargo:rustc-link-search=native={}", dir);
-    } else {
-        if let Some(default_library_dir) = default_library_dir {
-            for dir in default_library_dir {
-                println!("cargo:rustc-link-search=native={}", dir);
-            }
+    } else if let Some(default_library_dir) = default_library_dir {
+        for dir in default_library_dir {
+            println!("cargo:rustc-link-search=native={}", dir);
         }
     }
 
@@ -71,14 +69,12 @@ fn get_default_library_dir() -> Option<impl Iterator<Item = String>> {
 
     Some(programfiles.flat_map(move |programfiles| {
         // Use both VapourSynth and VapourSynth-32 folder names.
-        ["", "-32"]
-            .into_iter()
-            .filter_map(move |vapoursynth_suffix| {
-                let mut path = PathBuf::from(&programfiles);
-                path.push(format!("VapourSynth{}", vapoursynth_suffix));
-                path.push("sdk");
-                path.push(suffix);
-                path.to_str().map(|s| s.to_owned())
-            })
+        ["", "-32"].iter().filter_map(move |vapoursynth_suffix| {
+            let mut path = PathBuf::from(&programfiles);
+            path.push(format!("VapourSynth{}", vapoursynth_suffix));
+            path.push("sdk");
+            path.push(suffix);
+            path.to_str().map(|s| s.to_owned())
+        })
     }))
 }

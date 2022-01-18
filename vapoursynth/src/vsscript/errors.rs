@@ -1,26 +1,28 @@
 use std::ffi::{CString, NulError};
-use std::{fmt, io, result};
+use std::{fmt, io};
+
+use thiserror::Error;
 
 /// The error type for `vsscript` operations.
-#[derive(Fail, Debug)]
+#[derive(Error, Debug)]
 pub enum Error {
-    #[fail(display = "Couldn't convert to a CString")]
-    CStringConversion(#[cause] NulError),
-    #[fail(display = "Couldn't open the file")]
-    FileOpen(#[cause] io::Error),
-    #[fail(display = "Couldn't read the file")]
-    FileRead(#[cause] io::Error),
-    #[fail(display = "Path isn't valid Unicode")]
+    #[error("Couldn't convert to a CString")]
+    CStringConversion(#[source] NulError),
+    #[error("Couldn't open the file")]
+    FileOpen(#[source] io::Error),
+    #[error("Couldn't read the file")]
+    FileRead(#[source] io::Error),
+    #[error("Path isn't valid Unicode")]
     PathInvalidUnicode,
-    #[fail(display = "An error occurred in VSScript")]
-    VSScript(#[cause] VSScriptError),
-    #[fail(display = "There's no such variable")]
+    #[error("An error occurred in VSScript")]
+    VSScript(#[source] VSScriptError),
+    #[error("There's no such variable")]
     NoSuchVariable,
-    #[fail(display = "Couldn't get the core")]
+    #[error("Couldn't get the core")]
     NoCore,
-    #[fail(display = "There's no output on the requested index")]
+    #[error("There's no output on the requested index")]
     NoOutput,
-    #[fail(display = "Couldn't get the VapourSynth API")]
+    #[error("Couldn't get the VapourSynth API")]
     NoAPI,
 }
 
@@ -38,10 +40,10 @@ impl From<VSScriptError> for Error {
     }
 }
 
-pub(crate) type Result<T> = result::Result<T, Error>;
+pub(crate) type Result<T> = std::result::Result<T, Error>;
 
 /// A container for a VSScript error.
-#[derive(Fail, Debug)]
+#[derive(Error, Debug)]
 pub struct VSScriptError(CString);
 
 impl fmt::Display for VSScriptError {

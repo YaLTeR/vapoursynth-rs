@@ -58,9 +58,9 @@ mod need_api_and_vsscript {
 
             for row in 0..resolution.height {
                 let data_row = frame.data_row(plane, row);
-                assert_eq!(&data_row[..], &color[..]);
+                assert_eq!(data_row, &color[..]);
                 let data_row = frame.plane_row::<u8>(plane, row);
-                assert_eq!(&data_row[..], &color[..]);
+                assert_eq!(data_row, &color[..]);
             }
         }
     }
@@ -82,7 +82,7 @@ mod need_api_and_vsscript {
         if let Property::Constant(format) = info.format {
             assert_eq!(format.name(), "RGB24");
         } else {
-            assert!(false);
+            unreachable!();
         }
 
         assert_eq!(
@@ -108,7 +108,7 @@ mod need_api_and_vsscript {
         let frame = node.get_frame(0).unwrap();
         green_frame_test(&frame);
         props_test(&frame, 60);
-        env_video_var_test(&env);
+        env_video_var_test(env);
     }
 
     #[test]
@@ -174,9 +174,9 @@ mod need_api_and_vsscript {
 
             for row in 0..resolution.height {
                 let data_row = frame.data_row(plane, row);
-                assert_eq!(&data_row[..], &color[..]);
+                assert_eq!(data_row, &color[..]);
                 let data_row = frame.plane_row::<u8>(plane, row);
-                assert_eq!(&data_row[..], &color[..]);
+                assert_eq!(data_row, &color[..]);
             }
         }
 
@@ -202,9 +202,9 @@ mod need_api_and_vsscript {
 
         for row in 0..resolution.height {
             let data_row = frame.data_row(plane, row);
-            assert_eq!(&data_row[..], &color[..]);
+            assert_eq!(data_row, &color[..]);
             let data_row = frame.plane_row::<u8>(plane, row);
-            assert_eq!(&data_row[..], &color[..]);
+            assert_eq!(data_row, &color[..]);
         }
 
         props_test(&frame, 30);
@@ -232,7 +232,7 @@ mod need_api_and_vsscript {
         if let Property::Constant(format) = info.format {
             assert_eq!(format.name(), "Gray8");
         } else {
-            assert!(false);
+            unreachable!();
         }
 
         assert_eq!(
@@ -271,9 +271,9 @@ mod need_api_and_vsscript {
 
         for row in 0..resolution.height {
             let data_row = frame.data_row(0, row);
-            assert_eq!(&data_row[..], &[128; 1920][..]);
+            assert_eq!(data_row, &[128; 1920][..]);
             let data_row = frame.plane_row::<u8>(0, row);
-            assert_eq!(&data_row[..], &[128; 1920][..]);
+            assert_eq!(data_row, &[128; 1920][..]);
         }
     }
 
@@ -378,8 +378,8 @@ mod need_api_and_vsscript {
         for plane in 0..3 {
             for row in 0..16 {
                 let mut gt = [0u8; 16];
-                for col in 0..16 {
-                    gt[col] = match plane {
+                for (col, item) in gt.iter_mut().enumerate() {
+                    *item = match plane {
                         0 => row as u8 * 16,
                         1 => col as u8 * 16,
                         2 => 0,
@@ -402,21 +402,13 @@ mod need_api_and_vsscript {
         assert!(env
             .clear_output(1)
             .err()
-            .map(|e| if let vsscript::Error::NoOutput = e {
-                true
-            } else {
-                false
-            })
+            .map(|e| matches!(e, vsscript::Error::NoOutput))
             .unwrap_or(false));
         assert!(env.clear_output(0).is_ok());
         assert!(env
             .clear_output(0)
             .err()
-            .map(|e| if let vsscript::Error::NoOutput = e {
-                true
-            } else {
-                false
-            })
+            .map(|e| matches!(e, vsscript::Error::NoOutput))
             .unwrap_or(false));
     }
 
@@ -612,7 +604,7 @@ mod need_api_and_vsscript {
         let std = std.unwrap();
 
         let functions = std.functions();
-        let names: Vec<_> = functions
+        assert!(functions
             .keys()
             .filter_map(|key| unsafe {
                 bind(
@@ -623,9 +615,8 @@ mod need_api_and_vsscript {
                 .ok()
                 .map(|value| (key, value))
             })
-            .filter_map(|(key, value)| value.split(';').nth(0).map(|name| (key, name)))
-            .collect();
-        assert!(names.contains(&("CropRel", "CropRel")));
+            .filter_map(|(key, value)| value.split(';').next().map(|name| (key, name)))
+            .any(|x| x == ("CropRel", "CropRel")));
 
         #[cfg(feature = "gte-vsscript-api-31")]
         let (node, _) = env.get_output(0).unwrap();

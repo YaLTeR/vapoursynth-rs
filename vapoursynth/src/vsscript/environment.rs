@@ -7,12 +7,14 @@ use std::ptr;
 use std::ptr::NonNull;
 use vapoursynth_sys as ffi;
 
-use api::API;
-use core::CoreRef;
-use map::Map;
-use node::Node;
-use vsscript::errors::Result;
-use vsscript::*;
+use crate::api::API;
+use crate::core::CoreRef;
+use crate::map::Map;
+use crate::node::Node;
+use crate::vsscript::errors::Result;
+use crate::vsscript::*;
+
+use crate::vsscript::VSScriptError;
 
 /// VSScript file evaluation flags.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

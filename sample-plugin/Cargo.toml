@@ -1,5 +1,6 @@
 [package]
 name = "sample-plugin"
+edition = "2021"
 version = "0.1.0"
 authors = ["Ivan Molodetskikh <yalterz@gmail.com>"]
 
@@ -7,9 +8,9 @@ authors = ["Ivan Molodetskikh <yalterz@gmail.com>"]
 crate-type = ["cdylib"]
 
 [dependencies]
-cfg-if = {version = "0.1", optional = true }
-failure = "0.1"
-rand = "0.7"
+cfg-if = { version = "1.0.0", optional = true }
+anyhow = "1"
+rand = "0.8.4"
 vapoursynth = { path = "../vapoursynth" }
 
 [[bin]]
@@ -17,5 +18,5 @@ name = "test"
 required-features = [
     "cfg-if",
     "vapoursynth/vapoursynth-functions",
-    "vapoursynth/vsscript-functions"
+    "vapoursynth/vsscript-functions",
 ]

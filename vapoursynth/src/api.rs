@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 use std::{mem, panic, process};
 use vapoursynth_sys as ffi;
 
-use core::CoreRef;
+use crate::core::CoreRef;
 
 /// A wrapper for the VapourSynth API.
 #[derive(Debug, Clone, Copy)]
@@ -35,7 +35,7 @@ pub enum MessageType {
 
 // Macros for implementing repetitive functions.
 macro_rules! prop_get_something {
-    ($name:ident, $func:ident, $rv:ty) => (
+    ($name:ident, $func:ident, $rv:ty) => {
         #[inline]
         pub(crate) unsafe fn $name(
             self,
@@ -46,11 +46,11 @@ macro_rules! prop_get_something {
         ) -> $rv {
             (self.handle.as_ref().$func)(map, key, index, error)
         }
-    )
+    };
 }
 
 macro_rules! prop_set_something {
-    ($name:ident, $func:ident, $type:ty) => (
+    ($name:ident, $func:ident, $type:ty) => {
         #[inline]
         pub(crate) unsafe fn $name(
             self,
@@ -61,7 +61,7 @@ macro_rules! prop_set_something {
         ) -> i32 {
             (self.handle.as_ref().$func)(map, key, value, append as i32)
         }
-    )
+    };
 }
 
 /// ID of a unique, registered VapourSynth message handler.
@@ -85,14 +85,12 @@ impl API {
     #[cfg(all(feature = "vsscript-functions", feature = "gte-vsscript-api-32"))]
     #[inline]
     pub fn get() -> Option<Self> {
-        use vsscript;
-
         // Check if we already have the API.
         let handle = RAW_API.load(Ordering::Relaxed);
 
         let handle = if handle.is_null() {
             // Attempt retrieving it otherwise.
-            vsscript::maybe_initialize();
+            crate::vsscript::maybe_initialize();
             let handle =
                 unsafe { ffi::vsscript_getVSApi2(ffi::VAPOURSYNTH_API_VERSION) } as *mut ffi::VSAPI;
 

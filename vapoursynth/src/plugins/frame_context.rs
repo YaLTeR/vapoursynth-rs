@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use std::ptr::NonNull;
 use vapoursynth_sys as ffi;
 
-use api::API;
+use crate::api::API;
 
 /// A frame context used in filters.
 #[derive(Debug, Clone, Copy)]
