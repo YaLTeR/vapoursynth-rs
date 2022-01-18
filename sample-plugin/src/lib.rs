@@ -325,7 +325,6 @@ make_filter_function! {
         core: CoreRef<'core>,
         name: &[u8],
     ) -> Result<Option<Box<dyn Filter<'core> + 'core>>, Error> {
-
         let name = unsafe { CStr::from_ptr(name.as_ptr() as _) };
         let name = name.to_str()
             .context("name contains invalid UTF-8")?
