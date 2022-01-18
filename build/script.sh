@@ -32,7 +32,7 @@ sudo make install
 cd ..
 
 # Install VapourSynth
-git clone --depth 1 --branch R57 https://github.com/vapoursynth/vapoursynth.git vs-dir
+git clone --depth 1 --branch R53 https://github.com/vapoursynth/vapoursynth.git vs-dir
 cd vs-dir
 ./autogen.sh
 ./configure $CONFIGURE_ARGS
