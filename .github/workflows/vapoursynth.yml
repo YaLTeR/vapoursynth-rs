@@ -55,7 +55,7 @@ jobs:
     - name: Install VapourSynth on MacOS
       if: matrix.os == 'macOS-10.15'
       run: |
-        brew install vapoursynth@53
+        brew install "https://raw.githubusercontent.com/Homebrew/homebrew-core/6873837ac751d75fc99b797a63169dfbeaf44810/Formula/vapoursynth.rb"
     - name: Install VapourSynth on Ubuntu 64-bit
       if: matrix.toolchain == 'stable-x86_64-unknown-linux-gnu'
       run: |
