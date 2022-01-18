@@ -55,7 +55,7 @@ jobs:
     - name: Install VapourSynth on MacOS
       if: matrix.os == 'macOS-10.15'
       run: |
-        brew install vapoursynth
+        brew install vapoursynth@53
     - name: Install VapourSynth on Ubuntu 64-bit
       if: matrix.toolchain == 'stable-x86_64-unknown-linux-gnu'
       run: |
@@ -78,9 +78,9 @@ jobs:
       run: |
         cd sample-plugin
         cargo build --verbose
-        cargo run --verbose --bin test --features cfg-if \
+        cargo run --verbose --bin test --features "cfg-if \
                   vapoursynth/vapoursynth-functions \
-                  vapoursynth/vsscript-functions
+                  vapoursynth/vsscript-functions"
     - name: Run doc
       uses: actions-rs/cargo@v1
       with:
