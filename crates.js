@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["anyhow","bitflags","cfg_if","getrandom","half","lazy_static","libc","ppv_lite86","proc_macro2","quote","rand","rand_chacha","rand_core","sample_plugin","syn","test","thiserror","thiserror_impl","unicode_xid","vapoursynth","vapoursynth_sys"];

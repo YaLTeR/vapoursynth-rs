@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `vapoursynth/src/vsscript/environment.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>environment.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../vapoursynth/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `vapoursynth&#x2F;src&#x2F;vsscript&#x2F;environment.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>environment.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../vapoursynth/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -270,22 +271,25 @@
 <span id="270">270</span>
 <span id="271">271</span>
 <span id="272">272</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::{<span class="ident">CStr</span>, <span class="ident">CString</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Read</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ptr</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ptr</span>::<span class="ident">NonNull</span>;
+<span id="273">273</span>
+<span id="274">274</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::ffi</span>::{<span class="ident">CStr</span>, <span class="ident">CString</span>};
+<span class="kw">use</span> <span class="ident">std::fs::File</span>;
+<span class="kw">use</span> <span class="ident">std::io::Read</span>;
+<span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
+<span class="kw">use</span> <span class="ident">std::path::Path</span>;
+<span class="kw">use</span> <span class="ident">std::ptr</span>;
+<span class="kw">use</span> <span class="ident">std::ptr::NonNull</span>;
 <span class="kw">use</span> <span class="ident">vapoursynth_sys</span> <span class="kw">as</span> <span class="ident">ffi</span>;
 
-<span class="kw">use</span> <span class="ident">api</span>::<span class="ident">API</span>;
-<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">CoreRef</span>;
-<span class="kw">use</span> <span class="ident">map</span>::<span class="ident">Map</span>;
-<span class="kw">use</span> <span class="ident">node</span>::<span class="ident">Node</span>;
-<span class="kw">use</span> <span class="ident">vsscript</span>::<span class="ident">errors</span>::<span class="prelude-ty">Result</span>;
-<span class="kw">use</span> <span class="ident">vsscript</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::api::API</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::CoreRef</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::map::Map</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::Node</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vsscript::errors::Result</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vsscript</span>::<span class="kw-2">*</span>;
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vsscript::VSScriptError</span>;
 
 <span class="doccomment">/// VSScript file evaluation flags.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
@@ -297,10 +301,10 @@
 
 <span class="kw">impl</span> <span class="ident">EvalFlags</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">ffi_type</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> ::<span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_int</span> {
+    <span class="kw">fn</span> <span class="ident">ffi_type</span>(<span class="self">self</span>) -&gt; <span class="ident">::std::os::raw::c_int</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">EvalFlags</span>::<span class="ident">Nothing</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-            <span class="ident">EvalFlags</span>::<span class="ident">SetWorkingDir</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ffi</span>::<span class="ident">VSEvalFlags</span>::<span class="ident">efSetWorkingDir</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident">EvalFlags::Nothing</span> =&gt; <span class="number">0</span>,
+            <span class="ident">EvalFlags::SetWorkingDir</span> =&gt; <span class="ident">ffi::VSEvalFlags::efSetWorkingDir</span> <span class="kw">as</span> <span class="kw">_</span>,
         }
     }
 }
@@ -317,7 +321,7 @@
 <span class="doccomment">/// A wrapper for the VSScript environment.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Environment</span> {
-    <span class="ident">handle</span>: <span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">ffi</span>::<span class="ident">VSScript</span><span class="op">&gt;</span>,
+    <span class="ident">handle</span>: <span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">ffi::VSScript</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">Environment</span> {}
@@ -325,9 +329,9 @@
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Environment</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">unsafe</span> {
-            <span class="ident">ffi</span>::<span class="ident">vsscript_freeScript</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>());
+            <span class="ident">ffi::vsscript_freeScript</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>());
         }
     }
 }
@@ -338,26 +342,26 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// This function must only be called if an error is present.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CString</span> {
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">vsscript_getError</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>());
-        <span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">message</span>).<span class="ident">to_owned</span>()
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">CString</span> {
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">ffi::vsscript_getError</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>());
+        <span class="ident">CStr::from_ptr</span>(<span class="ident">message</span>).<span class="ident">to_owned</span>()
     }
 
     <span class="doccomment">/// Creates an empty script environment.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Useful if it is necessary to set some variable in the script environment before evaluating</span>
     <span class="doccomment">/// any scripts.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">maybe_initialize</span>();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">null_mut</span>();
-        <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="macro">call_vsscript</span><span class="macro">!</span>(<span class="ident">ffi</span>::<span class="ident">vsscript_createScript</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">handle</span>)) };
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">ptr::null_mut</span>();
+        <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="macro">call_vsscript!</span>(<span class="ident">ffi::vsscript_createScript</span>(<span class="kw-2">&amp;mut</span> <span class="ident">handle</span>)) };
         <span class="kw">let</span> <span class="ident">environment</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">handle</span>: <span class="kw">unsafe</span> { <span class="ident">NonNull</span>::<span class="ident">new_unchecked</span>(<span class="ident">handle</span>) },
+            <span class="ident">handle</span>: <span class="kw">unsafe</span> { <span class="ident">NonNull::new_unchecked</span>(<span class="ident">handle</span>) },
         };
 
         <span class="kw">if</span> <span class="ident">rv</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">VSScriptError</span>::<span class="ident">new</span>(<span class="kw">unsafe</span> { <span class="ident">environment</span>.<span class="ident">error</span>() }).<span class="ident">into</span>())
+            <span class="prelude-val">Err</span>(<span class="ident">VSScriptError::new</span>(<span class="kw">unsafe</span> { <span class="ident">environment</span>.<span class="ident">error</span>() }).<span class="ident">into</span>())
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">environment</span>)
         }
@@ -369,35 +373,35 @@
     <span class="doccomment">/// `vsscript_evaluateScript()` (a function that could produce an error) and the following call</span>
     <span class="doccomment">/// to `vsscript_getError()`. If atomicity is not enforced, another thread could perform some</span>
     <span class="doccomment">/// operation between these two and clear or change the error message.</span>
-    <span class="kw">fn</span> <span class="ident">evaluate_script</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">args</span>: <span class="ident">EvaluateScriptArgs</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">evaluate_script</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">args</span>: <span class="ident">EvaluateScriptArgs</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">script</span>, <span class="ident">path</span>, <span class="ident">flags</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">args</span> {
-            <span class="ident">EvaluateScriptArgs</span>::<span class="ident">Script</span>(<span class="ident">script</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">script</span>.<span class="ident">to_owned</span>(), <span class="prelude-val">None</span>, <span class="ident">EvalFlags</span>::<span class="ident">Nothing</span>),
-            <span class="ident">EvaluateScriptArgs</span>::<span class="ident">File</span>(<span class="ident">path</span>, <span class="ident">flags</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File</span>::<span class="ident">open</span>(<span class="ident">path</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">FileOpen</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">script</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">new</span>();
-                <span class="ident">file</span>.<span class="ident">read_to_string</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">script</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">FileRead</span>)<span class="question-mark">?</span>;
+            <span class="ident">EvaluateScriptArgs::Script</span>(<span class="ident">script</span>) =&gt; (<span class="ident">script</span>.<span class="ident">to_owned</span>(), <span class="prelude-val">None</span>, <span class="ident">EvalFlags::Nothing</span>),
+            <span class="ident">EvaluateScriptArgs::File</span>(<span class="ident">path</span>, <span class="ident">flags</span>) =&gt; {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="ident">path</span>).<span class="ident">map_err</span>(<span class="ident">Error::FileOpen</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">script</span> <span class="op">=</span> <span class="ident">String::new</span>();
+                <span class="ident">file</span>.<span class="ident">read_to_string</span>(<span class="kw-2">&amp;mut</span> <span class="ident">script</span>).<span class="ident">map_err</span>(<span class="ident">Error::FileRead</span>)<span class="question-mark">?</span>;
 
                 <span class="comment">// vsscript throws an error if it&#39;s not valid UTF-8 anyway.</span>
-                <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">to_str</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">PathInvalidUnicode</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">CString</span>::<span class="ident">new</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">to_str</span>().<span class="ident">ok_or</span>(<span class="ident">Error::PathInvalidUnicode</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">CString::new</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
 
                 (<span class="ident">script</span>, <span class="prelude-val">Some</span>(<span class="ident">path</span>), <span class="ident">flags</span>)
             }
         };
 
-        <span class="kw">let</span> <span class="ident">script</span> <span class="op">=</span> <span class="ident">CString</span>::<span class="ident">new</span>(<span class="ident">script</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">script</span> <span class="op">=</span> <span class="ident">CString::new</span>(<span class="ident">script</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="macro">call_vsscript</span><span class="macro">!</span>(<span class="ident">ffi</span>::<span class="ident">vsscript_evaluateScript</span>(
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(),
+            <span class="macro">call_vsscript!</span>(<span class="ident">ffi::vsscript_evaluateScript</span>(
+                <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(),
                 <span class="ident">script</span>.<span class="ident">as_ptr</span>(),
-                <span class="ident">path</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_ptr</span>()).<span class="ident">unwrap_or</span>(<span class="ident">ptr</span>::<span class="ident">null</span>()),
+                <span class="ident">path</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_ptr</span>()).<span class="ident">unwrap_or</span>(<span class="ident">ptr::null</span>()),
                 <span class="ident">flags</span>.<span class="ident">ffi_type</span>(),
             ))
         };
 
         <span class="kw">if</span> <span class="ident">rv</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">VSScriptError</span>::<span class="ident">new</span>(<span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">error</span>() }).<span class="ident">into</span>())
+            <span class="prelude-val">Err</span>(<span class="ident">VSScriptError::new</span>(<span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">error</span>() }).<span class="ident">into</span>())
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(())
         }
@@ -405,37 +409,37 @@
 
     <span class="doccomment">/// Creates a script environment and evaluates a script contained in a string.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_script</span>(<span class="ident">script</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">environment</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>()<span class="question-mark">?</span>;
-        <span class="ident">environment</span>.<span class="ident">evaluate_script</span>(<span class="ident">EvaluateScriptArgs</span>::<span class="ident">Script</span>(<span class="ident">script</span>))<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_script</span>(<span class="ident">script</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">environment</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::new</span>()<span class="question-mark">?</span>;
+        <span class="ident">environment</span>.<span class="ident">evaluate_script</span>(<span class="ident">EvaluateScriptArgs::Script</span>(<span class="ident">script</span>))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">environment</span>)
     }
 
     <span class="doccomment">/// Creates a script environment and evaluates a script contained in a file.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_file</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">path</span>: <span class="ident">P</span>, <span class="ident">flags</span>: <span class="ident">EvalFlags</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">environment</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>()<span class="question-mark">?</span>;
-        <span class="ident">environment</span>.<span class="ident">evaluate_script</span>(<span class="ident">EvaluateScriptArgs</span>::<span class="ident">File</span>(<span class="ident">path</span>.<span class="ident">as_ref</span>(), <span class="ident">flags</span>))<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_file</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">path</span>: <span class="ident">P</span>, <span class="ident">flags</span>: <span class="ident">EvalFlags</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">environment</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::new</span>()<span class="question-mark">?</span>;
+        <span class="ident">environment</span>.<span class="ident">evaluate_script</span>(<span class="ident">EvaluateScriptArgs::File</span>(<span class="ident">path</span>.<span class="ident">as_ref</span>(), <span class="ident">flags</span>))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">environment</span>)
     }
 
     <span class="doccomment">/// Evaluates a script contained in a string.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval_script</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">script</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">evaluate_script</span>(<span class="ident">EvaluateScriptArgs</span>::<span class="ident">Script</span>(<span class="ident">script</span>))
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval_script</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">script</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">evaluate_script</span>(<span class="ident">EvaluateScriptArgs::Script</span>(<span class="ident">script</span>))
     }
 
     <span class="doccomment">/// Evaluates a script contained in a file.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval_file</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">path</span>: <span class="ident">P</span>, <span class="ident">flags</span>: <span class="ident">EvalFlags</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">evaluate_script</span>(<span class="ident">EvaluateScriptArgs</span>::<span class="ident">File</span>(<span class="ident">path</span>.<span class="ident">as_ref</span>(), <span class="ident">flags</span>))
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval_file</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">path</span>: <span class="ident">P</span>, <span class="ident">flags</span>: <span class="ident">EvalFlags</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">evaluate_script</span>(<span class="ident">EvaluateScriptArgs::File</span>(<span class="ident">path</span>.<span class="ident">as_ref</span>(), <span class="ident">flags</span>))
     }
 
     <span class="doccomment">/// Clears the script environment.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe</span> {
-            <span class="ident">ffi</span>::<span class="ident">vsscript_clearEnvironment</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>());
+            <span class="ident">ffi::vsscript_clearEnvironment</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>());
         }
     }
 
@@ -446,15 +450,15 @@
         <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;vapoursynth-functions&quot;</span>
     ))]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span> {
         <span class="comment">// Node needs the API.</span>
-        <span class="ident">API</span>::<span class="ident">get</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">NoAPI</span>)<span class="question-mark">?</span>;
+        <span class="ident">API::get</span>().<span class="ident">ok_or</span>(<span class="ident">Error::NoAPI</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">node_handle</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ffi</span>::<span class="ident">vsscript_getOutput</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>) };
+        <span class="kw">let</span> <span class="ident">node_handle</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ffi::vsscript_getOutput</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>) };
         <span class="kw">if</span> <span class="ident">node_handle</span>.<span class="ident">is_null</span>() {
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoOutput</span>)
+            <span class="prelude-val">Err</span>(<span class="ident">Error::NoOutput</span>)
         } <span class="kw">else</span> {
-            <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">Node</span>::<span class="ident">from_ptr</span>(<span class="ident">node_handle</span>) })
+            <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">Node::from_ptr</span>(<span class="ident">node_handle</span>) })
         }
     }
 
@@ -465,30 +469,30 @@
         <span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;vapoursynth-functions&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gte-vsscript-api-32&quot;</span>)
     ))]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Node</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Node</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
         <span class="comment">// Node needs the API.</span>
-        <span class="ident">API</span>::<span class="ident">get</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">NoAPI</span>)<span class="question-mark">?</span>;
+        <span class="ident">API::get</span>().<span class="ident">ok_or</span>(<span class="ident">Error::NoAPI</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">alpha_handle</span> <span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">null_mut</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">alpha_handle</span> <span class="op">=</span> <span class="ident">ptr::null_mut</span>();
         <span class="kw">let</span> <span class="ident">node_handle</span> <span class="op">=</span>
-            <span class="kw">unsafe</span> { <span class="ident">ffi</span>::<span class="ident">vsscript_getOutput2</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">alpha_handle</span>) };
+            <span class="kw">unsafe</span> { <span class="ident">ffi::vsscript_getOutput2</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;mut</span> <span class="ident">alpha_handle</span>) };
 
         <span class="kw">if</span> <span class="ident">node_handle</span>.<span class="ident">is_null</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoOutput</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::NoOutput</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Node</span>::<span class="ident">from_ptr</span>(<span class="ident">node_handle</span>) };
-        <span class="kw">let</span> <span class="ident">alpha_node</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">alpha_handle</span>.<span class="ident">as_mut</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">Node</span>::<span class="ident">from_ptr</span>(<span class="ident">p</span>)) };
+        <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Node::from_ptr</span>(<span class="ident">node_handle</span>) };
+        <span class="kw">let</span> <span class="ident">alpha_node</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">alpha_handle</span>.<span class="ident">as_mut</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">Node::from_ptr</span>(<span class="ident">p</span>)) };
 
         <span class="prelude-val">Ok</span>((<span class="ident">node</span>, <span class="ident">alpha_node</span>))
     }
 
     <span class="doccomment">/// Cancels a node set for output. The node will no longer be available to `get_output()`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_output</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ffi</span>::<span class="ident">vsscript_clearOutput</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>) };
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_output</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ffi::vsscript_clearOutput</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>) };
         <span class="kw">if</span> <span class="ident">rv</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoOutput</span>)
+            <span class="prelude-val">Err</span>(<span class="ident">Error::NoOutput</span>)
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(())
         }
@@ -497,51 +501,52 @@
     <span class="doccomment">/// Retrieves the VapourSynth core that was created in the script environment. If a VapourSynth</span>
     <span class="doccomment">/// core has not been created yet, it will be created now, with the default options.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;vapoursynth-functions&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gte-vsscript-api-32&quot;</span>))]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_core</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CoreRef</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_core</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CoreRef</span><span class="op">&gt;</span> {
         <span class="comment">// CoreRef needs the API.</span>
-        <span class="ident">API</span>::<span class="ident">get</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">NoAPI</span>)<span class="question-mark">?</span>;
+        <span class="ident">API::get</span>().<span class="ident">ok_or</span>(<span class="ident">Error::NoAPI</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ffi</span>::<span class="ident">vsscript_getCore</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>()) };
+        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ffi::vsscript_getCore</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>()) };
         <span class="kw">if</span> <span class="ident">ptr</span>.<span class="ident">is_null</span>() {
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoCore</span>)
+            <span class="prelude-val">Err</span>(<span class="ident">Error::NoCore</span>)
         } <span class="kw">else</span> {
-            <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">CoreRef</span>::<span class="ident">from_ptr</span>(<span class="ident">ptr</span>) })
+            <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">CoreRef::from_ptr</span>(<span class="ident">ptr</span>) })
         }
     }
 
     <span class="doccomment">/// Retrieves a variable from the script environment.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_variable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Map</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">CString</span>::<span class="ident">new</span>(<span class="ident">name</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_variable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">map</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Map</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">CString::new</span>(<span class="ident">name</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">ffi</span>::<span class="ident">vsscript_getVariable</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>(), <span class="ident">map</span>.<span class="ident">deref_mut</span>())
+            <span class="ident">ffi::vsscript_getVariable</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>(), <span class="ident">map</span>.<span class="ident">deref_mut</span>())
         };
         <span class="kw">if</span> <span class="ident">rv</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoSuchVariable</span>)
+            <span class="prelude-val">Err</span>(<span class="ident">Error::NoSuchVariable</span>)
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(())
         }
     }
 
     <span class="doccomment">/// Sets variables in the script environment.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_variables</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">variables</span>: <span class="kw-2">&amp;</span><span class="ident">Map</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ffi</span>::<span class="ident">vsscript_setVariable</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">variables</span>.<span class="ident">deref</span>()) };
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_variables</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">variables</span>: <span class="kw-2">&amp;</span><span class="ident">Map</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ffi::vsscript_setVariable</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">variables</span>.<span class="ident">deref</span>()) };
         <span class="kw">if</span> <span class="ident">rv</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoSuchVariable</span>)
+            <span class="prelude-val">Err</span>(<span class="ident">Error::NoSuchVariable</span>)
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(())
         }
     }
 
     <span class="doccomment">/// Deletes a variable from the script environment.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_variable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">CString</span>::<span class="ident">new</span>(<span class="ident">name</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ffi</span>::<span class="ident">vsscript_clearVariable</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>()) };
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_variable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">CString::new</span>(<span class="ident">name</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ffi::vsscript_clearVariable</span>(<span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ptr</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>()) };
         <span class="kw">if</span> <span class="ident">rv</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoSuchVariable</span>)
+            <span class="prelude-val">Err</span>(<span class="ident">Error::NoSuchVariable</span>)
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(())
         }
     }
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "vapoursynth";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="vapoursynth" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+</body></html>

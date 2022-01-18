@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `vapoursynth/src/frame.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>frame.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../vapoursynth/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `vapoursynth&#x2F;src&#x2F;frame.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>frame.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../vapoursynth/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -498,25 +499,28 @@
 <span id="498">498</span>
 <span id="499">499</span>
 <span id="500">500</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! VapourSynth frames.</span>
+<span id="501">501</span>
+<span id="502">502</span>
+</pre><pre class="rust"><code><span class="doccomment">//! VapourSynth frames.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ptr</span>::{<span class="self">self</span>, <span class="ident">NonNull</span>};
+<span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
+<span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
+<span class="kw">use</span> <span class="ident">std::ptr</span>::{<span class="self">self</span>, <span class="ident">NonNull</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">slice</span>};
 <span class="kw">use</span> <span class="ident">vapoursynth_sys</span> <span class="kw">as</span> <span class="ident">ffi</span>;
 
-<span class="kw">use</span> <span class="ident">api</span>::<span class="ident">API</span>;
-<span class="kw">use</span> <span class="ident">component</span>::<span class="ident">Component</span>;
-<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">CoreRef</span>;
-<span class="kw">use</span> <span class="ident">format</span>::<span class="ident">Format</span>;
-<span class="kw">use</span> <span class="ident">map</span>::{<span class="ident">MapRef</span>, <span class="ident">MapRefMut</span>};
-<span class="kw">use</span> <span class="ident">video_info</span>::<span class="ident">Resolution</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::api::API</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::component::Component</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::CoreRef</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::format::Format</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::map</span>::{<span class="ident">MapRef</span>, <span class="ident">MapRefMut</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::video_info::Resolution</span>;
 
 <span class="doccomment">/// An error indicating that the frame data has non-zero padding.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Fail</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="attribute">#[<span class="ident">fail</span>(<span class="ident">display</span> <span class="op">=</span> <span class="string">&quot;Frame data has non-zero padding: {}&quot;</span>, <span class="ident">_0</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Frame data has non-zero padding: {}&quot;</span>, <span class="ident">_0</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NonZeroPadding</span>(<span class="ident">usize</span>);
 
 <span class="doccomment">/// One frame of a clip.</span>
@@ -524,7 +528,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> {
     <span class="comment">// The actual mutability of this depends on whether it&#39;s accessed via `&amp;Frame` or `&amp;mut Frame`.</span>
-    <span class="ident">handle</span>: <span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">ffi</span>::<span class="ident">VSFrameRef</span><span class="op">&gt;</span>,
+    <span class="ident">handle</span>: <span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">ffi::VSFrameRef</span><span class="op">&gt;</span>,
     <span class="comment">// The cached frame format for fast access.</span>
     <span class="ident">format</span>: <span class="ident">Format</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span>,
     <span class="ident">_owner</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;core</span> ()<span class="op">&gt;</span>,
@@ -549,11 +553,11 @@
 
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSFrameRef</span>;
+    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">ffi::VSFrameRef</span>;
 
     <span class="comment">// Technically this should return `&amp;&#39;core`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Target</span> {
+    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ref</span>() }
     }
 }
@@ -562,27 +566,27 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> <span class="ident">DerefMut</span> <span class="kw">for</span> <span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> {
     <span class="comment">// Technically this should return `&amp;&#39;core`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Target</span> {
+    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_mut</span>() }
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">unsafe</span> {
-            <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">free_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>);
+            <span class="ident">API::get_cached</span>().<span class="ident">free_frame</span>(<span class="self">self</span>);
         }
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">FrameRef</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">clone_frame</span>(<span class="self">self</span>);
+            <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">clone_frame</span>(<span class="self">self</span>);
             <span class="self">Self</span> {
-                <span class="ident">frame</span>: <span class="ident">Frame</span>::<span class="ident">from_ptr</span>(<span class="ident">handle</span>),
+                <span class="ident">frame</span>: <span class="ident">Frame::from_ptr</span>(<span class="ident">handle</span>),
             }
         }
     }
@@ -592,7 +596,7 @@
     <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Target</span> {
+    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">frame</span>
     }
 }
@@ -601,15 +605,15 @@
     <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Target</span> {
+    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">frame</span>
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> <span class="ident">DerefMut</span> <span class="kw">for</span> <span class="ident">FrameRefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Target</span> {
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">frame</span>
+    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">frame</span>
     }
 }
 
@@ -619,9 +623,9 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `handle` and the lifetime is valid and API is cached.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ffi</span>::<span class="ident">VSFrameRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*const</span> <span class="ident">ffi::VSFrameRef</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">frame</span>: <span class="ident">Frame</span>::<span class="ident">from_ptr</span>(<span class="ident">handle</span>),
+            <span class="ident">frame</span>: <span class="ident">Frame::from_ptr</span>(<span class="ident">handle</span>),
         }
     }
 }
@@ -632,9 +636,9 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `handle` and the lifetime is valid and API is cached.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ffi</span>::<span class="ident">VSFrameRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*mut</span> <span class="ident">ffi::VSFrameRef</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">frame</span>: <span class="ident">Frame</span>::<span class="ident">from_ptr</span>(<span class="ident">handle</span>),
+            <span class="ident">frame</span>: <span class="ident">Frame::from_ptr</span>(<span class="ident">handle</span>),
         }
     }
 
@@ -644,9 +648,9 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Judging by the underlying implementation, it seems that any valid `core` can be used.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">copy_of</span>(<span class="ident">core</span>: <span class="ident">CoreRef</span>, <span class="ident">frame</span>: <span class="kw-2">&amp;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">copy_of</span>(<span class="ident">core</span>: <span class="ident">CoreRef</span>, <span class="ident">frame</span>: <span class="kw-2">&amp;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">frame</span>: <span class="kw">unsafe</span> { <span class="ident">Frame</span>::<span class="ident">from_ptr</span>(<span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">copy_frame</span>(<span class="ident">frame</span>, <span class="ident">core</span>.<span class="ident">ptr</span>())) },
+            <span class="ident">frame</span>: <span class="kw">unsafe</span> { <span class="ident">Frame::from_ptr</span>(<span class="ident">API::get_cached</span>().<span class="ident">copy_frame</span>(<span class="ident">frame</span>, <span class="ident">core</span>.<span class="ident">ptr</span>())) },
         }
     }
 
@@ -666,17 +670,17 @@
         <span class="ident">prop_src</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">format</span>: <span class="ident">Format</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span>,
         <span class="ident">resolution</span>: <span class="ident">Resolution</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">resolution</span>.<span class="ident">width</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">i32</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">resolution</span>.<span class="ident">height</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">i32</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
+    ) -&gt; <span class="self">Self</span> {
+        <span class="macro">assert!</span>(<span class="ident">resolution</span>.<span class="ident">width</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">i32::max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="macro">assert!</span>(<span class="ident">resolution</span>.<span class="ident">height</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">i32::max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
 
         <span class="self">Self</span> {
             <span class="ident">frame</span>: <span class="kw">unsafe</span> {
-                <span class="ident">Frame</span>::<span class="ident">from_ptr</span>(<span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">new_video_frame</span>(
+                <span class="ident">Frame::from_ptr</span>(<span class="ident">API::get_cached</span>().<span class="ident">new_video_frame</span>(
                     <span class="kw-2">&amp;</span><span class="ident">format</span>,
                     <span class="ident">resolution</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
                     <span class="ident">resolution</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                    <span class="ident">prop_src</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">deref</span>() <span class="kw">as</span> <span class="kw">_</span>).<span class="ident">unwrap_or</span>(<span class="ident">ptr</span>::<span class="ident">null</span>()),
+                    <span class="ident">prop_src</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">deref</span>() <span class="kw">as</span> <span class="kw">_</span>).<span class="ident">unwrap_or</span>(<span class="ident">ptr::null</span>()),
                     <span class="ident">core</span>.<span class="ident">ptr</span>(),
                 ))
             },
@@ -686,7 +690,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">FrameRefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FrameRef</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="ident">FrameRefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="ident">FrameRefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">frame</span>: <span class="ident">x</span>.<span class="ident">frame</span> }
     }
 }
@@ -699,12 +703,12 @@
     <span class="doccomment">/// `Frame` gets put into `FrameRef` or `FrameRefMut` according to the input pointer</span>
     <span class="doccomment">/// mutability.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ffi</span>::<span class="ident">VSFrameRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*const</span> <span class="ident">ffi::VSFrameRef</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">handle</span>: <span class="ident">NonNull</span>::<span class="ident">new_unchecked</span>(<span class="ident">handle</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ffi</span>::<span class="ident">VSFrameRef</span>),
+            <span class="ident">handle</span>: <span class="ident">NonNull::new_unchecked</span>(<span class="ident">handle</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">ffi::VSFrameRef</span>),
             <span class="ident">format</span>: <span class="kw">unsafe</span> {
-                <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">get_frame_format</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">handle</span>);
-                <span class="ident">Format</span>::<span class="ident">from_ptr</span>(<span class="ident">ptr</span>)
+                <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">get_frame_format</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">handle</span>);
+                <span class="ident">Format::from_ptr</span>(<span class="ident">ptr</span>)
             },
             <span class="ident">_owner</span>: <span class="ident">PhantomData</span>,
         }
@@ -712,7 +716,7 @@
 
     <span class="doccomment">/// Returns the frame format.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Format</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">format</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Format</span><span class="op">&lt;</span><span class="lifetime">&#39;core</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">format</span>
     }
 
@@ -723,10 +727,10 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `plane &gt;= format().plane_count()`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
 
-        <span class="kw">unsafe</span> { <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">get_frame_width</span>(<span class="self">self</span>, <span class="ident">plane</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="kw">as</span> <span class="ident">usize</span> }
+        <span class="kw">unsafe</span> { <span class="ident">API::get_cached</span>().<span class="ident">get_frame_width</span>(<span class="self">self</span>, <span class="ident">plane</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="kw">as</span> <span class="ident">usize</span> }
     }
 
     <span class="doccomment">/// Returns the height of a plane, in pixels.</span>
@@ -736,10 +740,10 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `plane &gt;= format().plane_count()`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
 
-        <span class="kw">unsafe</span> { <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">get_frame_height</span>(<span class="self">self</span>, <span class="ident">plane</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="kw">as</span> <span class="ident">usize</span> }
+        <span class="kw">unsafe</span> { <span class="ident">API::get_cached</span>().<span class="ident">get_frame_height</span>(<span class="self">self</span>, <span class="ident">plane</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="kw">as</span> <span class="ident">usize</span> }
     }
 
     <span class="doccomment">/// Returns the resolution of a plane.</span>
@@ -749,8 +753,8 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `plane` is invalid for this frame.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resolution</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Resolution</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resolution</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Resolution</span> {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
 
         <span class="ident">Resolution</span> {
             <span class="ident">width</span>: <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>),
@@ -763,10 +767,10 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `plane &gt;= format().plane_count()`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stride</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stride</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
 
-        <span class="kw">unsafe</span> { <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">get_frame_stride</span>(<span class="self">self</span>, <span class="ident">plane</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="kw">as</span> <span class="ident">usize</span> }
+        <span class="kw">unsafe</span> { <span class="ident">API::get_cached</span>().<span class="ident">get_frame_stride</span>(<span class="self">self</span>, <span class="ident">plane</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="kw">as</span> <span class="ident">usize</span> }
     }
 
     <span class="doccomment">/// Returns a slice of a plane&#39;s pixel row.</span>
@@ -774,22 +778,22 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if the requested plane, row or component type is invalid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">plane_row</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Component</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>, <span class="ident">row</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">T</span>] {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">row</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">height</span>(<span class="ident">plane</span>));
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">T</span>::<span class="ident">is_valid</span>(<span class="self">self</span>.<span class="ident">format</span>()));
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">plane_row</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Component</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>, <span class="ident">row</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">T</span>] {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+        <span class="macro">assert!</span>(<span class="ident">row</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">height</span>(<span class="ident">plane</span>));
+        <span class="macro">assert!</span>(<span class="ident">T::is_valid</span>(<span class="self">self</span>.<span class="ident">format</span>()));
 
         <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stride</span>(<span class="ident">plane</span>);
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">data_ptr</span>(<span class="ident">plane</span>);
 
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">stride</span> <span class="op">*</span> <span class="ident">row</span>;
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">isize</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="macro">assert!</span>(<span class="ident">offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">isize::max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">isize</span>;
 
         <span class="kw">let</span> <span class="ident">row_ptr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="ident">offset</span>) };
         <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>);
 
-        <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">row_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">T</span>, <span class="ident">width</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts</span>(<span class="ident">row_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">T</span>, <span class="ident">width</span>) }
     }
 
     <span class="doccomment">/// Returns a mutable slice of a plane&#39;s pixel row.</span>
@@ -797,22 +801,22 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if the requested plane, row or component type is invalid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">plane_row_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Component</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>, <span class="ident">row</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">T</span>] {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">row</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">height</span>(<span class="ident">plane</span>));
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">T</span>::<span class="ident">is_valid</span>(<span class="self">self</span>.<span class="ident">format</span>()));
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">plane_row_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Component</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>, <span class="ident">row</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;mut</span> [<span class="ident">T</span>] {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+        <span class="macro">assert!</span>(<span class="ident">row</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">height</span>(<span class="ident">plane</span>));
+        <span class="macro">assert!</span>(<span class="ident">T::is_valid</span>(<span class="self">self</span>.<span class="ident">format</span>()));
 
         <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stride</span>(<span class="ident">plane</span>);
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">data_ptr_mut</span>(<span class="ident">plane</span>);
 
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">stride</span> <span class="op">*</span> <span class="ident">row</span>;
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">isize</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="macro">assert!</span>(<span class="ident">offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">isize::max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">isize</span>;
 
         <span class="kw">let</span> <span class="ident">row_ptr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="ident">offset</span>) };
         <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>);
 
-        <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">row_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">width</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts_mut</span>(<span class="ident">row_ptr</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">T</span>, <span class="ident">width</span>) }
     }
 
     <span class="doccomment">/// Returns a slice of the plane&#39;s pixels.</span>
@@ -823,12 +827,12 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if the requested plane or component type is invalid.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">plane</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Component</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">NonZeroPadding</span><span class="op">&gt;</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">T</span>::<span class="ident">is_valid</span>(<span class="self">self</span>.<span class="ident">format</span>()));
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">plane</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Component</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">NonZeroPadding</span><span class="op">&gt;</span> {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+        <span class="macro">assert!</span>(<span class="ident">T::is_valid</span>(<span class="self">self</span>.<span class="ident">format</span>()));
 
         <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stride</span>(<span class="ident">plane</span>);
-        <span class="kw">let</span> <span class="ident">width_in_bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
+        <span class="kw">let</span> <span class="ident">width_in_bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize::from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
         <span class="kw">if</span> <span class="ident">stride</span> <span class="op">!</span><span class="op">=</span> <span class="ident">width_in_bytes</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">NonZeroPadding</span>(<span class="ident">stride</span> <span class="op">-</span> <span class="ident">width_in_bytes</span>));
         }
@@ -837,7 +841,7 @@
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">height</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>);
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">data_ptr</span>(<span class="ident">plane</span>);
 
-        <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">T</span>, <span class="ident">length</span>) })
+        <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">T</span>, <span class="ident">length</span>) })
     }
 
     <span class="doccomment">/// Returns a mutable slice of the plane&#39;s pixels.</span>
@@ -848,12 +852,12 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if the requested plane or component type is invalid.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">plane_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Component</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">T</span>], <span class="ident">NonZeroPadding</span><span class="op">&gt;</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">T</span>::<span class="ident">is_valid</span>(<span class="self">self</span>.<span class="ident">format</span>()));
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">plane_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Component</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> [<span class="ident">T</span>], <span class="ident">NonZeroPadding</span><span class="op">&gt;</span> {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+        <span class="macro">assert!</span>(<span class="ident">T::is_valid</span>(<span class="self">self</span>.<span class="ident">format</span>()));
 
         <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stride</span>(<span class="ident">plane</span>);
-        <span class="kw">let</span> <span class="ident">width_in_bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
+        <span class="kw">let</span> <span class="ident">width_in_bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize::from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
         <span class="kw">if</span> <span class="ident">stride</span> <span class="op">!</span><span class="op">=</span> <span class="ident">width_in_bytes</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">NonZeroPadding</span>(<span class="ident">stride</span> <span class="op">-</span> <span class="ident">width_in_bytes</span>));
         }
@@ -862,7 +866,7 @@
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">height</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>);
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">data_ptr_mut</span>(<span class="ident">plane</span>);
 
-        <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">length</span>) })
+        <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts_mut</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">T</span>, <span class="ident">length</span>) })
     }
 
     <span class="doccomment">/// Returns a pointer to the plane&#39;s pixels.</span>
@@ -873,10 +877,10 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `plane &gt;= format().plane_count()`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data_ptr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data_ptr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*const</span> <span class="ident">u8</span> {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
 
-        <span class="kw">unsafe</span> { <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">get_frame_read_ptr</span>(<span class="self">self</span>, <span class="ident">plane</span> <span class="kw">as</span> <span class="ident">i32</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">API::get_cached</span>().<span class="ident">get_frame_read_ptr</span>(<span class="self">self</span>, <span class="ident">plane</span> <span class="kw">as</span> <span class="ident">i32</span>) }
     }
 
     <span class="doccomment">/// Returns a mutable pointer to the plane&#39;s pixels.</span>
@@ -887,10 +891,10 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `plane &gt;= format().plane_count()`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data_ptr_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data_ptr_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
 
-        <span class="kw">unsafe</span> { <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">get_frame_write_ptr</span>(<span class="self">self</span>, <span class="ident">plane</span> <span class="kw">as</span> <span class="ident">i32</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">API::get_cached</span>().<span class="ident">get_frame_write_ptr</span>(<span class="self">self</span>, <span class="ident">plane</span> <span class="kw">as</span> <span class="ident">i32</span>) }
     }
 
     <span class="doccomment">/// Returns a slice of a plane&#39;s pixel row.</span>
@@ -899,21 +903,21 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `plane &gt;= format().plane_count()` or if `row &gt;= height()`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data_row</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>, <span class="ident">row</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">row</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">height</span>(<span class="ident">plane</span>));
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data_row</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>, <span class="ident">row</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+        <span class="macro">assert!</span>(<span class="ident">row</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">height</span>(<span class="ident">plane</span>));
 
         <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stride</span>(<span class="ident">plane</span>);
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">data_ptr</span>(<span class="ident">plane</span>);
 
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">stride</span> <span class="op">*</span> <span class="ident">row</span>;
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">isize</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="macro">assert!</span>(<span class="ident">offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">isize::max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">isize</span>;
 
         <span class="kw">let</span> <span class="ident">row_ptr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="ident">offset</span>) };
-        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
+        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize::from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
 
-        <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">row_ptr</span>, <span class="ident">width</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts</span>(<span class="ident">row_ptr</span>, <span class="ident">width</span>) }
     }
 
     <span class="doccomment">/// Returns a mutable slice of a plane&#39;s pixel row.</span>
@@ -922,21 +926,21 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `plane &gt;= format().plane_count()` or if `row &gt;= height()`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data_row_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>, <span class="ident">row</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>] {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">row</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">height</span>(<span class="ident">plane</span>));
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data_row_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>, <span class="ident">row</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>] {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+        <span class="macro">assert!</span>(<span class="ident">row</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">height</span>(<span class="ident">plane</span>));
 
         <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stride</span>(<span class="ident">plane</span>);
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">data_ptr_mut</span>(<span class="ident">plane</span>);
 
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">stride</span> <span class="op">*</span> <span class="ident">row</span>;
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">isize</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="macro">assert!</span>(<span class="ident">offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">isize::max_value</span>() <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">isize</span>;
 
         <span class="kw">let</span> <span class="ident">row_ptr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="ident">offset</span>) };
-        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
+        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize::from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
 
-        <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">row_ptr</span>, <span class="ident">width</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts_mut</span>(<span class="ident">row_ptr</span>, <span class="ident">width</span>) }
     }
 
     <span class="doccomment">/// Returns a slice of the plane&#39;s pixels.</span>
@@ -947,11 +951,11 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `plane &gt;= format().plane_count()` or if `row &gt;= height()`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">NonZeroPadding</span><span class="op">&gt;</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">NonZeroPadding</span><span class="op">&gt;</span> {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
 
         <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stride</span>(<span class="ident">plane</span>);
-        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
+        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize::from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
         <span class="kw">if</span> <span class="ident">stride</span> <span class="op">!</span><span class="op">=</span> <span class="ident">width</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">NonZeroPadding</span>(<span class="ident">stride</span> <span class="op">-</span> <span class="ident">width</span>));
         }
@@ -960,7 +964,7 @@
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">height</span> <span class="op">*</span> <span class="ident">stride</span>;
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">data_ptr</span>(<span class="ident">plane</span>);
 
-        <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">length</span>) })
+        <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">length</span>) })
     }
 
     <span class="doccomment">/// Returns a mutable slice of the plane&#39;s pixels.</span>
@@ -971,11 +975,11 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `plane &gt;= format().plane_count()` or if `row &gt;= height()`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>], <span class="ident">NonZeroPadding</span><span class="op">&gt;</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">data_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">plane</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>], <span class="ident">NonZeroPadding</span><span class="op">&gt;</span> {
+        <span class="macro">assert!</span>(<span class="ident">plane</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">format</span>().<span class="ident">plane_count</span>());
 
         <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stride</span>(<span class="ident">plane</span>);
-        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
+        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>(<span class="ident">plane</span>) <span class="op">*</span> <span class="ident">usize::from</span>(<span class="self">self</span>.<span class="ident">format</span>().<span class="ident">bytes_per_sample</span>());
         <span class="kw">if</span> <span class="ident">stride</span> <span class="op">!</span><span class="op">=</span> <span class="ident">width</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">NonZeroPadding</span>(<span class="ident">stride</span> <span class="op">-</span> <span class="ident">width</span>));
         }
@@ -984,20 +988,21 @@
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">height</span> <span class="op">*</span> <span class="ident">stride</span>;
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">data_ptr_mut</span>(<span class="ident">plane</span>);
 
-        <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">ptr</span>, <span class="ident">length</span>) })
+        <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts_mut</span>(<span class="ident">ptr</span>, <span class="ident">length</span>) })
     }
 
     <span class="doccomment">/// Returns a map of frame&#39;s properties.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">props</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MapRef</span> {
-        <span class="kw">unsafe</span> { <span class="ident">MapRef</span>::<span class="ident">from_ptr</span>(<span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">get_frame_props_ro</span>(<span class="self">self</span>)) }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">props</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">MapRef</span> {
+        <span class="kw">unsafe</span> { <span class="ident">MapRef::from_ptr</span>(<span class="ident">API::get_cached</span>().<span class="ident">get_frame_props_ro</span>(<span class="self">self</span>)) }
     }
 
     <span class="doccomment">/// Returns a mutable map of frame&#39;s properties.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">props_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MapRefMut</span> {
-        <span class="kw">unsafe</span> { <span class="ident">MapRefMut</span>::<span class="ident">from_ptr</span>(<span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">get_frame_props_rw</span>(<span class="self">self</span>)) }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">props_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">MapRefMut</span> {
+        <span class="kw">unsafe</span> { <span class="ident">MapRefMut::from_ptr</span>(<span class="ident">API::get_cached</span>().<span class="ident">get_frame_props_rw</span>(<span class="self">self</span>)) }
     }
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "vapoursynth";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="vapoursynth" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
+</body></html>

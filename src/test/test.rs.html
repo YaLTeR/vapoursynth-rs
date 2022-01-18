@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `sample-plugin/src/bin/test.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>test.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../test/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `sample-plugin&#x2F;src&#x2F;bin&#x2F;test.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>test.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../test/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -194,19 +195,18 @@
 <span id="194">194</span>
 <span id="195">195</span>
 <span id="196">196</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">/// A test executable for the sample plugin.</span>
+</pre><pre class="rust"><code><span class="doccomment">/// A test executable for the sample plugin.</span>
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">cfg_if</span>;
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">vapoursynth</span>;
-<span class="kw">use</span> <span class="ident">vapoursynth</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">vapoursynth</span>::<span class="ident">video_info</span>::<span class="ident">Framerate</span>;
+<span class="kw">use</span> <span class="ident">vapoursynth::prelude</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">vapoursynth::video_info::Framerate</span>;
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">env</span>::<span class="ident">current_exe</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="ident">stdout</span>, <span class="ident">Write</span>};
+<span class="kw">use</span> <span class="ident">std::env::current_exe</span>;
+<span class="kw">use</span> <span class="ident">std::fmt::Debug</span>;
+<span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">stdout</span>, <span class="ident">Write</span>};
 
-<span class="macro">cfg_if</span><span class="macro">!</span> {
+<span class="macro">cfg_if!</span> {
     <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span> {
         <span class="kw">const</span> <span class="ident">EXTENSION</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;dll&quot;</span>;
         <span class="kw">const</span> <span class="ident">PREFIX</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>;
@@ -219,18 +219,18 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">plugin_path</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">plugin_path</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">current_exe</span>().<span class="ident">unwrap</span>();
-    <span class="ident">path</span>.<span class="ident">set_file_name</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}sample_plugin.{}&quot;</span>, <span class="ident">PREFIX</span>, <span class="ident">EXTENSION</span>));
+    <span class="ident">path</span>.<span class="ident">set_file_name</span>(<span class="macro">format!</span>(<span class="string">&quot;{}sample_plugin.{}&quot;</span>, <span class="ident">PREFIX</span>, <span class="ident">EXTENSION</span>));
     <span class="ident">path</span>.<span class="ident">into_os_string</span>().<span class="ident">into_string</span>().<span class="ident">unwrap</span>().<span class="ident">into_bytes</span>()
 }
 
-<span class="kw">fn</span> <span class="ident">make_environment</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Environment</span> {
-    <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">Environment</span>::<span class="ident">new</span>().<span class="ident">unwrap</span>();
+<span class="kw">fn</span> <span class="ident">make_environment</span>() -&gt; <span class="ident">Environment</span> {
+    <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">Environment::new</span>().<span class="ident">unwrap</span>();
 
     <span class="comment">// Set the running_from_test variable.</span>
-    <span class="kw">let</span> <span class="ident">api</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get</span>().<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">OwnedMap</span>::<span class="ident">new</span>(<span class="ident">api</span>);
+    <span class="kw">let</span> <span class="ident">api</span> <span class="op">=</span> <span class="ident">API::get</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">OwnedMap::new</span>(<span class="ident">api</span>);
     <span class="ident">map</span>.<span class="ident">set</span>(<span class="string">&quot;running_from_test&quot;</span>, <span class="kw-2">&amp;</span><span class="number">1</span>).<span class="ident">unwrap</span>();
     <span class="ident">env</span>.<span class="ident">set_variables</span>(<span class="kw-2">&amp;</span><span class="ident">map</span>).<span class="ident">unwrap</span>();
 
@@ -243,9 +243,9 @@
             .<span class="ident">unwrap</span>();
 
         <span class="ident">map</span>.<span class="ident">clear</span>();
-        <span class="ident">map</span>.<span class="ident">set</span>(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span><span class="kw-2">&amp;</span><span class="ident">plugin_path</span>()[..]).<span class="ident">unwrap</span>();
+        <span class="ident">map</span>.<span class="ident">set</span>(<span class="string">&quot;path&quot;</span>, <span class="op">&amp;&amp;</span><span class="ident">plugin_path</span>()[..]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="ident">std</span>.<span class="ident">invoke</span>(<span class="string">&quot;LoadPlugin&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">map</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">rv</span>.<span class="ident">error</span>(), <span class="prelude-val">None</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">rv</span>.<span class="ident">error</span>(), <span class="prelude-val">None</span>);
     }
 
     <span class="ident">env</span>
@@ -253,20 +253,20 @@
 
 <span class="kw">fn</span> <span class="ident">verify_pixels</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Component</span> <span class="op">+</span> <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">PartialEq</span><span class="op">&gt;</span>(<span class="ident">frame</span>: <span class="kw-2">&amp;</span><span class="ident">Frame</span>, <span class="ident">expected</span>: [<span class="ident">T</span>; <span class="number">3</span>]) {
     <span class="kw">for</span> <span class="ident">plane_num</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">3</span> {
-        <span class="kw">let</span> <span class="ident">expected_row</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">expected</span>[<span class="ident">plane_num</span>]; <span class="ident">frame</span>.<span class="ident">width</span>(<span class="ident">plane_num</span>)];
+        <span class="kw">let</span> <span class="ident">expected_row</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">expected</span>[<span class="ident">plane_num</span>]; <span class="ident">frame</span>.<span class="ident">width</span>(<span class="ident">plane_num</span>)];
 
         <span class="kw">for</span> <span class="ident">row</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">frame</span>.<span class="ident">height</span>(<span class="ident">plane_num</span>) {
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="ident">expected_row</span>[..], <span class="ident">frame</span>.<span class="ident">plane_row</span>(<span class="ident">plane_num</span>, <span class="ident">row</span>));
+            <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">expected_row</span>[..], <span class="ident">frame</span>.<span class="ident">plane_row</span>(<span class="ident">plane_num</span>, <span class="ident">row</span>));
         }
     }
 }
 
 <span class="kw">fn</span> <span class="ident">test_passthrough</span>() {
-    <span class="macro">print</span><span class="macro">!</span>(<span class="string">&quot;Running test_passthrough()...&quot;</span>);
+    <span class="macro">print!</span>(<span class="string">&quot;Running test_passthrough()...&quot;</span>);
     <span class="ident">stdout</span>().<span class="ident">flush</span>().<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">make_environment</span>();
-    <span class="ident">env</span>.<span class="ident">eval_file</span>(<span class="string">&quot;test-vpy/passthrough.vpy&quot;</span>, <span class="ident">EvalFlags</span>::<span class="ident">Nothing</span>)
+    <span class="ident">env</span>.<span class="ident">eval_file</span>(<span class="string">&quot;test-vpy/passthrough.vpy&quot;</span>, <span class="ident">EvalFlags::Nothing</span>)
         .<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">get_output</span>(<span class="number">0</span>).<span class="ident">unwrap</span>();
 
@@ -275,15 +275,15 @@
     <span class="ident">verify_pixels</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">node</span>.<span class="ident">get_frame</span>(<span class="number">2</span>).<span class="ident">unwrap</span>(), [<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>, <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>, <span class="number">0</span>]);
     <span class="ident">verify_pixels</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">node</span>.<span class="ident">get_frame</span>(<span class="number">3</span>).<span class="ident">unwrap</span>(), [<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">14</span>, <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">14</span>, <span class="number">0</span>]);
 
-    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ok&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot; ok&quot;</span>);
 }
 
 <span class="kw">fn</span> <span class="ident">test_invert</span>() {
-    <span class="macro">print</span><span class="macro">!</span>(<span class="string">&quot;Running test_invert()...&quot;</span>);
+    <span class="macro">print!</span>(<span class="string">&quot;Running test_invert()...&quot;</span>);
     <span class="ident">stdout</span>().<span class="ident">flush</span>().<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">make_environment</span>();
-    <span class="ident">env</span>.<span class="ident">eval_file</span>(<span class="string">&quot;test-vpy/invert.vpy&quot;</span>, <span class="ident">EvalFlags</span>::<span class="ident">Nothing</span>)
+    <span class="ident">env</span>.<span class="ident">eval_file</span>(<span class="string">&quot;test-vpy/invert.vpy&quot;</span>, <span class="ident">EvalFlags::Nothing</span>)
         .<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">get_output</span>(<span class="number">0</span>).<span class="ident">unwrap</span>();
 
@@ -312,20 +312,20 @@
         [<span class="number">65535</span> <span class="op">-</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">14</span>), <span class="number">65535</span> <span class="op">-</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">14</span>), <span class="number">65535</span>],
     );
 
-    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ok&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot; ok&quot;</span>);
 }
 
 <span class="kw">fn</span> <span class="ident">test_random_noise</span>() {
-    <span class="macro">print</span><span class="macro">!</span>(<span class="string">&quot;Running test_random_noise()...&quot;</span>);
+    <span class="macro">print!</span>(<span class="string">&quot;Running test_random_noise()...&quot;</span>);
     <span class="ident">stdout</span>().<span class="ident">flush</span>().<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">make_environment</span>();
-    <span class="ident">env</span>.<span class="ident">eval_file</span>(<span class="string">&quot;test-vpy/random_noise.vpy&quot;</span>, <span class="ident">EvalFlags</span>::<span class="ident">Nothing</span>)
+    <span class="ident">env</span>.<span class="ident">eval_file</span>(<span class="string">&quot;test-vpy/random_noise.vpy&quot;</span>, <span class="ident">EvalFlags::Nothing</span>)
         .<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">get_output</span>(<span class="number">0</span>).<span class="ident">unwrap</span>();
 
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">node</span>.<span class="ident">info</span>().<span class="ident">num_frames</span>, <span class="number">10</span>.<span class="ident">into</span>());
-    <span class="macro">assert_eq</span><span class="macro">!</span>(
+    <span class="macro">assert_eq!</span>(<span class="ident">node</span>.<span class="ident">info</span>().<span class="ident">num_frames</span>, <span class="number">10</span>.<span class="ident">into</span>());
+    <span class="macro">assert_eq!</span>(
         <span class="ident">node</span>.<span class="ident">info</span>().<span class="ident">framerate</span>,
         <span class="ident">Framerate</span> {
             <span class="ident">numerator</span>: <span class="number">60</span>,
@@ -336,24 +336,24 @@
 
     <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="ident">node</span>.<span class="ident">get_frame</span>(<span class="number">0</span>).<span class="ident">unwrap</span>();
 
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">frame</span>.<span class="ident">width</span>(<span class="number">0</span>), <span class="number">320</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">frame</span>.<span class="ident">height</span>(<span class="number">0</span>), <span class="number">240</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">frame</span>.<span class="ident">format</span>().<span class="ident">id</span>(), <span class="ident">PresetFormat</span>::<span class="ident">RGB24</span>.<span class="ident">into</span>());
+    <span class="macro">assert_eq!</span>(<span class="ident">frame</span>.<span class="ident">width</span>(<span class="number">0</span>), <span class="number">320</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">frame</span>.<span class="ident">height</span>(<span class="number">0</span>), <span class="number">240</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">frame</span>.<span class="ident">format</span>().<span class="ident">id</span>(), <span class="ident">PresetFormat::RGB24</span>.<span class="ident">into</span>());
 
-    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ok&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot; ok&quot;</span>);
 }
 
 <span class="kw">fn</span> <span class="ident">test_make_random_noise</span>() {
-    <span class="macro">print</span><span class="macro">!</span>(<span class="string">&quot;Running test_make_random_noise()...&quot;</span>);
+    <span class="macro">print!</span>(<span class="string">&quot;Running test_make_random_noise()...&quot;</span>);
     <span class="ident">stdout</span>().<span class="ident">flush</span>().<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">make_environment</span>();
-    <span class="ident">env</span>.<span class="ident">eval_file</span>(<span class="string">&quot;test-vpy/make_random_noise.vpy&quot;</span>, <span class="ident">EvalFlags</span>::<span class="ident">Nothing</span>)
+    <span class="ident">env</span>.<span class="ident">eval_file</span>(<span class="string">&quot;test-vpy/make_random_noise.vpy&quot;</span>, <span class="ident">EvalFlags::Nothing</span>)
         .<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">get_output</span>(<span class="number">0</span>).<span class="ident">unwrap</span>();
 
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">node</span>.<span class="ident">info</span>().<span class="ident">num_frames</span>, <span class="number">10</span>.<span class="ident">into</span>());
-    <span class="macro">assert_eq</span><span class="macro">!</span>(
+    <span class="macro">assert_eq!</span>(<span class="ident">node</span>.<span class="ident">info</span>().<span class="ident">num_frames</span>, <span class="number">10</span>.<span class="ident">into</span>());
+    <span class="macro">assert_eq!</span>(
         <span class="ident">node</span>.<span class="ident">info</span>().<span class="ident">framerate</span>,
         <span class="ident">Framerate</span> {
             <span class="ident">numerator</span>: <span class="number">60</span>,
@@ -364,24 +364,24 @@
 
     <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="ident">node</span>.<span class="ident">get_frame</span>(<span class="number">0</span>).<span class="ident">unwrap</span>();
 
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">frame</span>.<span class="ident">width</span>(<span class="number">0</span>), <span class="number">320</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">frame</span>.<span class="ident">height</span>(<span class="number">0</span>), <span class="number">240</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">frame</span>.<span class="ident">format</span>().<span class="ident">id</span>(), <span class="ident">PresetFormat</span>::<span class="ident">RGB24</span>.<span class="ident">into</span>());
+    <span class="macro">assert_eq!</span>(<span class="ident">frame</span>.<span class="ident">width</span>(<span class="number">0</span>), <span class="number">320</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">frame</span>.<span class="ident">height</span>(<span class="number">0</span>), <span class="number">240</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">frame</span>.<span class="ident">format</span>().<span class="ident">id</span>(), <span class="ident">PresetFormat::RGB24</span>.<span class="ident">into</span>());
 
-    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ok&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot; ok&quot;</span>);
 }
 
 <span class="kw">fn</span> <span class="ident">test_arguments</span>() {
-    <span class="macro">print</span><span class="macro">!</span>(<span class="string">&quot;Running test_arguments()...&quot;</span>);
+    <span class="macro">print!</span>(<span class="string">&quot;Running test_arguments()...&quot;</span>);
     <span class="ident">stdout</span>().<span class="ident">flush</span>().<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">make_environment</span>();
 
     <span class="comment">// If the evaluation succeeds, the test succeeds.</span>
-    <span class="ident">env</span>.<span class="ident">eval_file</span>(<span class="string">&quot;test-vpy/argument-test.vpy&quot;</span>, <span class="ident">EvalFlags</span>::<span class="ident">Nothing</span>)
+    <span class="ident">env</span>.<span class="ident">eval_file</span>(<span class="string">&quot;test-vpy/argument-test.vpy&quot;</span>, <span class="ident">EvalFlags::Nothing</span>)
         .<span class="ident">unwrap</span>();
 
-    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot; ok&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot; ok&quot;</span>);
 }
 
 <span class="kw">fn</span> <span class="ident">main</span>() {
@@ -391,5 +391,6 @@
     <span class="ident">test_make_random_noise</span>();
     <span class="ident">test_arguments</span>();
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "test";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="test" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
+</body></html>

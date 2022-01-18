@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `vapoursynth/src/map/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../vapoursynth/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `vapoursynth&#x2F;src&#x2F;map&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../vapoursynth/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1058,31 +1059,30 @@
 <span id="1058">1058</span>
 <span id="1059">1059</span>
 <span id="1060">1060</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! VapourSynth maps.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! VapourSynth maps.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Cow</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::{<span class="ident">CStr</span>, <span class="ident">CString</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_char</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ptr</span>::{<span class="self">self</span>, <span class="ident">NonNull</span>};
+<span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
+<span class="kw">use</span> <span class="ident">std::ffi</span>::{<span class="ident">CStr</span>, <span class="ident">CString</span>};
+<span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
+<span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
+<span class="kw">use</span> <span class="ident">std::os::raw::c_char</span>;
+<span class="kw">use</span> <span class="ident">std::ptr</span>::{<span class="self">self</span>, <span class="ident">NonNull</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">result</span>, <span class="ident">slice</span>};
 <span class="kw">use</span> <span class="ident">vapoursynth_sys</span> <span class="kw">as</span> <span class="ident">ffi</span>;
 
-<span class="kw">use</span> <span class="ident">api</span>::<span class="ident">API</span>;
-<span class="kw">use</span> <span class="ident">frame</span>::{<span class="ident">Frame</span>, <span class="ident">FrameRef</span>};
-<span class="kw">use</span> <span class="ident">function</span>::<span class="ident">Function</span>;
-<span class="kw">use</span> <span class="ident">node</span>::<span class="ident">Node</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::api::API</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::frame</span>::{<span class="ident">Frame</span>, <span class="ident">FrameRef</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::function::Function</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::Node</span>;
 
 <span class="kw">mod</span> <span class="ident">errors</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">errors</span>::{<span class="ident">Error</span>, <span class="ident">InvalidKeyError</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::errors</span>::{<span class="ident">Error</span>, <span class="ident">InvalidKeyError</span>, <span class="prelude-ty">Result</span>};
 
 <span class="kw">mod</span> <span class="ident">iterators</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">iterators</span>::{<span class="ident">Keys</span>, <span class="ident">ValueIter</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::iterators</span>::{<span class="ident">Keys</span>, <span class="ident">ValueIter</span>};
 
 <span class="kw">mod</span> <span class="ident">value</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">value</span>::{<span class="ident">Value</span>, <span class="ident">ValueType</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::value</span>::{<span class="ident">Value</span>, <span class="ident">ValueType</span>};
 
 <span class="doccomment">/// A VapourSynth map.</span>
 <span class="doccomment">///</span>
@@ -1091,7 +1091,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span> {
     <span class="comment">// The actual mutability of this depends on whether it&#39;s accessed via `&amp;Map` or `&amp;mut Map`.</span>
-    <span class="ident">handle</span>: <span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">ffi</span>::<span class="ident">VSMap</span><span class="op">&gt;</span>,
+    <span class="ident">handle</span>: <span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">ffi::VSMap</span><span class="op">&gt;</span>,
     <span class="ident">_elem</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;elem</span> ()<span class="op">&gt;</span>,
 }
 
@@ -1123,10 +1123,10 @@
 
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSMap</span>;
+    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">ffi::VSMap</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Target</span> {
+    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_ref</span>() }
     }
 }
@@ -1134,7 +1134,7 @@
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span> <span class="ident">DerefMut</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Target</span> {
+    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">as_mut</span>() }
     }
 }
@@ -1144,7 +1144,7 @@
 
     <span class="comment">// Technically this should return `&amp;&#39;owner`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Target</span> {
+    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">map</span>
     }
 }
@@ -1154,7 +1154,7 @@
 
     <span class="comment">// Technically this should return `&amp;&#39;owner`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Target</span> {
+    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">map</span>
     }
 }
@@ -1162,16 +1162,16 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;owner</span>, <span class="lifetime">&#39;elem</span><span class="op">&gt;</span> <span class="ident">DerefMut</span> <span class="kw">for</span> <span class="ident">MapRefMut</span><span class="op">&lt;</span><span class="lifetime">&#39;owner</span>, <span class="lifetime">&#39;elem</span><span class="op">&gt;</span> {
     <span class="comment">// Technically this should return `&amp;&#39;owner`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Target</span> {
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>
+    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map</span>
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">OwnedMap</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">unsafe</span> {
-            <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">free_map</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>);
+            <span class="ident">API::get_cached</span>().<span class="ident">free_map</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map</span>);
         }
     }
 }
@@ -1180,24 +1180,24 @@
     <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Target</span> {
+    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">map</span>
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span> <span class="ident">DerefMut</span> <span class="kw">for</span> <span class="ident">OwnedMap</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Target</span> {
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>
+    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map</span>
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span> <span class="ident">OwnedMap</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Creates a new map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">api</span>: <span class="ident">API</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">api</span>: <span class="ident">API</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">map</span>: <span class="kw">unsafe</span> { <span class="ident">Map</span>::<span class="ident">from_ptr</span>(<span class="ident">api</span>.<span class="ident">create_map</span>()) },
+            <span class="ident">map</span>: <span class="kw">unsafe</span> { <span class="ident">Map::from_ptr</span>(<span class="ident">api</span>.<span class="ident">create_map</span>()) },
         }
     }
 
@@ -1207,9 +1207,9 @@
     <span class="doccomment">/// The caller needs to ensure the pointer and the lifetime is valid and that this is an owned</span>
     <span class="doccomment">/// map pointer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ffi</span>::<span class="ident">VSMap</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*mut</span> <span class="ident">ffi::VSMap</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">map</span>: <span class="ident">Map</span>::<span class="ident">from_ptr</span>(<span class="ident">handle</span>),
+            <span class="ident">map</span>: <span class="ident">Map::from_ptr</span>(<span class="ident">handle</span>),
         }
     }
 }
@@ -1221,9 +1221,9 @@
     <span class="doccomment">/// The caller needs to ensure the pointer and the lifetimes are valid, and that there are no</span>
     <span class="doccomment">/// mutable references to the given map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ffi</span>::<span class="ident">VSMap</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*const</span> <span class="ident">ffi::VSMap</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">map</span>: <span class="ident">Map</span>::<span class="ident">from_ptr</span>(<span class="ident">handle</span>),
+            <span class="ident">map</span>: <span class="ident">Map::from_ptr</span>(<span class="ident">handle</span>),
             <span class="ident">_owner</span>: <span class="ident">PhantomData</span>,
         }
     }
@@ -1236,9 +1236,9 @@
     <span class="doccomment">/// The caller needs to ensure the pointer and the lifetimes are valid, and that there are no</span>
     <span class="doccomment">/// references to the given map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ffi</span>::<span class="ident">VSMap</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*mut</span> <span class="ident">ffi::VSMap</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">map</span>: <span class="ident">Map</span>::<span class="ident">from_ptr</span>(<span class="ident">handle</span>),
+            <span class="ident">map</span>: <span class="ident">Map::from_ptr</span>(<span class="ident">handle</span>),
             <span class="ident">_owner</span>: <span class="ident">PhantomData</span>,
         }
     }
@@ -1246,25 +1246,25 @@
 
 <span class="doccomment">/// Turns a `prop_get_something()` error into a `Result`.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">fn</span> <span class="ident">handle_get_prop_error</span>(<span class="ident">error</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">error</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+<span class="kw">fn</span> <span class="ident">handle_get_prop_error</span>(<span class="ident">error</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="ident">error</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="prelude-val">Ok</span>(())
     } <span class="kw">else</span> {
         <span class="prelude-val">Err</span>(<span class="kw">match</span> <span class="ident">error</span> {
-            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSGetPropErrors</span>::<span class="ident">peUnset</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Error</span>::<span class="ident">KeyNotFound</span>,
-            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSGetPropErrors</span>::<span class="ident">peType</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Error</span>::<span class="ident">WrongValueType</span>,
-            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSGetPropErrors</span>::<span class="ident">peIndex</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Error</span>::<span class="ident">IndexOutOfBounds</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">==</span> <span class="ident">ffi::VSGetPropErrors::peUnset</span> <span class="kw">as</span> <span class="ident">i32</span> =&gt; <span class="ident">Error::KeyNotFound</span>,
+            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">==</span> <span class="ident">ffi::VSGetPropErrors::peType</span> <span class="kw">as</span> <span class="ident">i32</span> =&gt; <span class="ident">Error::WrongValueType</span>,
+            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">==</span> <span class="ident">ffi::VSGetPropErrors::peIndex</span> <span class="kw">as</span> <span class="ident">i32</span> =&gt; <span class="ident">Error::IndexOutOfBounds</span>,
+            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
         })
     }
 }
 
 <span class="doccomment">/// Turns a `prop_set_something(paAppend)` error into a `Result`.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">fn</span> <span class="ident">handle_append_prop_error</span>(<span class="ident">error</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">handle_append_prop_error</span>(<span class="ident">error</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">error</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">error</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span>);
-        <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">WrongValueType</span>)
+        <span class="macro">debug_assert!</span>(<span class="ident">error</span> <span class="op">==</span> <span class="number">1</span>);
+        <span class="prelude-val">Err</span>(<span class="ident">Error::WrongValueType</span>)
     } <span class="kw">else</span> {
         <span class="prelude-val">Ok</span>(())
     }
@@ -1277,30 +1277,30 @@
     <span class="doccomment">/// The caller needs to ensure the pointer is valid, the element lifetime is valid, and that</span>
     <span class="doccomment">/// the resulting `Map` gets put into `MapRef` or `MapRefMut` or `OwnedMap` correctly.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ffi</span>::<span class="ident">VSMap</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_ptr</span>(<span class="ident">handle</span>: <span class="kw-2">*const</span> <span class="ident">ffi::VSMap</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">handle</span>: <span class="ident">NonNull</span>::<span class="ident">new_unchecked</span>(<span class="ident">handle</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ffi</span>::<span class="ident">VSMap</span>),
+            <span class="ident">handle</span>: <span class="ident">NonNull::new_unchecked</span>(<span class="ident">handle</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">ffi::VSMap</span>),
             <span class="ident">_elem</span>: <span class="ident">PhantomData</span>,
         }
     }
 
     <span class="doccomment">/// Checks if the key is valid. Valid keys start with an alphabetic character or an underscore,</span>
     <span class="doccomment">/// and contain only alphanumeric characters and underscores.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_key_valid</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InvalidKeyError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_key_valid</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">result::Result</span><span class="op">&lt;</span>(), <span class="ident">InvalidKeyError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">InvalidKeyError</span>::<span class="ident">EmptyKey</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">InvalidKeyError::EmptyKey</span>);
         }
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">chars</span>();
 
         <span class="kw">let</span> <span class="ident">first</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>();
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">first</span>.<span class="ident">is_ascii_alphabetic</span>() <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">first</span> <span class="op">!</span><span class="op">=</span> <span class="string">&#39;_&#39;</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">InvalidKeyError</span>::<span class="ident">InvalidCharacter</span>(<span class="number">0</span>));
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">first</span>.<span class="ident">is_ascii_alphabetic</span>() <span class="op">&amp;&amp;</span> <span class="ident">first</span> <span class="op">!</span><span class="op">=</span> <span class="string">&#39;_&#39;</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">InvalidKeyError::InvalidCharacter</span>(<span class="number">0</span>));
         }
 
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">c</span>) <span class="kw">in</span> <span class="ident">chars</span>.<span class="ident">enumerate</span>() {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">c</span>.<span class="ident">is_ascii_alphanumeric</span>() <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">c</span> <span class="op">!</span><span class="op">=</span> <span class="string">&#39;_&#39;</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">InvalidKeyError</span>::<span class="ident">InvalidCharacter</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>));
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">c</span>.<span class="ident">is_ascii_alphanumeric</span>() <span class="op">&amp;&amp;</span> <span class="ident">c</span> <span class="op">!</span><span class="op">=</span> <span class="string">&#39;_&#39;</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">InvalidKeyError::InvalidCharacter</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>));
             }
         }
 
@@ -1309,46 +1309,46 @@
 
     <span class="doccomment">/// Checks if the key is valid and makes it a `CString`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">make_raw_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CString</span><span class="op">&gt;</span> {
-        <span class="ident">Map</span>::<span class="ident">is_key_valid</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">CString</span>::<span class="ident">new</span>(<span class="ident">key</span>).<span class="ident">unwrap</span>())
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">make_raw_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CString</span><span class="op">&gt;</span> {
+        <span class="ident">Map::is_key_valid</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">CString::new</span>(<span class="ident">key</span>).<span class="ident">unwrap</span>())
     }
 
     <span class="doccomment">/// Clears the map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">unsafe</span> {
-            <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">clear_map</span>(<span class="self">self</span>);
+            <span class="ident">API::get_cached</span>().<span class="ident">clear_map</span>(<span class="self">self</span>);
         }
     }
 
     <span class="doccomment">/// Returns the error message contained in the map, if any.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">error_message</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">get_error</span>(<span class="self">self</span>) };
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">error_message</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">API::get_cached</span>().<span class="ident">get_error</span>(<span class="self">self</span>) };
         <span class="kw">if</span> <span class="ident">error_message</span>.<span class="ident">is_null</span>() {
             <span class="kw">return</span> <span class="prelude-val">None</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">error_message</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">error_message</span>) };
+        <span class="kw">let</span> <span class="ident">error_message</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">CStr::from_ptr</span>(<span class="ident">error_message</span>) };
         <span class="prelude-val">Some</span>(<span class="ident">error_message</span>.<span class="ident">to_string_lossy</span>())
     }
 
     <span class="doccomment">/// Adds an error message to a map. The map is cleared first.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_error</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">error_message</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">error_message</span> <span class="op">=</span> <span class="ident">CString</span>::<span class="ident">new</span>(<span class="ident">error_message</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_error</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">error_message</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">error_message</span> <span class="op">=</span> <span class="ident">CString::new</span>(<span class="ident">error_message</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
-            <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">set_error</span>(<span class="self">self</span>, <span class="ident">error_message</span>.<span class="ident">as_ptr</span>());
+            <span class="ident">API::get_cached</span>().<span class="ident">set_error</span>(<span class="self">self</span>, <span class="ident">error_message</span>.<span class="ident">as_ptr</span>());
         }
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Returns the number of keys contained in a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-        <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_num_keys</span>(<span class="self">self</span>) };
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">count</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
+        <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">API::get_cached</span>().<span class="ident">prop_num_keys</span>(<span class="self">self</span>) };
+        <span class="macro">debug_assert!</span>(<span class="ident">count</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span>);
         <span class="ident">count</span> <span class="kw">as</span> <span class="ident">usize</span>
     }
 
@@ -1357,11 +1357,11 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `index &gt;= self.key_count()`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">key_raw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">CStr</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">index</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">key_count</span>());
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">key_raw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">CStr</span> {
+        <span class="macro">assert!</span>(<span class="ident">index</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">key_count</span>());
         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">index</span> <span class="kw">as</span> <span class="ident">i32</span>;
 
-        <span class="kw">unsafe</span> { <span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_get_key</span>(<span class="self">self</span>, <span class="ident">index</span>)) }
+        <span class="kw">unsafe</span> { <span class="ident">CStr::from_ptr</span>(<span class="ident">API::get_cached</span>().<span class="ident">prop_get_key</span>(<span class="self">self</span>, <span class="ident">index</span>)) }
     }
 
     <span class="doccomment">/// Returns a key from a map.</span>
@@ -1369,14 +1369,14 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Panics if `index &gt;= self.key_count()`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">str</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
         <span class="self">self</span>.<span class="ident">key_raw</span>(<span class="ident">index</span>).<span class="ident">to_str</span>().<span class="ident">unwrap</span>()
     }
 
     <span class="doccomment">/// Returns an iterator over all keys in a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Keys</span> {
-        <span class="ident">Keys</span>::<span class="ident">new</span>(<span class="self">self</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Keys</span> {
+        <span class="ident">Keys::new</span>(<span class="self">self</span>)
     }
 
     <span class="doccomment">/// Returns the number of elements associated with a key in a map.</span>
@@ -1384,20 +1384,20 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">value_count_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_num_elements</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>());
-        <span class="kw">if</span> <span class="ident">rv</span> <span class="op">=</span><span class="op">=</span> <span class="op">-</span><span class="number">1</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">KeyNotFound</span>)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">value_count_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">rv</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_num_elements</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>());
+        <span class="kw">if</span> <span class="ident">rv</span> <span class="op">==</span> <span class="op">-</span><span class="number">1</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">Error::KeyNotFound</span>)
         } <span class="kw">else</span> {
-            <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">rv</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span>);
+            <span class="macro">debug_assert!</span>(<span class="ident">rv</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span>);
             <span class="prelude-val">Ok</span>(<span class="ident">rv</span> <span class="kw">as</span> <span class="ident">usize</span>)
         }
     }
 
     <span class="doccomment">/// Returns the number of elements associated with a key in a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">value_count_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) }
     }
 
@@ -1406,23 +1406,23 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">value_type_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueType</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_get_type</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>()) {
-            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSPropTypes</span>::<span class="ident">ptUnset</span> <span class="kw">as</span> <span class="ident">c_char</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">KeyNotFound</span>),
-            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSPropTypes</span>::<span class="ident">ptInt</span> <span class="kw">as</span> <span class="ident">c_char</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ValueType</span>::<span class="ident">Int</span>),
-            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSPropTypes</span>::<span class="ident">ptFloat</span> <span class="kw">as</span> <span class="ident">c_char</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ValueType</span>::<span class="ident">Float</span>),
-            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSPropTypes</span>::<span class="ident">ptData</span> <span class="kw">as</span> <span class="ident">c_char</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ValueType</span>::<span class="ident">Data</span>),
-            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSPropTypes</span>::<span class="ident">ptNode</span> <span class="kw">as</span> <span class="ident">c_char</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ValueType</span>::<span class="ident">Node</span>),
-            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSPropTypes</span>::<span class="ident">ptFrame</span> <span class="kw">as</span> <span class="ident">c_char</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ValueType</span>::<span class="ident">Frame</span>),
-            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">VSPropTypes</span>::<span class="ident">ptFunction</span> <span class="kw">as</span> <span class="ident">c_char</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ValueType</span>::<span class="ident">Function</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">value_type_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueType</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_get_type</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>()) {
+            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">==</span> <span class="ident">ffi::VSPropTypes::ptUnset</span> <span class="kw">as</span> <span class="ident">c_char</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::KeyNotFound</span>),
+            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">==</span> <span class="ident">ffi::VSPropTypes::ptInt</span> <span class="kw">as</span> <span class="ident">c_char</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">ValueType::Int</span>),
+            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">==</span> <span class="ident">ffi::VSPropTypes::ptFloat</span> <span class="kw">as</span> <span class="ident">c_char</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">ValueType::Float</span>),
+            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">==</span> <span class="ident">ffi::VSPropTypes::ptData</span> <span class="kw">as</span> <span class="ident">c_char</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">ValueType::Data</span>),
+            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">==</span> <span class="ident">ffi::VSPropTypes::ptNode</span> <span class="kw">as</span> <span class="ident">c_char</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">ValueType::Node</span>),
+            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">==</span> <span class="ident">ffi::VSPropTypes::ptFrame</span> <span class="kw">as</span> <span class="ident">c_char</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">ValueType::Frame</span>),
+            <span class="ident">x</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">==</span> <span class="ident">ffi::VSPropTypes::ptFunction</span> <span class="kw">as</span> <span class="ident">c_char</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">ValueType::Function</span>),
+            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
         }
     }
 
     <span class="doccomment">/// Retrieves a value type from a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueType</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueType</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">value_type_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) }
     }
 
@@ -1431,20 +1431,20 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">delete_key_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_delete_key</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>());
-        <span class="kw">if</span> <span class="ident">result</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">KeyNotFound</span>)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">delete_key_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_delete_key</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>());
+        <span class="kw">if</span> <span class="ident">result</span> <span class="op">==</span> <span class="number">0</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">Error::KeyNotFound</span>)
         } <span class="kw">else</span> {
-            <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">result</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span>);
+            <span class="macro">debug_assert!</span>(<span class="ident">result</span> <span class="op">==</span> <span class="number">1</span>);
             <span class="prelude-val">Ok</span>(())
         }
     }
 
     <span class="doccomment">/// Deletes the given key.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">delete_key</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">delete_key</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">delete_key_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) }
     }
 
@@ -1453,36 +1453,36 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">touch_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">value_type</span>: <span class="ident">ValueType</span>) {
-        <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
-        <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">touch_value</span> {
-            (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">func</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">value</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {{
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">touch_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">value_type</span>: <span class="ident">ValueType</span>) {
+        <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
+        <span class="macro">macro_rules!</span> <span class="ident">touch_value</span> {
+            (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">func</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">value</span>:<span class="ident">expr</span>) =&gt; {{
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
-                    <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="macro-nonterminal">$</span><span class="macro-nonterminal">func</span>(
+                    <span class="ident">API::get_cached</span>().<span class="macro-nonterminal">$</span><span class="macro-nonterminal">func</span>(
                         <span class="self">self</span>,
                         <span class="ident">key</span>.<span class="ident">as_ptr</span>(),
                         <span class="macro-nonterminal">$</span><span class="macro-nonterminal">value</span>,
-                        <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paTouch</span>
+                        <span class="ident">ffi::VSPropAppendMode::paTouch</span>
                     );
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">result</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>);
+                <span class="macro">debug_assert!</span>(<span class="ident">result</span> <span class="op">==</span> <span class="number">0</span>);
             }};
         }
 
         <span class="kw">match</span> <span class="ident">value_type</span> {
-            <span class="ident">ValueType</span>::<span class="ident">Int</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">touch_value</span><span class="macro">!</span>(<span class="ident">prop_set_int</span>, <span class="number">0</span>),
-            <span class="ident">ValueType</span>::<span class="ident">Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">touch_value</span><span class="macro">!</span>(<span class="ident">prop_set_float</span>, <span class="number">0f64</span>),
-            <span class="ident">ValueType</span>::<span class="ident">Data</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">touch_value</span><span class="macro">!</span>(<span class="ident">prop_set_data</span>, <span class="kw-2">&amp;</span>[]),
-            <span class="ident">ValueType</span>::<span class="ident">Node</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">touch_value</span><span class="macro">!</span>(<span class="ident">prop_set_node</span>, <span class="ident">ptr</span>::<span class="ident">null_mut</span>()),
-            <span class="ident">ValueType</span>::<span class="ident">Frame</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">touch_value</span><span class="macro">!</span>(<span class="ident">prop_set_frame</span>, <span class="ident">ptr</span>::<span class="ident">null</span>()),
-            <span class="ident">ValueType</span>::<span class="ident">Function</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">touch_value</span><span class="macro">!</span>(<span class="ident">prop_set_func</span>, <span class="ident">ptr</span>::<span class="ident">null_mut</span>()),
+            <span class="ident">ValueType::Int</span> =&gt; <span class="macro">touch_value!</span>(<span class="ident">prop_set_int</span>, <span class="number">0</span>),
+            <span class="ident">ValueType::Float</span> =&gt; <span class="macro">touch_value!</span>(<span class="ident">prop_set_float</span>, <span class="number">0f64</span>),
+            <span class="ident">ValueType::Data</span> =&gt; <span class="macro">touch_value!</span>(<span class="ident">prop_set_data</span>, <span class="kw-2">&amp;</span>[]),
+            <span class="ident">ValueType::Node</span> =&gt; <span class="macro">touch_value!</span>(<span class="ident">prop_set_node</span>, <span class="ident">ptr::null_mut</span>()),
+            <span class="ident">ValueType::Frame</span> =&gt; <span class="macro">touch_value!</span>(<span class="ident">prop_set_frame</span>, <span class="ident">ptr::null</span>()),
+            <span class="ident">ValueType::Function</span> =&gt; <span class="macro">touch_value!</span>(<span class="ident">prop_set_func</span>, <span class="ident">ptr::null_mut</span>()),
         }
     }
 
     <span class="doccomment">/// Touches the key. That is, if the key exists, nothing happens, otherwise a key is created</span>
     <span class="doccomment">/// with no values associated.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">touch</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">value_type</span>: <span class="ident">ValueType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">touch</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">value_type</span>: <span class="ident">ValueType</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">touch_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value_type</span>);
         }
@@ -1491,8 +1491,8 @@
 
     <span class="doccomment">/// Retrieves a property value.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="ident">T</span>: <span class="ident">Value</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="ident">T</span>::<span class="ident">get_from_map</span>(<span class="self">self</span>, <span class="ident">key</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="ident">T</span>: <span class="ident">Value</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="ident">T::get_from_map</span>(<span class="self">self</span>, <span class="ident">key</span>)
     }
 
     <span class="doccomment">/// Retrieves an iterator over the map values.</span>
@@ -1500,36 +1500,36 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_iter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="ident">T</span>: <span class="ident">Value</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="ident">T</span>::<span class="ident">get_iter_from_map</span>(<span class="self">self</span>, <span class="ident">key</span>)
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">T::get_iter_from_map</span>(<span class="self">self</span>, <span class="ident">key</span>)
     }
 
     <span class="doccomment">/// Sets a property value.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="ident">T</span>: <span class="ident">Value</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="ident">T</span>::<span class="ident">store_in_map</span>(<span class="self">self</span>, <span class="ident">key</span>, <span class="ident">x</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="ident">T</span>: <span class="ident">Value</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="ident">T::store_in_map</span>(<span class="self">self</span>, <span class="ident">key</span>, <span class="ident">x</span>)
     }
 
     <span class="doccomment">/// Appends a property value.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="ident">T</span>: <span class="ident">Value</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="ident">T</span>::<span class="ident">append_to_map</span>(<span class="self">self</span>, <span class="ident">key</span>, <span class="ident">x</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="ident">T</span>: <span class="ident">Value</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="ident">T::append_to_map</span>(<span class="self">self</span>, <span class="ident">key</span>, <span class="ident">x</span>)
     }
 
     <span class="doccomment">/// Retrieves an integer from a map.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This function retrieves the first value associated with the key.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_int</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_int</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">get_int_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">0</span>) }
     }
 
     <span class="doccomment">/// Retrieves integers from a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_int_iter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">i64</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_int_iter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">i64</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
     }
 
     <span class="doccomment">/// Retrieves an array of integers from a map.</span>
@@ -1537,8 +1537,8 @@
     <span class="doccomment">/// This is faster than iterating over a `get_int_iter()`.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gte-vapoursynth-api-31&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_int_array</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">i64</span>]<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_int_array</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">i64</span>]<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">get_int_array_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) }
     }
 
@@ -1546,8 +1546,8 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// This function retrieves the first value associated with the key.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_float</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_float</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">get_float_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">0</span>) }
     }
 
@@ -1556,24 +1556,24 @@
     <span class="doccomment">/// This is faster than iterating over a `get_float_iter()`.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gte-vapoursynth-api-31&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_float_array</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">f64</span>]<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_float_array</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">f64</span>]<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">get_float_array_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) }
     }
 
     <span class="doccomment">/// Retrieves floating point numbers from a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_float_iter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_float_iter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
     }
 
     <span class="doccomment">/// Retrieves data from a map.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This function retrieves the first value associated with the key.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">get_data_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">0</span>) }
     }
 
@@ -1582,17 +1582,17 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_data_iter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> [<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> [<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span><span class="ident">::new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
     }
 
     <span class="doccomment">/// Retrieves a node from a map.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This function retrieves the first value associated with the key.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_node</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_node</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">get_node_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">0</span>) }
     }
 
@@ -1601,17 +1601,17 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_node_iter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
     }
 
     <span class="doccomment">/// Retrieves a frame from a map.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This function retrieves the first value associated with the key.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FrameRef</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FrameRef</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">get_frame_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">0</span>) }
     }
 
@@ -1620,17 +1620,17 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_frame_iter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">FrameRef</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="ident">FrameRef</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">FrameRef</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="ident">FrameRef</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
     }
 
     <span class="doccomment">/// Retrieves a function from a map.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This function retrieves the first value associated with the key.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_function</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_function</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">get_function_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">0</span>) }
     }
 
@@ -1639,9 +1639,9 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_function_iter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;map</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="ident">Function</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueIter</span><span class="op">&lt;</span><span class="lifetime">&#39;map</span>, <span class="lifetime">&#39;elem</span>, <span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+        <span class="kw">unsafe</span> { <span class="ident">ValueIter</span>::<span class="op">&lt;</span><span class="ident">Function</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="self">self</span>, <span class="ident">key</span>) }
     }
 
     <span class="doccomment">/// Retrieves an integer from a map.</span>
@@ -1649,9 +1649,9 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_int_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">index</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_int_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">index</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">error</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_get_int</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">error</span>);
+        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_get_int</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;mut</span> <span class="ident">error</span>);
         <span class="ident">handle_get_prop_error</span>(<span class="ident">error</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="ident">value</span>)
@@ -1663,13 +1663,13 @@
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gte-vapoursynth-api-31&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_int_array_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">i64</span>]<span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_int_array_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">i64</span>]<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">error</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_get_int_array</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">error</span>);
+        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_get_int_array</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="kw-2">&amp;mut</span> <span class="ident">error</span>);
         <span class="ident">handle_get_prop_error</span>(<span class="ident">error</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_count_raw_unchecked</span>(<span class="ident">key</span>).<span class="ident">unwrap</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">value</span>, <span class="ident">length</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">slice::from_raw_parts</span>(<span class="ident">value</span>, <span class="ident">length</span>))
     }
 
     <span class="doccomment">/// Retrieves a floating point number from a map.</span>
@@ -1677,9 +1677,9 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_float_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">index</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_float_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">index</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">error</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_get_float</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">error</span>);
+        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_get_float</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;mut</span> <span class="ident">error</span>);
         <span class="ident">handle_get_prop_error</span>(<span class="ident">error</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="ident">value</span>)
@@ -1691,13 +1691,13 @@
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gte-vapoursynth-api-31&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_float_array_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">f64</span>]<span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_float_array_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">f64</span>]<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">error</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_get_float_array</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">error</span>);
+        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_get_float_array</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="kw-2">&amp;mut</span> <span class="ident">error</span>);
         <span class="ident">handle_get_prop_error</span>(<span class="ident">error</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_count_raw_unchecked</span>(<span class="ident">key</span>).<span class="ident">unwrap</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">value</span>, <span class="ident">length</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">slice::from_raw_parts</span>(<span class="ident">value</span>, <span class="ident">length</span>))
     }
 
     <span class="doccomment">/// Retrieves data from a map.</span>
@@ -1705,17 +1705,17 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_data_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">index</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_data_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">index</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">error</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_get_data</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">error</span>);
+        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_get_data</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;mut</span> <span class="ident">error</span>);
         <span class="ident">handle_get_prop_error</span>(<span class="ident">error</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">error</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_get_data_size</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">error</span>);
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">error</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>);
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">length</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_get_data_size</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;mut</span> <span class="ident">error</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">error</span> <span class="op">==</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">length</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span>);
 
-        <span class="prelude-val">Ok</span>(<span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">slice::from_raw_parts</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>, <span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>))
     }
 
     <span class="doccomment">/// Retrieves a node from a map.</span>
@@ -1727,12 +1727,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>,
         <span class="ident">index</span>: <span class="ident">i32</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">error</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_get_node</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">error</span>);
+        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_get_node</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;mut</span> <span class="ident">error</span>);
         <span class="ident">handle_get_prop_error</span>(<span class="ident">error</span>)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Node</span>::<span class="ident">from_ptr</span>(<span class="ident">value</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">Node::from_ptr</span>(<span class="ident">value</span>))
     }
 
     <span class="doccomment">/// Retrieves a frame from a map.</span>
@@ -1744,12 +1744,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>,
         <span class="ident">index</span>: <span class="ident">i32</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FrameRef</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FrameRef</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">error</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_get_frame</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">error</span>);
+        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_get_frame</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;mut</span> <span class="ident">error</span>);
         <span class="ident">handle_get_prop_error</span>(<span class="ident">error</span>)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">FrameRef</span>::<span class="ident">from_ptr</span>(<span class="ident">value</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">FrameRef::from_ptr</span>(<span class="ident">value</span>))
     }
 
     <span class="doccomment">/// Retrieves a function from a map.</span>
@@ -1761,53 +1761,53 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>,
         <span class="ident">index</span>: <span class="ident">i32</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">error</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_get_func</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">error</span>);
+        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_get_func</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">index</span>, <span class="kw-2">&amp;mut</span> <span class="ident">error</span>);
         <span class="ident">handle_get_prop_error</span>(<span class="ident">error</span>)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Function</span>::<span class="ident">from_ptr</span>(<span class="ident">value</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">Function::from_ptr</span>(<span class="ident">value</span>))
     }
 
     <span class="doccomment">/// Appends an integer to a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_int</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_int</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">append_int_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>) }
     }
 
     <span class="doccomment">/// Appends a floating point number to a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_float</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_float</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">append_float_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>) }
     }
 
     <span class="doccomment">/// Appends data to a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_data</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_data</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">append_data_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>) }
     }
 
     <span class="doccomment">/// Appends a node to a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_node</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_node</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">append_node_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>) }
     }
 
     <span class="doccomment">/// Appends a frame to a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_frame</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_frame</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">append_frame_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>) }
     }
 
     <span class="doccomment">/// Appends a function to a map.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_function</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">append_function</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">append_function_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>) }
     }
 
@@ -1816,9 +1816,9 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">append_int_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">append_int_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span>
-            <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_int</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">x</span>, <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paAppend</span>);
+            <span class="ident">API::get_cached</span>().<span class="ident">prop_set_int</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">x</span>, <span class="ident">ffi::VSPropAppendMode::paAppend</span>);
 
         <span class="ident">handle_append_prop_error</span>(<span class="ident">error</span>)
     }
@@ -1828,12 +1828,12 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">append_float_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_float</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">append_float_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_set_float</span>(
             <span class="self">self</span>,
             <span class="ident">key</span>.<span class="ident">as_ptr</span>(),
             <span class="ident">x</span>,
-            <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paAppend</span>,
+            <span class="ident">ffi::VSPropAppendMode::paAppend</span>,
         );
 
         <span class="ident">handle_append_prop_error</span>(<span class="ident">error</span>)
@@ -1844,9 +1844,9 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">append_data_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">append_data_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span>
-            <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_data</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">x</span>, <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paAppend</span>);
+            <span class="ident">API::get_cached</span>().<span class="ident">prop_set_data</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">x</span>, <span class="ident">ffi::VSPropAppendMode::paAppend</span>);
 
         <span class="ident">handle_append_prop_error</span>(<span class="ident">error</span>)
     }
@@ -1857,15 +1857,15 @@
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">append_node_raw_unchecked</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>,
         <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_node</span>(
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_set_node</span>(
             <span class="self">self</span>,
             <span class="ident">key</span>.<span class="ident">as_ptr</span>(),
             <span class="ident">x</span>.<span class="ident">ptr</span>(),
-            <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paAppend</span>,
+            <span class="ident">ffi::VSPropAppendMode::paAppend</span>,
         );
 
         <span class="ident">handle_append_prop_error</span>(<span class="ident">error</span>)
@@ -1877,15 +1877,15 @@
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">append_frame_raw_unchecked</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>,
         <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_frame</span>(
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_set_frame</span>(
             <span class="self">self</span>,
             <span class="ident">key</span>.<span class="ident">as_ptr</span>(),
             <span class="ident">x</span>.<span class="ident">deref</span>(),
-            <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paAppend</span>,
+            <span class="ident">ffi::VSPropAppendMode::paAppend</span>,
         );
 
         <span class="ident">handle_append_prop_error</span>(<span class="ident">error</span>)
@@ -1897,15 +1897,15 @@
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">append_function_raw_unchecked</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>,
         <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_func</span>(
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_set_func</span>(
             <span class="self">self</span>,
             <span class="ident">key</span>.<span class="ident">as_ptr</span>(),
             <span class="ident">x</span>.<span class="ident">ptr</span>(),
-            <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paAppend</span>,
+            <span class="ident">ffi::VSPropAppendMode::paAppend</span>,
         );
 
         <span class="ident">handle_append_prop_error</span>(<span class="ident">error</span>)
@@ -1913,8 +1913,8 @@
 
     <span class="doccomment">/// Sets a property value to an integer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_int</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_int</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="ident">i64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">set_int_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>);
         }
@@ -1926,8 +1926,8 @@
     <span class="doccomment">/// This is faster than calling `append_int()` in a loop.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gte-vapoursynth-api-31&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_int_array</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">i64</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_int_array</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">i64</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">set_int_array_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>);
         }
@@ -1936,8 +1936,8 @@
 
     <span class="doccomment">/// Sets a property value to a floating point number.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_float</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_float</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="ident">f64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">set_float_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>);
         }
@@ -1949,8 +1949,8 @@
     <span class="doccomment">/// This is faster than calling `append_float()` in a loop.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gte-vapoursynth-api-31&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_float_array</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">f64</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_float_array</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">f64</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">set_float_array_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>);
         }
@@ -1959,8 +1959,8 @@
 
     <span class="doccomment">/// Sets a property value to data.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_data</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_data</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">set_data_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>);
         }
@@ -1969,8 +1969,8 @@
 
     <span class="doccomment">/// Sets a property value to a node.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_node</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_node</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">set_node_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>);
         }
@@ -1979,8 +1979,8 @@
 
     <span class="doccomment">/// Sets a property value to a frame.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_frame</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_frame</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">set_frame_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>);
         }
@@ -1989,8 +1989,8 @@
 
     <span class="doccomment">/// Sets a property value to a function.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_function</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map</span>::<span class="ident">make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_function</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Map::make_raw_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">set_function_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">x</span>);
         }
@@ -2002,11 +2002,11 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_int_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="ident">i64</span>) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_int_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="ident">i64</span>) {
         <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span>
-            <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_int</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">x</span>, <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paReplace</span>);
+            <span class="ident">API::get_cached</span>().<span class="ident">prop_set_int</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">x</span>, <span class="ident">ffi::VSPropAppendMode::paReplace</span>);
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">error</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">error</span> <span class="op">==</span> <span class="number">0</span>);
     }
 
     <span class="doccomment">/// Sets a property value to an integer array.</span>
@@ -2018,10 +2018,10 @@
     <span class="doccomment">/// Panics if `x.len()` can&#39;t fit in an `i32`.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gte-vapoursynth-api-31&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_int_array_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">i64</span>]) {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_int_array</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">x</span>);
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_int_array_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">i64</span>]) {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_set_int_array</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">x</span>);
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">error</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">error</span> <span class="op">==</span> <span class="number">0</span>);
     }
 
     <span class="doccomment">/// Sets a property value to a floating point number.</span>
@@ -2029,15 +2029,15 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_float_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="ident">f64</span>) {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_float</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_float_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="ident">f64</span>) {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_set_float</span>(
             <span class="self">self</span>,
             <span class="ident">key</span>.<span class="ident">as_ptr</span>(),
             <span class="ident">x</span>,
-            <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paReplace</span>,
+            <span class="ident">ffi::VSPropAppendMode::paReplace</span>,
         );
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">error</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">error</span> <span class="op">==</span> <span class="number">0</span>);
     }
 
     <span class="doccomment">/// Sets a property value to a floating point number array.</span>
@@ -2049,10 +2049,10 @@
     <span class="doccomment">/// Panics if `x.len()` can&#39;t fit in an `i32`.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gte-vapoursynth-api-31&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_float_array_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">f64</span>]) {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_float_array</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">x</span>);
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_float_array_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">f64</span>]) {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_set_float_array</span>(<span class="self">self</span>, <span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">x</span>);
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">error</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">error</span> <span class="op">==</span> <span class="number">0</span>);
     }
 
     <span class="doccomment">/// Sets a property value to data.</span>
@@ -2060,15 +2060,15 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_data_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_data</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_data_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_set_data</span>(
             <span class="self">self</span>,
             <span class="ident">key</span>.<span class="ident">as_ptr</span>(),
             <span class="ident">x</span>,
-            <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paReplace</span>,
+            <span class="ident">ffi::VSPropAppendMode::paReplace</span>,
         );
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">error</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">error</span> <span class="op">==</span> <span class="number">0</span>);
     }
 
     <span class="doccomment">/// Sets a property value to a node.</span>
@@ -2076,15 +2076,15 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_node_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_node</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_node_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Node</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_set_node</span>(
             <span class="self">self</span>,
             <span class="ident">key</span>.<span class="ident">as_ptr</span>(),
             <span class="ident">x</span>.<span class="ident">ptr</span>(),
-            <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paReplace</span>,
+            <span class="ident">ffi::VSPropAppendMode::paReplace</span>,
         );
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">error</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">error</span> <span class="op">==</span> <span class="number">0</span>);
     }
 
     <span class="doccomment">/// Sets a property value to a frame.</span>
@@ -2092,15 +2092,15 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_frame_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_frame</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_frame_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Frame</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_set_frame</span>(
             <span class="self">self</span>,
             <span class="ident">key</span>.<span class="ident">as_ptr</span>(),
             <span class="ident">x</span>.<span class="ident">deref</span>(),
-            <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paReplace</span>,
+            <span class="ident">ffi::VSPropAppendMode::paReplace</span>,
         );
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">error</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">error</span> <span class="op">==</span> <span class="number">0</span>);
     }
 
     <span class="doccomment">/// Sets a property value to a function.</span>
@@ -2108,16 +2108,17 @@
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">/// The caller must ensure `key` is valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_function_raw_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API</span>::<span class="ident">get_cached</span>().<span class="ident">prop_set_func</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_function_raw_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">CStr</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Function</span><span class="op">&lt;</span><span class="lifetime">&#39;elem</span><span class="op">&gt;</span>) {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">API::get_cached</span>().<span class="ident">prop_set_func</span>(
             <span class="self">self</span>,
             <span class="ident">key</span>.<span class="ident">as_ptr</span>(),
             <span class="ident">x</span>.<span class="ident">ptr</span>(),
-            <span class="ident">ffi</span>::<span class="ident">VSPropAppendMode</span>::<span class="ident">paReplace</span>,
+            <span class="ident">ffi::VSPropAppendMode::paReplace</span>,
         );
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">error</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">error</span> <span class="op">==</span> <span class="number">0</span>);
     }
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "vapoursynth";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="vapoursynth" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+</body></html>
