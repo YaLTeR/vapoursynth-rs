@@ -37,12 +37,14 @@ jobs:
 
       matrix:
         toolchain:
-         - stable-x86_64-apple-darwin
+        # I can't figure out how to install an older version of VapourSynth on macOS,
+        # so don't test macOS until we can test on the latest version again.
+        #  - stable-x86_64-apple-darwin
          - stable-x86_64-unknown-linux-gnu
          - stable-i686-unknown-linux-gnu
         include:
-         - toolchain: stable-x86_64-apple-darwin
-           os: macOS-10.15
+        #  - toolchain: stable-x86_64-apple-darwin
+        #    os: macOS-10.15
          - toolchain: stable-x86_64-unknown-linux-gnu
            os: ubuntu-20.04
          - toolchain: stable-i686-unknown-linux-gnu
@@ -55,7 +57,7 @@ jobs:
     - name: Install VapourSynth on MacOS
       if: matrix.os == 'macOS-10.15'
       run: |
-        brew install "https://raw.githubusercontent.com/Homebrew/homebrew-core/6873837ac751d75fc99b797a63169dfbeaf44810/Formula/vapoursynth.rb"
+        brew install vapoursynth
     - name: Install VapourSynth on Ubuntu 64-bit
       if: matrix.toolchain == 'stable-x86_64-unknown-linux-gnu'
       run: |
