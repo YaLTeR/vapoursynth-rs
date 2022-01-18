@@ -5,10 +5,11 @@ set -ex
 sudo apt-get install nasm
 
 # Install a 32-bit environment if a 32-bit arch is used
-[ -z $1 ] || sudo dpkg --add-architecture i386 && \
-             sudo apt-get update && \
-             sudo apt-get install gcc-multilib g++-multilib \
-                                  libpython3.8-dev:i386
+if [ "$1" = "i686" ]; then
+    sudo dpkg --add-architecture i386
+    sudo apt-get update
+    sudo apt-get install gcc-multilib g++-multilib libpython3.8-dev:i386
+fi
 
 # Install Cython
 sudo pip3 install cython
