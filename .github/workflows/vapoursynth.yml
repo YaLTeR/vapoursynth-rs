@@ -91,13 +91,12 @@ jobs:
     - name: Deploy documentation
       if: >
         matrix.toolchain == 'stable-x86_64-unknown-linux-gnu' &&
-        github.event_name == 'push'
-      uses: JamesIves/github-pages-deploy-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BASE_BRANCH: master
-        BRANCH: gh-pages
-        FOLDER: target/doc
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/master'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./target/doc
 
   windows-tests:
     strategy:
