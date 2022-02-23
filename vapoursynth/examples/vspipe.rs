@@ -24,7 +24,7 @@ mod inner {
 
     use anyhow::{anyhow, bail, ensure, Context, Error};
 
-    use self::clap::{Command, Arg};
+    use self::clap::{Arg, Command};
     use self::num_rational::Ratio;
     use self::vapoursynth::prelude::*;
     use super::*;

@@ -1,7 +1,7 @@
 //! VapourSynth nodes.
 
 use std::borrow::Cow;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 use std::os::raw::{c_char, c_void};
 use std::process;
@@ -12,6 +12,7 @@ use vapoursynth_sys as ffi;
 use crate::api::API;
 use crate::frame::FrameRef;
 use crate::plugins::FrameContext;
+use crate::prelude::Property;
 use crate::video_info::VideoInfo;
 
 mod errors;
@@ -111,7 +112,23 @@ impl<'core> Node<'core> {
     /// Panics is `n` is greater than `i32::max_value()`.
     pub fn get_frame<'error>(&self, n: usize) -> Result<FrameRef<'core>, GetFrameError<'error>> {
         assert!(n <= i32::max_value() as usize);
-        let n = n as i32;
+
+        let vi = &self.info();
+
+        #[cfg(not(feature = "gte-vapoursynth-api-32"))]
+        if let Property::Constant(total) = vi.num_frames {
+            if n >= total {
+                let err_cstring =
+                    CString::new("Requested frame number beyond the last one").unwrap();
+                return Err(GetFrameError::new(Cow::Owned(err_cstring)));
+            }
+        }
+
+        #[cfg(feature = "gte-vapoursynth-api-32")]
+        if n >= vi.num_frames {
+            let err_cstring = CString::new("Requested frame number beyond the last one").unwrap();
+            return Err(GetFrameError::new(Cow::Owned(err_cstring)));
+        }
 
         // Kinda arbitrary. Same value as used in vsvfw.
         const ERROR_BUF_CAPACITY: usize = 32 * 1024;
@@ -119,7 +136,8 @@ impl<'core> Node<'core> {
         let mut err_buf = vec![0; ERROR_BUF_CAPACITY];
         let mut err_buf = err_buf.into_boxed_slice();
 
-        let handle = unsafe { API::get_cached().get_frame(n, self.handle.as_ptr(), &mut *err_buf) };
+        let handle =
+            unsafe { API::get_cached().get_frame(n as i32, self.handle.as_ptr(), &mut *err_buf) };
 
         if handle.is_null() {
             // TODO: remove this extra allocation by reusing `Box<[c_char]>`.
