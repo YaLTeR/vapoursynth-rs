@@ -24,7 +24,7 @@ mod inner {
 
     use anyhow::{anyhow, bail, ensure, Context, Error};
 
-    use self::clap::{App, Arg};
+    use self::clap::{Command, Arg};
     use self::num_rational::Ratio;
     use self::vapoursynth::prelude::*;
     use super::*;
@@ -569,7 +569,7 @@ mod inner {
     }
 
     pub fn run() -> anyhow::Result<()> {
-        let matches = App::new("vspipe-rs")
+        let matches = Command::new("vspipe-rs")
             .about("A Rust implementation of vspipe")
             .author("Ivan M. <yalterz@gmail.com>")
             .arg(
