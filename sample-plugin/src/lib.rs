@@ -403,11 +403,12 @@ make_filter_function! {
             ensure!(float == 1337f64, "{} != 1337", float);
         }
         ensure!(data == &b"asd"[..], "{:?} != {:?}", data, &b"asd"[..]);
-        ensure!(
-            node.info().num_frames == Property::Constant(1),
-            "{:?} != 1",
-            node.info().num_frames
-        );
+
+        // Only one frame, this is to pass tests for all API versions
+        // Use `Node.info()`
+        ensure!(node.get_frame(0).is_ok(), "couldn't get frame 0");
+        ensure!(node.get_frame(1).is_err(), "frame count > 1");
+
         ensure!(frame.width(0) == 320, "{} != 320", frame.width(0));
         ensure!(out.get::<i64>("val").map(|x| x == 10).unwrap_or(false), "Incorrect function");
         ensure!(optional_int.is_some(), "optional_int is missing");

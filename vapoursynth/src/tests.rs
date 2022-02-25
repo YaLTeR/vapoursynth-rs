@@ -961,7 +961,7 @@ mod need_api {
             let (tx, rx) = channel();
             *SENDER.lock().unwrap() = Some(tx);
 
-            api.add_message_handler_trivial(|message_type, message| {
+            let id = api.add_message_handler_trivial(|message_type, message| {
                 let guard = SENDER.lock().unwrap();
                 let tx = guard.as_ref().unwrap();
                 assert_eq!(tx.send((message_type, message.to_owned())), Ok(()));
@@ -999,10 +999,9 @@ mod need_api {
                     CString::new("test critical message").unwrap()
                 ))
             );
-        }
 
-        #[allow(deprecated)]
-        api.clear_message_handler();
+            api.remove_message_handler(id);
+        }
     }
 
     #[test]
