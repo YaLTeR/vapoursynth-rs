@@ -141,10 +141,7 @@ unsafe extern "system" fn get_frame(
                         ptr
                     }
                     Err(err) => {
-                        let mut buf = String::new();
-
-                        buf += &format!("{}", err);
-
+                        let buf = format!("{}", err);
                         let buf = CString::new(buf.replace('\0', "\\0")).unwrap();
                         api.set_filter_error(buf.as_ptr(), frame_ctx);
 
