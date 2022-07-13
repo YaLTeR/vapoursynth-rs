@@ -134,6 +134,7 @@ jobs:
       if: matrix.arch == 'i686'
       run: |
         build/windows-script.ps1 -arch i686
+    - run: rustup set auto-self-update disable
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
