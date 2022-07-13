@@ -17,19 +17,19 @@ travis-ci = { repository = "YaLTeR/vapoursynth-rs" }
 appveyor = { repository = "YaLTeR/vapoursynth-rs" }
 
 [dependencies]
-bitflags = "1"
-half = { version = "1", optional = true }
-anyhow = "1.0.52"
-thiserror = "1.0.30"
-lazy_static = "1"
+bitflags = "1.3.2"
+half = { version = "2.0.0", optional = true }
+anyhow = "1.0.58"
+thiserror = "1.0.31"
+lazy_static = "1.4.0"
 vapoursynth-sys = { version = "0.3", path = "../vapoursynth-sys" }
 
 [dev-dependencies]
-clap = "3"
-lazy_static = "1"
+clap = "3.2.10"
+lazy_static = "1.4.0"
 
 [dev-dependencies.num-rational]
-version = "0.4.0"
+version = "0.4.1"
 default-features = false
 features = ["std"]
 
