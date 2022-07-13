@@ -234,6 +234,7 @@ impl<'core> Filter<'core> for RandomNoise {
 make_filter_function! {
     RandomNoiseFunction, "RandomNoise"
 
+    #[allow(clippy::too_many_arguments)]
     fn create_random_noise<'core>(
         _api: API,
         core: CoreRef<'core>,
@@ -379,6 +380,7 @@ impl<'core> Filter<'core> for ArgumentTestFilter<'core> {
 make_filter_function! {
     ArgumentTestFilterFunction, "ArgumentTest"
 
+    #[allow(clippy::too_many_arguments)]
     fn create_argument_test<'core>(
         api: API,
         _core: CoreRef<'core>,
