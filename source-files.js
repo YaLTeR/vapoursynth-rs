@@ -1,9 +1,9 @@
-var N = null;var sourcesIndex = {};
+var sourcesIndex = {};
 sourcesIndex["anyhow"] = {"name":"","files":["backtrace.rs","chain.rs","context.rs","ensure.rs","error.rs","fmt.rs","kind.rs","lib.rs","macros.rs","ptr.rs","wrapper.rs"]};
 sourcesIndex["bitflags"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["cfg_if"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["getrandom"] = {"name":"","files":["error.rs","error_impls.rs","lib.rs","linux_android.rs","use_file.rs","util.rs","util_libc.rs"]};
-sourcesIndex["half"] = {"name":"","dirs":[{"name":"bfloat","files":["convert.rs"]},{"name":"binary16","files":["convert.rs"]}],"files":["bfloat.rs","binary16.rs","lib.rs","slice.rs"]};
+sourcesIndex["half"] = {"name":"","dirs":[{"name":"bfloat","files":["convert.rs"]},{"name":"binary16","files":["convert.rs"]}],"files":["bfloat.rs","binary16.rs","lib.rs","slice.rs","vec.rs"]};
 sourcesIndex["lazy_static"] = {"name":"","files":["inline_lazy.rs","lib.rs"]};
 sourcesIndex["libc"] = {"name":"","dirs":[{"name":"unix","dirs":[{"name":"linux_like","dirs":[{"name":"linux","dirs":[{"name":"arch","dirs":[{"name":"generic","files":["mod.rs"]}],"files":["mod.rs"]},{"name":"gnu","dirs":[{"name":"b64","dirs":[{"name":"x86_64","files":["align.rs","mod.rs","not_x32.rs"]}],"files":["mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["align.rs","mod.rs","non_exhaustive.rs"]}],"files":["mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["fixed_width_ints.rs","lib.rs","macros.rs"]};
 sourcesIndex["ppv_lite86"] = {"name":"","dirs":[{"name":"x86_64","files":["mod.rs","sse2.rs"]}],"files":["lib.rs","soft.rs","types.rs"]};
@@ -17,7 +17,7 @@ sourcesIndex["syn"] = {"name":"","dirs":[{"name":"gen","files":["clone.rs","gen_
 sourcesIndex["test"] = {"name":"","files":["test.rs"]};
 sourcesIndex["thiserror"] = {"name":"","files":["aserror.rs","display.rs","lib.rs"]};
 sourcesIndex["thiserror_impl"] = {"name":"","files":["ast.rs","attr.rs","expand.rs","fmt.rs","generics.rs","lib.rs","prop.rs","valid.rs"]};
-sourcesIndex["unicode_xid"] = {"name":"","files":["lib.rs","tables.rs"]};
+sourcesIndex["unicode_ident"] = {"name":"","files":["lib.rs","tables.rs"]};
 sourcesIndex["vapoursynth"] = {"name":"","dirs":[{"name":"map","files":["errors.rs","iterators.rs","mod.rs","value.rs"]},{"name":"node","files":["errors.rs","mod.rs"]},{"name":"plugins","files":["ffi.rs","frame_context.rs","mod.rs"]},{"name":"vsscript","files":["environment.rs","errors.rs","mod.rs"]}],"files":["api.rs","component.rs","core.rs","format.rs","frame.rs","function.rs","lib.rs","plugin.rs","video_info.rs"]};
 sourcesIndex["vapoursynth_sys"] = {"name":"","files":["bindings.rs","lib.rs"]};
 createSourceSidebar();
