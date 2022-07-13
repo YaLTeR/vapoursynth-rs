@@ -159,7 +159,7 @@
 //! `<path to the VapourSynth installation>\sdk\lib64` or `<...>\lib32`, depending on the target
 //! bitness.
 
-#![doc(html_root_url = "https://docs.rs/vapoursynth/0.3.0")]
+#![doc(html_root_url = "https://docs.rs/vapoursynth/0.4.0")]
 // Preventing all those warnings with #[cfg] directives would be really diffucult.
 #![allow(unused, dead_code)]
 #![allow(clippy::trivially_copy_pass_by_ref)]

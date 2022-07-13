@@ -1,3 +1,7 @@
+## v0.4 (12th Jul 2022)
+* Migrated to the 2021 edition.
+* Updated dependencies.
+
 ## v0.3 (22nd Oct 2019)
 * Added support for VapourSynth API 3.6 (R47)
 * Added more default VapourSynth .lib folders on Windows: the automatic

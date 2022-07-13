@@ -1,3 +1,10 @@
+## v0.4 (12th Jul 2022)
+* Migrated from `failure` to `thiserror` and `anyhow`.
+* Migrated to the 2021 edition.
+* Added `impl From<FormatID> for i32`.
+* Changed integer values of the `ColorFamily` enum to match those used by VapourSynth.
+* Updated dependencies.
+
 ## v0.3 (22nd Oct 2019)
 * Added support for VapourSynth API 3.6 (R47):
   * `API::{add,remove}_message_handler` deprecate `API::set_message_handler`.
