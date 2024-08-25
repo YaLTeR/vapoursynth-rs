@@ -137,7 +137,7 @@ impl<'core> Node<'core> {
         let mut err_buf = err_buf.into_boxed_slice();
 
         let handle =
-            unsafe { API::get_cached().get_frame(n as i32, self.handle.as_ptr(), &mut *err_buf) };
+            unsafe { API::get_cached().get_frame(n as i32, self.handle.as_ptr(), &mut err_buf) };
 
         if handle.is_null() {
             // TODO: remove this extra allocation by reusing `Box<[c_char]>`.
