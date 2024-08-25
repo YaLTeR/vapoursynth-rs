@@ -1,4 +1,4 @@
-///! A sample VapourSynth plugin.
+//! A sample VapourSynth plugin.
 extern crate rand;
 #[macro_use]
 extern crate vapoursynth;
