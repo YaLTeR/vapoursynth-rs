@@ -168,8 +168,8 @@ impl<'core> FrameRefMut<'core> {
         format: Format<'core>,
         resolution: Resolution,
     ) -> Self {
-        assert!(resolution.width <= i32::max_value() as usize);
-        assert!(resolution.height <= i32::max_value() as usize);
+        assert!(resolution.width <= i32::MAX as usize);
+        assert!(resolution.height <= i32::MAX as usize);
 
         Self {
             frame: unsafe {
@@ -284,7 +284,7 @@ impl<'core> Frame<'core> {
         let ptr = self.data_ptr(plane);
 
         let offset = stride * row;
-        assert!(offset <= isize::max_value() as usize);
+        assert!(offset <= isize::MAX as usize);
         let offset = offset as isize;
 
         let row_ptr = unsafe { ptr.offset(offset) };
@@ -307,7 +307,7 @@ impl<'core> Frame<'core> {
         let ptr = self.data_ptr_mut(plane);
 
         let offset = stride * row;
-        assert!(offset <= isize::max_value() as usize);
+        assert!(offset <= isize::MAX as usize);
         let offset = offset as isize;
 
         let row_ptr = unsafe { ptr.offset(offset) };
@@ -408,7 +408,7 @@ impl<'core> Frame<'core> {
         let ptr = self.data_ptr(plane);
 
         let offset = stride * row;
-        assert!(offset <= isize::max_value() as usize);
+        assert!(offset <= isize::MAX as usize);
         let offset = offset as isize;
 
         let row_ptr = unsafe { ptr.offset(offset) };
@@ -431,7 +431,7 @@ impl<'core> Frame<'core> {
         let ptr = self.data_ptr_mut(plane);
 
         let offset = stride * row;
-        assert!(offset <= isize::max_value() as usize);
+        assert!(offset <= isize::MAX as usize);
         let offset = offset as isize;
 
         let row_ptr = unsafe { ptr.offset(offset) };

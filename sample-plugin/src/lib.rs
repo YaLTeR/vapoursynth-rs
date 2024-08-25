@@ -253,17 +253,17 @@ make_filter_function! {
             bail!("Floating point formats are not supported");
         }
 
-        if width <= 0 || width > i64::from(i32::max_value()) {
+        if width <= 0 || width > i64::from(i32::MAX) {
             bail!("Invalid width");
         }
         let width = width as usize;
 
-        if height <= 0 || height > i64::from(i32::max_value()) {
+        if height <= 0 || height > i64::from(i32::MAX) {
             bail!("Invalid height");
         }
         let height = height as usize;
 
-        if length <= 0 || length > i64::from(i32::max_value()) {
+        if length <= 0 || length > i64::from(i32::MAX) {
             bail!("Invalid length");
         }
         let length = length as usize;

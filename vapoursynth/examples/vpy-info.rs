@@ -109,7 +109,7 @@ fn run() -> Result<(), Error> {
         let n = n
             .parse::<usize>()
             .context("Couldn't parse the frame number")?;
-        if n > i32::max_value() as usize {
+        if n > i32::MAX as usize {
             bail!("Frame number is too big");
         }
 

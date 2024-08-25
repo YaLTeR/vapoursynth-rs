@@ -457,7 +457,7 @@ impl API {
     /// The caller must ensure `node` is valid.
     ///
     /// # Panics
-    /// Panics if `err_msg` is larger than `i32::max_value()`.
+    /// Panics if `err_msg` is larger than `i32::MAX`.
     #[inline]
     pub(crate) unsafe fn get_frame(
         self,
@@ -466,7 +466,7 @@ impl API {
         err_msg: &mut [c_char],
     ) -> *const ffi::VSFrameRef {
         let len = err_msg.len();
-        assert!(len <= i32::max_value() as usize);
+        assert!(len <= i32::MAX as usize);
         let len = len as i32;
 
         (self.handle.as_ref().getFrame)(n, node, err_msg.as_mut_ptr(), len)
@@ -749,7 +749,7 @@ impl API {
         append: ffi::VSPropAppendMode,
     ) -> i32 {
         let length = value.len();
-        assert!(length <= i32::max_value() as usize);
+        assert!(length <= i32::MAX as usize);
         let length = length as i32;
 
         (self.handle.as_ref().propSetData)(map, key, value.as_ptr() as _, length, append as i32)
@@ -771,7 +771,7 @@ impl API {
         value: &[i64],
     ) -> i32 {
         let length = value.len();
-        assert!(length <= i32::max_value() as usize);
+        assert!(length <= i32::MAX as usize);
         let length = length as i32;
 
         (self.handle.as_ref().propSetIntArray)(map, key, value.as_ptr(), length)
@@ -793,7 +793,7 @@ impl API {
         value: &[f64],
     ) -> i32 {
         let length = value.len();
-        assert!(length <= i32::max_value() as usize);
+        assert!(length <= i32::MAX as usize);
         let length = length as i32;
 
         (self.handle.as_ref().propSetFloatArray)(map, key, value.as_ptr(), length)
@@ -921,7 +921,7 @@ impl API {
     #[inline]
     pub(crate) unsafe fn set_video_info(self, vi: &[ffi::VSVideoInfo], node: *mut ffi::VSNode) {
         let length = vi.len();
-        assert!(length <= i32::max_value() as usize);
+        assert!(length <= i32::MAX as usize);
         let length = length as i32;
 
         (self.handle.as_ref().setVideoInfo)(vi.as_ptr(), length, node);
