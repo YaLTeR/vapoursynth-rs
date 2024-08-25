@@ -109,9 +109,9 @@ impl<'core> Node<'core> {
     /// The `'error` lifetime is unbounded because this function always returns owned data.
     ///
     /// # Panics
-    /// Panics is `n` is greater than `i32::max_value()`.
+    /// Panics is `n` is greater than `i32::MAX`.
     pub fn get_frame<'error>(&self, n: usize) -> Result<FrameRef<'core>, GetFrameError<'error>> {
-        assert!(n <= i32::max_value() as usize);
+        assert!(n <= i32::MAX as usize);
 
         let vi = &self.info();
 
@@ -162,7 +162,7 @@ impl<'core> Node<'core> {
     /// If the callback panics, the process is aborted.
     ///
     /// # Panics
-    /// Panics is `n` is greater than `i32::max_value()`.
+    /// Panics is `n` is greater than `i32::MAX`.
     pub fn get_frame_async<F>(&self, n: usize, callback: F)
     where
         F: FnOnce(Result<FrameRef<'core>, GetFrameError>, usize, Node<'core>) + Send + 'core,
@@ -230,7 +230,7 @@ impl<'core> Node<'core> {
             }
         }
 
-        assert!(n <= i32::max_value() as usize);
+        assert!(n <= i32::MAX as usize);
         let n = n as i32;
 
         let user_data = Box::new(CallbackData {
@@ -266,9 +266,9 @@ impl<'core> Node<'core> {
     /// It is best to request frames in ascending order, i.e. `n`, `n+1`, `n+2`, etc.
     ///
     /// # Panics
-    /// Panics is `n` is greater than `i32::max_value()`.
+    /// Panics is `n` is greater than `i32::MAX`.
     pub fn request_frame_filter(&self, context: FrameContext, n: usize) {
-        assert!(n <= i32::max_value() as usize);
+        assert!(n <= i32::MAX as usize);
         let n = n as i32;
 
         unsafe {
@@ -282,9 +282,9 @@ impl<'core> Node<'core> {
     /// more than once.
     ///
     /// # Panics
-    /// Panics is `n` is greater than `i32::max_value()`.
+    /// Panics is `n` is greater than `i32::MAX`.
     pub fn get_frame_filter(&self, context: FrameContext, n: usize) -> Option<FrameRef<'core>> {
-        assert!(n <= i32::max_value() as usize);
+        assert!(n <= i32::MAX as usize);
         let n = n as i32;
 
         let ptr = unsafe { API::get_cached().get_frame_filter(n, self.ptr(), context.ptr()) };

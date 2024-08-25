@@ -330,7 +330,7 @@ mod need_api_and_vsscript {
         verify_pixel_format(&env, 1, 32, [5f32, 42f32, 0.25f32]);
         verify_pixel_format(&env, 2, 32, [0.125f32, 10f32, 0.5f32]);
         verify_pixel_format(&env, 3, 17, [77777u32, 88888u32, 99999u32]);
-        verify_pixel_format(&env, 4, 32, [u32::max_value(), 12345u32, 65432u32]);
+        verify_pixel_format(&env, 4, 32, [u32::MAX, 12345u32, 65432u32]);
 
         #[cfg(feature = "f16-pixel-type")]
         verify_pixel_format(

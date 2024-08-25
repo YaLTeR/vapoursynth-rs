@@ -159,7 +159,7 @@ impl<'core> Format<'core> {
     #[inline]
     pub fn bits_per_sample(self) -> u8 {
         let rv = self.handle.bitsPerSample;
-        debug_assert!(rv >= 0 && rv <= i32::from(u8::max_value()));
+        debug_assert!(rv >= 0 && rv <= i32::from(u8::MAX));
         rv as u8
     }
 
@@ -168,7 +168,7 @@ impl<'core> Format<'core> {
     #[inline]
     pub fn bytes_per_sample(self) -> u8 {
         let rv = self.handle.bytesPerSample;
-        debug_assert!(rv >= 0 && rv <= i32::from(u8::max_value()));
+        debug_assert!(rv >= 0 && rv <= i32::from(u8::MAX));
         rv as u8
     }
 
@@ -176,7 +176,7 @@ impl<'core> Format<'core> {
     #[inline]
     pub fn sub_sampling_w(self) -> u8 {
         let rv = self.handle.subSamplingW;
-        debug_assert!(rv >= 0 && rv <= i32::from(u8::max_value()));
+        debug_assert!(rv >= 0 && rv <= i32::from(u8::MAX));
         rv as u8
     }
 
@@ -184,7 +184,7 @@ impl<'core> Format<'core> {
     #[inline]
     pub fn sub_sampling_h(self) -> u8 {
         let rv = self.handle.subSamplingH;
-        debug_assert!(rv >= 0 && rv <= i32::from(u8::max_value()));
+        debug_assert!(rv >= 0 && rv <= i32::from(u8::MAX));
         rv as u8
     }
 }
