@@ -163,6 +163,9 @@ impl<'core> Filter<'core> for RandomNoise {
             format: core.get_format(self.format_id).unwrap().into(),
             resolution: self.resolution.into(),
             framerate: self.framerate.into(),
+
+            // useless for some API versions, required for others
+            #[allow(clippy::useless_conversion)]
             num_frames: self.length.into(),
             flags: Flags::empty(),
         }]
