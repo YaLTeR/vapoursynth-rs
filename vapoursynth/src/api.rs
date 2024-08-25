@@ -199,6 +199,7 @@ impl API {
         F: FnMut(MessageType, &CStr) + Send + 'static,
     {
         struct CallbackData {
+            #[allow(clippy::type_complexity)]
             callback: Box<dyn FnMut(MessageType, &CStr) + Send + 'static>,
         }
 
@@ -258,6 +259,7 @@ impl API {
         F: FnMut(MessageType, &CStr) + Send + 'static,
     {
         struct CallbackData {
+            #[allow(clippy::type_complexity)]
             callback: Box<dyn FnMut(MessageType, &CStr) + Send + 'static>,
         }
 
