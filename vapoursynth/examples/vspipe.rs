@@ -538,7 +538,7 @@ mod inner {
             }
         }
 
-        let &(ref lock, ref cvar) = &shared_data.output_done_pair;
+        let (lock, cvar) = &shared_data.output_done_pair;
         let mut done = lock.lock().unwrap();
         while !*done {
             done = cvar.wait(done).unwrap();
