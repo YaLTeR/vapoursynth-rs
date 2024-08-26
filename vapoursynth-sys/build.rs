@@ -86,13 +86,21 @@ fn get_default_windows_library_dir(target: String, host: String) -> Vec<String> 
         .collect()
 }
 
-// Returns the default library dirs on macOS when using homebrew.
+// Returns the homebrew library dirs on macOS.
 fn get_default_macos_library_dir(target: String, host: String) -> Vec<String> {
     // If the host is not macOS/Apple, the library dirs will be different.
     if !host.contains("apple-darwin") {
         return vec![];
     }
 
+    // Use $HOMEBREW_PREFIX if set and not cross-compiling
+    if host == target {
+        if let Ok(prefix) = env::var("HOMEBREW_PREFIX") {
+            return vec![format!("{}/lib", prefix)];
+        }
+    }
+
+    // Otherwise, return the default library dir
     if target.starts_with("aarch64") {
         vec![String::from("/opt/homebrew/lib/")]
     } else {
