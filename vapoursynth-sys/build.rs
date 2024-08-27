@@ -16,9 +16,9 @@ fn main() {
 
     // Get the default library dir for some platforms.
     let default_library_dir = if targets_windows {
-        get_default_windows_library_dir(target, host)
+        get_default_windows_library_dir(&target, &host)
     } else if targets_macos {
-        get_default_macos_library_dir(target, host)
+        get_default_macos_library_dir(&target, &host)
     } else {
         vec![]
     };
@@ -50,7 +50,7 @@ fn main() {
 
 // Returns the default library dirs on Windows.
 // The default dir is where the VapourSynth installer puts the libraries.
-fn get_default_windows_library_dir(target: String, host: String) -> Vec<String> {
+fn get_default_windows_library_dir(target: &str, host: &str) -> Vec<String> {
     // If the host isn't Windows we don't have %programfiles%.
     if !host.contains("windows") {
         return vec![];
@@ -87,7 +87,7 @@ fn get_default_windows_library_dir(target: String, host: String) -> Vec<String> 
 }
 
 // Returns the homebrew library dirs on macOS.
-fn get_default_macos_library_dir(target: String, host: String) -> Vec<String> {
+fn get_default_macos_library_dir(target: &str, host: &str) -> Vec<String> {
     // If the host is not macOS/Apple, the library dirs will be different.
     if !host.contains("apple-darwin") {
         return vec![];
