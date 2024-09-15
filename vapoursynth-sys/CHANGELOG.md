@@ -1,3 +1,6 @@
+## v0.4.1 (14th Sep 2024)
+* Added default library paths for macOS for automatic detection.
+
 ## v0.4 (12th Jul 2022)
 * Migrated to the 2021 edition.
 * Updated dependencies.
